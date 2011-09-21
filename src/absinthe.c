@@ -26,6 +26,7 @@
 #include "mb2.h"
 #include "debug.h"
 #include "device.h"
+#include "crashreporter.h"
 
 int main(int argc, char* argv[]) {
 	int err = 0;
@@ -46,11 +47,11 @@ int main(int argc, char* argv[]) {
 	info("Opening connection to MobileBackup2 service\n");
 	mb2_t* mb2 = mb2_connect(device);
 	if (mb2 == NULL) {
-		error("Unable to open connection to MobileBackup2 service");
+		error("Unable to open connection to MobileBackup2 service\n");
 		device_free(device);
 		return -1;
 	}
-/*
+
 	// The second argument here is a pointer to the crashreport_t object containing
 	//  our dylib base address, as well as the state the device was in last time
 	//  it crashed.
@@ -76,7 +77,7 @@ int main(int argc, char* argv[]) {
 		device_free(device);
 		return -1;
 	}
-
+	/*
 	// Read in the last crash since that's probably our fault anyways. Since dylib
 	//  addresses are only randomized on boot, we now have base addresses to
 	//  calculate the addresses of our ROP gadgets we need.
@@ -127,8 +128,8 @@ int main(int argc, char* argv[]) {
 	// If open, then close and free structures
 	info("Cleaning up\n");
 	if (crash) crashreport_free(crash);
-	if (reporter) crashreporter_free(reporter);
 */
+	if (reporter) crashreporter_free(reporter);
 	if (mb2) mb2_free(mb2);
 	if (device) device_free(device);
 	info("Done\n");
