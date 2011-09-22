@@ -8,20 +8,21 @@
 #ifndef CRASHREPORTCOPY_H_
 #define CRASHREPORTCOPY_H_
 
-#include <plist/plist.h>
 #include <libimobiledevice/libimobiledevice.h>
 
 #include "lockdown.h"
 
 typedef struct crashreportcopy_t {
-	unsigned short port;
+	uint16_t port;
+	device_t* device;
 	idevice_connection_t connection;
 } crashreportcopy_t;
 
 crashreportcopy_t* crashreportcopy_create();
-crashreportcopy_t crashreport_connect(device_t* device, uint16_t port);
-crashreportcopy_t* crashreportcopy_open(device_t);
-int crashreportercopy_close(crashreportcopy_t* copier);
-void crashreportercopy_free(crashreportcopy_t* copier);
+crashreportcopy_t* crashreportcopy_connect(device_t* device);
+crashreportcopy_t* crashreportcopy_open(device_t* device, uint16_t port);
+
+int crashreportcopy_close(crashreportcopy_t* copier);
+void crashreportcopy_free(crashreportcopy_t* copier);
 
 #endif /* CRASHREPORTCOPY_H_ */

@@ -11,6 +11,7 @@
 #include <libimobiledevice/afc.h>
 
 #include "afc.h"
+#include "debug.h"
 #include "lockdown.h"
 
 afc_t* afc_create() {

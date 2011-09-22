@@ -12,8 +12,11 @@
 #include <string.h>
 #include <stddef.h>
 
+#include "debug.h"
 #include "lockdown.h"
 #include "crashreporter.h"
+#include "crashreportcopy.h"
+#include "crashreportmover.h"
 
 crashreporter_t* crashreporter_create() {
 	crashreporter_t* crashreporter = (crashreporter_t*) malloc(sizeof(crashreporter_t));
@@ -27,17 +30,18 @@ crashreporter_t* crashreporter_connect(device_t* device) {
 	int err = 0;
 	uint16_t port = 0;
 	crashreporter_t* crashreporter = crashreporter_create();
+	if(crashreporter != NULL) {
+		crashreporter->mover = crashreportmover_connect(device);
+		if(crashreporter->mover == NULL) {
+			error("Unable to connect to CrashReporter's mover service\n");
+			return NULL;
+		}
 
-	crashreporter->mover = crashreportmover_connect(device);
-	if(crashreporter->mover == NULL) {
-		error("Unable to connect to CrashReporter's mover service\n");
-		return NULL;
-	}
-
-	crashreporter->copier = crashreportcopier_connect(device);
-	if(crashreporter->copier == NULL) {
-		error("Unable to connect to CrashReporter's copier service\n");
-		return NULL;
+		crashreporter->copier = crashreportcopy_connect(device);
+		if(crashreporter->copier == NULL) {
+			error("Unable to connect to CrashReporter's copier service\n");
+			return NULL;
+		}
 	}
 
 	return crashreporter;
@@ -50,7 +54,7 @@ crashreporter_t* crashreporter_open(device_t* device, uint16_t port) {
 		return NULL;
 	}
 	// Startup crashreportmover service to move our crashes to the proper place ???
-	crashreportmover_t* mover = crashreportermover_open(device, port);
+	crashreportmover_t* mover = crashreportmover_open(device, port);
 	if(mover == NULL) {
 		
 		printf("failed to open crashreportermover_open!\n");
@@ -79,7 +83,7 @@ int crashreporter_close(crashreporter_t* crashreporter) {
 void crashreporter_free(crashreporter_t* crashreporter) {
 	if (crashreporter) {
 		if (crashreporter->mover) {
-			crashreportermover_free(crashreporter->mover);
+			crashreportmover_free(crashreporter->mover);
 		}
 		if (crashreporter->copier) {
 			crashreportcopy_free(crashreporter->copier);
