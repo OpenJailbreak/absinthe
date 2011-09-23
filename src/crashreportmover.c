@@ -29,7 +29,7 @@
 #include "crashreportmover.h"
 
 crashreportmover_t* crashreportmover_create() {
-	crashreportmover_t* mover = NULL;
+	crashreportmover_t* mover = (crashreportmover_t*) malloc(sizeof(crashreportmover_t));
 	if(mover != NULL) {
 		memset(mover, '\0', sizeof(mover));
 	}
@@ -65,21 +65,21 @@ crashreportmover_t* crashreportmover_connect(device_t* device) {
 }
 
 crashreportmover_t* crashreportmover_open(device_t* device, uint16_t port) {
-	int err = 0;
 	crashreportmover_t* mover = crashreportmover_create();
-
-	err = idevice_connect(device->client, port, &(mover->connection));
-	if(err < 0) {
-		return NULL;
+	if(mover != NULL) {
+		int err = idevice_connect(device->client, port, &(mover->connection));
+		if(err < 0) {
+			return NULL;
+		}
 	}
-	idevice_disconnect(mover->connection);
 	return mover;
 }
 
 
 
 int crashreportmover_close(crashreportmover_t* mover) {
-	return -1;
+	idevice_disconnect(mover->connection);
+	return 0;
 }
 
 void crashreportmover_free(crashreportmover_t* mover) {
