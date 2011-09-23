@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
 		device_free(device);
 		return -1;
 	}
-	/*
+
 	// Read in the last crash since that's probably our fault anyways. Since dylib
 	//  addresses are only randomized on boot, we now have base addresses to
 	//  calculate the addresses of our ROP gadgets we need.
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
 	// If open, then close and free structures
 	info("Cleaning up\n");
 	if (crash) crashreport_free(crash);
-*/
+
 	if (reporter) crashreporter_free(reporter);
 	if (mb2) mb2_free(mb2);
 	if (device) device_free(device);
