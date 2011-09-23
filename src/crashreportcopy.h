@@ -27,6 +27,7 @@
 typedef struct crashreportcopy_t {
 	uint16_t port;
 	device_t* device;
+	afc_client_t* client;
 	idevice_connection_t connection;
 } crashreportcopy_t;
 

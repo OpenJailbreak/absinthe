@@ -25,12 +25,9 @@
 #include <plist/plist.h>
 
 #include "afc.h"
+#include "crashreport.h"
 #include "crashreportcopy.h"
 #include "crashreportmover.h"
-
-typedef struct crashreport_t {
-	int i;
-} crashreport_t;
 
 typedef struct crashreporter_t {
 	//afc_t* afc;

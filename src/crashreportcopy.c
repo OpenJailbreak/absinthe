@@ -69,18 +69,26 @@ crashreportcopy_t* crashreportcopy_connect(device_t* device) {
 crashreportcopy_t* crashreportcopy_open(device_t* device, uint16_t port) {
 	int err = 0;
 	crashreportcopy_t* copier = crashreportcopy_create();
-
-	err = idevice_connect(device->client, port, &(copier->connection));
-	if(err < 0) {
-		return NULL;
+	if(copier != NULL) {
+		err = afc_client_new(device, port, &(copier->client));
+		if(err < 0) {
+			return NULL;
+		}
 	}
-	idevice_disconnect(copier->connection);
 	return copier;
 }
 
 int crashreportcopy_close(crashreportcopy_t* copier) {
-	return -1;
+	idevice_disconnect(copier->connection);
+	copier->connection = NULL;
+	return 0;
 }
 
 void crashreportcopy_free(crashreportcopy_t* copier) {
+	if(copier) {
+		if(copier->connection) {
+			crashreportcopy_close(copier);
+		}
+		free(copier);
+	}
 }

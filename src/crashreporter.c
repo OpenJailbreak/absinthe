@@ -24,6 +24,7 @@
 
 #include "debug.h"
 #include "lockdown.h"
+#include "crashreport.h"
 #include "crashreporter.h"
 #include "crashreportcopy.h"
 #include "crashreportmover.h"
@@ -104,5 +105,112 @@ void crashreporter_free(crashreporter_t* crashreporter) {
 
 
 crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
-	return NULL;
+	char** list = NULL;
+	afc_error_t err = AFC_E_SUCCESS;
+	if(crashreporter == NULL) {
+		return NULL;
+	}
+
+	if(crashreporter->mover == NULL) {
+		return NULL;
+	}
+
+	if(crashreporter->copier == NULL) {
+		return NULL;
+	}
+
+	err = crashreporter_move_crashes();
+	if(err < 0) {
+		return NULL;
+	}
+
+	err = afc_read_directory(crashreporter->copier->client, "/", &list);
+	if(err != AFC_E_SUCCESS) {
+		return NULL;
+	}
+
+	char *lastItem = NULL;
+
+	int i = 0;
+	int j = 0;
+
+	time_t latest = 0;
+
+	for(i = 0; list[i] != NULL; i++) {
+		if (!(strstr(list[i], "BackupAgent2") && strstr(list[i], ".plist"))) continue;
+
+		char **info = NULL;
+		if (afc_get_file_info(crashreporter->copier->client, list[i], &info) != AFC_E_SUCCESS) continue;
+		if (!info) continue;
+		time_t mtime = 0;
+		for (j = 0; info[j]; j += 2) {
+			if (!strcmp(info[j], "st_mtime")) {
+				mtime = atoll(info[j+1])/1000000000;
+			}
+			free(info[j]);
+			free(info[j+1]);
+		}
+		free(info);
+		if (mtime >= latest) {
+			latest = mtime;
+			lastItem = list[i];
+		}
+	}
+
+	printf("Copying '%s'\n", lastItem);
+	if (lastItem) {
+		lastItem = strdup(lastItem);
+	}
+	for (i = 0; list[i]; i++) {
+		free(list[i]);
+	}
+	free(list);
+	if (!lastItem) {
+		printf("hmm.. could not get last item\n");
+		return NULL;
+	}
+
+	uint64_t handle;
+	char data[0x1000];
+
+	err = afc_file_open(crashreporter->copier->client, lastItem, AFC_FOPEN_RDONLY, &handle);
+	if(err != AFC_E_SUCCESS) {
+		printf("Unable to open %s\n", lastItem);
+		free(lastItem);
+		return NULL;
+	}
+
+	FILE* output = fopen(lastItem, "w");
+	if(output == NULL) {
+		printf("Unable to open local file %s\n", lastItem);
+		free(lastItem);
+		afc_file_close(crashreporter->copier->client, handle);
+		return NULL;
+	}
+
+	int bytes_read = 0;
+	err = afc_file_read(crashreporter->copier->client, handle, data, 0x1000, &bytes_read);
+	while(err == AFC_E_SUCCESS && bytes_read > 0) {
+		fwrite(data, 1, bytes_read, output);
+		err = afc_file_read(crashreporter->copier->client, handle, data, 0x1000, &bytes_read);
+	}
+	afc_file_close(crashreporter->copier->client, handle);
+	fclose(output);
+/*
+	uint32_t size = 0;
+	plist_t plist = NULL;
+	int ferr = 0;
+	unsigned char* datas = NULL;
+	printf("lastItem %s\n",lastItem);
+	ferr = file_read(lastItem, &datas, &size);
+	if (ferr < 0) {
+		fprintf(stderr, "Unable to open %s\n", lastItem);
+		free(lastItem);
+		return NULL;
+	}
+	free(lastItem);
+	plist_from_xml(datas, size, &plist);
+	free(datas);
+*/
+	return crashreport_create();
 }

@@ -44,22 +44,22 @@ crashreportmover_t* crashreportmover_connect(device_t* device) {
 
 	lockdown = lockdown_open(device);
 	if(lockdown == NULL) {
-		error("Unable to open connection to lockdownd\n");
+		error("Unable to open connection to lockdown\n");
 		return NULL;
 	}
 
 	err = lockdown_start_service(lockdown, "com.apple.crashreportmover", &port);
 	if(err < 0) {
-		error("Unable to start CrashReport mover service\n");
+		error("Unable to start crash report mover service\n");
 		return NULL;
 	}
-	lockdown_close(lockdown);
 
 	mover = crashreportmover_open(device, port);
 	if(mover == NULL) {
-		error("Unable to open connection to CrashReporter mover service\n");
+		error("Unable to open connection to crash report mover service\n");
 		return NULL;
 	}
+	lockdown_close(lockdown);
 
 	return mover;
 }
