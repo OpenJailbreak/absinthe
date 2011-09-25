@@ -119,11 +119,6 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 		return NULL;
 	}
 
-	err = crashreporter_move_crashes();
-	if(err < 0) {
-		return NULL;
-	}
-
 	err = afc_read_directory(crashreporter->copier->client, "/", &list);
 	if(err != AFC_E_SUCCESS) {
 		return NULL;

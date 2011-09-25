@@ -62,8 +62,7 @@ int main(int argc, char* argv[]) {
 		device_free(device);
 		return -1;
 	}
-	// We'll just leak this for now since the program has crashed (hopefully)
-	//mb2_free(mb2);
+	mb2_free(mb2);
 
 	info("Giving the device a moment to write the crash report...\n");
 	sleep(3);
@@ -129,8 +128,6 @@ int main(int argc, char* argv[]) {
 	info("Cleaning up\n");
 	if (crash) crashreport_free(crash);
 
-	if (reporter) crashreporter_free(reporter);
-	if (mb2) mb2_free(mb2);
 	if (device) device_free(device);
 	info("Done\n");
 	return 0;

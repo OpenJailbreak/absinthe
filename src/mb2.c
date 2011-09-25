@@ -98,7 +98,11 @@ mb2_t* mb2_open(device_t* device, uint16_t port) {
 void mb2_free(mb2_t* mb2) {
 	if (mb2) {
 		if (mb2->client) {
-			mobilebackup2_client_free(mb2->client);
+			if (mb2->poison_spilled) {
+				// just leak it.
+			} else {
+				mobilebackup2_client_free(mb2->client);
+			}
 			mb2->client = NULL;
 		}
 		mb2->device = NULL;
