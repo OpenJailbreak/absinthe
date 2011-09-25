@@ -29,7 +29,15 @@ typedef struct mb2_t {
 	uint16_t port;
 	device_t* device;
 	mobilebackup2_client_t client;
+	unsigned char *poison;
+	size_t poison_length;
+	int poison_spilled;
 } mb2_t;
+
+#define CODE_SUCCESS 0x00
+#define CODE_ERROR_LOCAL 0x06
+#define CODE_ERROR_REMOTE 0x0b
+#define CODE_FILE_DATA 0x0c
 
 mb2_t* mb2_create();
 mb2_t* mb2_connect(device_t* device);
