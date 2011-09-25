@@ -70,7 +70,7 @@ crashreportcopy_t* crashreportcopy_open(device_t* device, uint16_t port) {
 	int err = 0;
 	crashreportcopy_t* copier = crashreportcopy_create();
 	if(copier != NULL) {
-		err = afc_client_new(device, port, &(copier->client));
+		err = afc_client_new(device->client, port, &(copier->client));
 		if(err < 0) {
 			return NULL;
 		}
