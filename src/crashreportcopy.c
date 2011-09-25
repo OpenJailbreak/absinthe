@@ -50,7 +50,7 @@ crashreportcopy_t* crashreportcopy_connect(device_t* device) {
 		return NULL;
 	}
 
-	err = lockdown_start_service(lockdown, "com.apple.crashreportcopy", &port);
+	err = lockdown_start_service(lockdown, "com.apple.crashreportcopymobile", &port);
 	if(err < 0) {
 		error("Unable to start AFC service\n");
 		return NULL;
