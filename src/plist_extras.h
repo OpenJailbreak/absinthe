@@ -18,6 +18,9 @@
  **/
 #ifndef PLIST_EXTRAS_H
 #define PLIST_EXTRAS_H
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <plist/plist.h>
 
 enum plist_format_t {

@@ -17,9 +17,6 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include <stdio.h>
-#include <stdint.h>
-
 #include "plist_extras.h"
 
 static void buffer_write_to_filename(const char *filename, const char *buffer, uint64_t length)

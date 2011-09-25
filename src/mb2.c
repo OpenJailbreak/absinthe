@@ -29,6 +29,7 @@
 #include "debug.h"
 #include "plist_extras.h"
 #include "endianness.h"
+#include "common.h"
 
 enum dlmsg_mode {
 	DLMSG_DOWNLOAD_FILES = 0,
@@ -105,8 +106,7 @@ void mb2_free(mb2_t* mb2) {
 	}
 }
 
-/* not sure if we even need this returns if there is a error adding a file maybe?*/
-
+/* this is required by mb2_handle_send_file */
 static void mb2_multi_status_add_file_error(plist_t status_dict, const char *path, int error_code, const char *error_message) {
 	printf(">> %s called\n", __func__);
 	if (!status_dict)
@@ -119,8 +119,7 @@ static void mb2_multi_status_add_file_error(plist_t status_dict, const char *pat
 	plist_dict_insert_item(status_dict, path, filedict);
 }
 
-/* not sure what this does yet, convert an error to a readable format? */
-
+/* convert an errno error value to a device link/backup protocol error value */
 static int errno_to_device_error(int errno_value) {
 	switch (errno_value) {
 	case ENOENT:
@@ -134,19 +133,12 @@ static int errno_to_device_error(int errno_value) {
 
 #pragma mark MB2 File Management code
 
-static char* format_size_for_display(off_t size)
-{
-	char* out = NULL;
-	asprintf(&out, "%lld", size);
-	return out;
-}
-
 static int mb2_handle_send_file(mb2_t* mb2s, const char *backup_dir, const char *path, plist_t *errplist) {
 	printf(">> %s called\n", __func__);
 	uint32_t nlen = 0;
 	uint32_t pathlen = strlen(path);
 	uint32_t bytes = 0;
-	char *localfile = NULL;
+	char *localfile = build_path(backup_dir, path, NULL);
 	char buf[32768];
 	struct stat fst;
 
@@ -159,9 +151,7 @@ static int mb2_handle_send_file(mb2_t* mb2s, const char *backup_dir, const char 
 	off_t sent;
 
 	mobilebackup2_error_t err;
-
-	asprintf(&localfile, "%s/%s", backup_dir, path);
-
+	
 	/* send path length */
 	nlen = htobe32(pathlen);
 	err = mobilebackup2_send_raw(mb2s->client, (const char*) &nlen,
@@ -193,9 +183,7 @@ static int mb2_handle_send_file(mb2_t* mb2s, const char *backup_dir, const char 
 
 	total = fst.st_size;
 
-	char *format_size = format_size_for_display(total);
-	printf("Sending '%s' (%s)\n", path, format_size);
-	free(format_size);
+	printf("Sending '%s' (%ld bytes)\n", path, total);
 
 	if (total == 0) {
 		errcode = 0;
@@ -423,8 +411,7 @@ static int mb2_handle_receive_files(mb2_t* mb2s, plist_t message, const char *ba
 		fname[r] = 0;
 		if (bname != NULL)
 			free(bname);
-		bname = NULL;
-		asprintf(&bname, "%s/%s", backup_dir, fname);
+		bname = build_path(backup_dir, fname, NULL);
 		free(fname);
 		nlen = 0;
 		mobilebackup2_receive_raw(mb2s->client, (char*) &nlen, 4, &r);
@@ -547,8 +534,7 @@ static void mb2_handle_list_directory(mb2_t* mb2s, plist_t message, const char *
 		return;
 	}
 
-	char *path = NULL;
-	asprintf(&path, "%s/%s", backup_dir, str);
+	char *path = build_path(backup_dir, str, NULL);
 	free(str);
 
 	plist_t dirlist = plist_new_dict();
@@ -557,8 +543,7 @@ static void mb2_handle_list_directory(mb2_t* mb2s, plist_t message, const char *
 	if (cur_dir) {
 		struct dirent* ent;
 		while ((ent = readdir(cur_dir))) {
-			char *fpath = NULL;
-			asprintf(&fpath, "%s/%s", path, ent->d_name);
+			char *fpath = build_path(path, ent->d_name, NULL);
 			if (fpath) {
 				plist_t fdict = plist_new_dict();
 				struct stat st;
@@ -605,17 +590,16 @@ static void mb2_handle_make_directory(mb2_t* mb2s, plist_t message, const char *
 	char *errdesc = NULL;
 	plist_get_string_val(dir, &str);
 
-	char *newpath = NULL;
-	asprintf(&newpath, "%s/%s", backup_dir, str);
+	char *newpath = build_path(backup_dir, str, NULL);
 	free(str);
 
-/* TODO	if (g_mkdir_with_parents(newpath, 0755) < 0) {
+	if (mkdir_with_parents(newpath, 0755) < 0) {
 		errdesc = strerror(errno);
 		if (errno != EEXIST) {
 			printf("mkdir: %s (%d)\n", errdesc, errno);
 		}
 		errcode = errno_to_device_error(errno);
-	}*/
+	}
 	free(newpath);
 	mobilebackup2_error_t err = mobilebackup2_send_status_response(
 			mb2s->client, errcode, errdesc, NULL);
@@ -656,10 +640,6 @@ static void mb2_copy_file_by_path(const char *src, const char *dst) {
 	}
 }
 
-static int mkdir_with_parents(const char* path, int mode) {
-
-}
-
 static void mb2_copy_directory_by_path(const char *src, const char *dst) {
 	printf(">> %s called\n", __func__);
 	if (!src || !dst) {
@@ -690,10 +670,8 @@ static void mb2_copy_directory_by_path(const char *src, const char *dst) {
 	if (cur_dir) {
 		struct dirent* ent;
 		while ((ent = readdir(cur_dir))) {
-			char *srcpath = NULL;
-			asprintf(&srcpath, "%s/%s", src, ent->d_name);
-			char *dstpath = NULL;
-			asprintf(&srcpath, "%s/%s", dst, ent->d_name);
+			char *srcpath = build_path(src, ent->d_name, NULL);
+			char *dstpath = build_path(dst, ent->d_name, NULL);
 			if (srcpath && dstpath) {
 				/* copy file */
 				mb2_copy_file_by_path(srcpath, dstpath);
@@ -819,11 +797,9 @@ static int mb2_process_messages(mb2_t* mb2, const char* backup_directory) {
 					char *str = NULL;
 					plist_get_string_val(val, &str);
 					if (str) {
-						char *newpath = NULL;
-						asprintf(&newpath, "%s/%s", backup_directory, str);
+						char *newpath = build_path(backup_directory, str, NULL);
 						free(str);
-						char *oldpath = NULL;
-						asprintf(&oldpath, "%s/%s", backup_directory, key);
+						char *oldpath = build_path(backup_directory, key, NULL);
 
 						remove(newpath);
 						if (rename(oldpath, newpath) < 0) {
@@ -868,8 +844,7 @@ static int mb2_process_messages(mb2_t* mb2, const char* backup_directory) {
 				char *str = NULL;
 				plist_get_string_val(val, &str);
 				if (str) {
-					char *newpath = NULL;
-					asprintf(&newpath, "%s/%s", backup_directory, str);
+					char *newpath = build_path(backup_directory, str, NULL);
 					free(str);
 					if (remove(newpath) < 0) {
 						printf("Could not remove '%s': %s (%d)\n", newpath,
@@ -903,10 +878,8 @@ static int mb2_process_messages(mb2_t* mb2, const char* backup_directory) {
 			plist_get_string_val(srcpath, &src);
 			plist_get_string_val(dstpath, &dst);
 			if (src && dst) {
-				char *oldpath = NULL;
-				asprintf(&oldpath, "%s/%s", backup_directory, src);
-				char *newpath = NULL;
-				asprintf(&newpath, "%s/%s", backup_directory, dst);
+				char *oldpath = build_path(backup_directory, src, NULL);
+				char *newpath = build_path(backup_directory, dst, NULL);
 
 				printf("Copying '%s' to '%s'\n", src, dst);
 
@@ -1016,14 +989,10 @@ int mb2_crash(mb2_t* mb2) {
 	mkdir(DUMMYBACKUPDIR, 0755);
 
 	/* make sure backup device sub-directory exists */
-	char *devbackupdir = NULL;
-	asprintf(&devbackupdir, DUMMYBACKUPDIR "/%s", mb2->device->uuid);
+	char *devbackupdir = build_path(DUMMYBACKUPDIR, mb2->device->uuid, NULL);
 	mkdir(devbackupdir, 0755);
 
-	char *statusplist = malloc(strlen(devbackupdir)+1+strlen("Status.plist")+1);
-	strcpy(statusplist, devbackupdir);
-	strcat(statusplist, "/");
-	strcat(statusplist, "Status.plist");
+	char *statusplist = build_path(devbackupdir, "Status.plist", NULL);
 	free(devbackupdir);
 
 	plist_t stpl = plist_new_dict();

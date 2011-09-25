@@ -12,6 +12,6 @@ AM_LDFLAGS =                   \
 
 bin_PROGRAMS = absinthe
 
-absinthe_SOURCES = absinthe.c device.c lockdown.c mb2.c afc.c plist_extras.c crashreporter.c crashreportmover.c crashreportcopy.c crashreport.c
+absinthe_SOURCES = absinthe.c common.c device.c lockdown.c mb2.c afc.c plist_extras.c crashreporter.c crashreportmover.c crashreportcopy.c crashreport.c
 absinthe_CFLAGS = $(AM_CFLAGS)
 absinthe_LDFLAGS = $(AM_LDFLAGS)
