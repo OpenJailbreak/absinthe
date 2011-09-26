@@ -1,14 +1,6 @@
-AM_CFLAGS =	                   \
-	$(GLOBAL_CFLAGS)           \
-	$(libimobiledevice_CFLAGS) \
-	$(libplist_CFLAGS)         \
-	$(libcrypto_CFLAGS)        
-
-AM_LDFLAGS =                   \
-	$(GLOBAL_LIBS)             \
-	$(libimobiledevice_LIBS)   \
-	$(libplist_LIBS)           \
-	$(libcrypto_LIBS)          
+AM_CFLAGS = $(GLOBAL_CFLAGS)
+AM_LDFLAGS = $(GLOBAL_LDFLAGS)
+AM_LDADD = $(GLOBAL_LIBS)
 
 bin_PROGRAMS = absinthe
 
@@ -27,3 +19,4 @@ absinthe_SOURCES = \
 
 absinthe_CFLAGS = $(AM_CFLAGS)
 absinthe_LDFLAGS = $(AM_LDFLAGS)
+absinthe_LDADD = $(AM_LDADD)
