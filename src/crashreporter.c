@@ -191,6 +191,8 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 	}
 	afc_file_close(crashreporter->copier->client, handle);
 	fclose(output);
+
+	afc_remove_path(crashreporter->copier->client, lastItem);
 /*
 	uint32_t size = 0;
 	plist_t plist = NULL;
