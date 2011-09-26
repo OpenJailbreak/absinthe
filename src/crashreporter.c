@@ -209,8 +209,12 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 	plist_from_xml(datas, size, &plist);
 	free(datas);
 
-	if (!plist) {
-		return NULL;
+	crashreport_t* report = NULL;
+	if (plist) {
+		report = crashreport_parse_plist(plist);
+		plist_free(plist);
+	} else {
+		error("Reading crash report as plist failed\n");
 	}
-	return crashreport_parse_plist(plist);
+	return report;
 }
