@@ -10,6 +10,9 @@ AM_INIT_AUTOMAKE()
 AM_PROG_CC_C_O
 AC_CONFIG_HEADERS(config.h)
 
+# Comment this out for production build to remove all debugging strings
+AC_DEFINE(_DEBUG,1,[debugging])
+
 ACCFLAGS="-m32 -I\$(top_srcdir)/include -DLIBXML_STATIC=1 -g "
 ACSHAREDLIBS=""
 

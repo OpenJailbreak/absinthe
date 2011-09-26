@@ -21,8 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Comment this out for production build to remove all debugging strings
-#define _DEBUG
 #include "mb2.h"
 #include "debug.h"
 #include "device.h"
