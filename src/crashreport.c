@@ -24,6 +24,10 @@
 #include <plist/plist.h>
 #include <libimobiledevice/libimobiledevice.h>
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "debug.h"
 #include "crashreport.h"
 
@@ -152,7 +156,90 @@ arm_state_t* crashreport_parse_state(const char* description) {
 }
 
 dylib_info_t** crashreport_parse_dylibs(const char* description) {
-	return NULL;
+	dylib_info_t** dylibs = NULL;
+	int dylibs_cnt = 256;
+	int num_dylibs = 0;
+
+	char* start;
+	char line[256];	
+	int num;
+	char* lf;
+
+	start = strstr(description, "Binary Images:");
+	if (!start) {
+		error("Couldn't find Binary Images beginning\n");
+		return NULL;
+	}
+
+	start = strchr(start, '\n');
+	if (!start) {
+		error("Couldn't get linebreak after beginning line\n");
+		return NULL;
+	}
+
+	dylibs = (dylib_info_t**)malloc(sizeof(dylib_info_t*) * dylibs_cnt);
+	memset(dylibs, 0, sizeof(dylib_info_t*) * dylibs_cnt);
+
+	start++;
+	lf = strchr(start, '\n');
+	while (lf) {
+		memcpy(line, start, lf-start);
+		line[lf-start] = 0;
+		char *lineptr = line;
+		uint32_t offset = 0;
+		char imagename[256];
+		imagename[0] = 0;
+		while ((lineptr[0] != 0) && (lineptr[0] == ' ')) {
+			lineptr++;
+		}
+		num = sscanf(lineptr, "0x%x -%*[ ]0x%*[0-9a-fA-F]%*[ ]%s arm", &offset, imagename);
+		if (num == 2) {
+			if (num_dylibs >= dylibs_cnt) {
+				dylibs_cnt+=64;
+				dylibs = (dylib_info_t**)realloc(dylibs, sizeof(dylib_info_t*) * dylibs_cnt);
+				if (!dylibs) {
+					error("ERROR: Out of memory\n");
+					return NULL;
+				}
+			}
+			dylibs[num_dylibs] = (dylib_info_t*)malloc(sizeof(dylib_info_t));
+			if (!dylibs[num_dylibs]) {
+				error("ERROR: Out of memory\n");
+				return NULL;
+			}
+			dylibs[num_dylibs]->offset = offset;
+			dylibs[num_dylibs]->name = strdup(imagename);
+			num_dylibs++;
+		}
+
+		start = lf+1;
+		lf = strchr(start, '\n');
+	}
+
+	// add a NULL terminator
+	if (num_dylibs >= dylibs_cnt) {
+		dylibs_cnt++;
+		dylibs = (dylib_info_t**)realloc(dylibs, sizeof(dylib_info_t*) * dylibs_cnt);
+		if (!dylibs) {
+			error("ERROR: Out of memory\n");
+			return NULL;
+		}
+	}
+	dylibs[num_dylibs] = NULL;
+
+#ifdef _DEBUG
+	{
+		debug("Number of binary images: %d {\n", num_dylibs);
+		int i;
+		while (dylibs[i]) {
+			debug("\t%d:\t0x%08x: %s\n", i, dylibs[i]->offset, dylibs[i]->name);
+			i++;
+		}
+		debug("}\n");
+	}
+#endif
+
+	return dylibs;
 }
 
 thread_info_t** crashreport_parse_threads(const char* description) {
