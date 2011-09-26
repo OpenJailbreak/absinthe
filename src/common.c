@@ -55,12 +55,10 @@ char* build_path(const char* elem, ...)
 	if (!elem) return NULL;
 	va_list args;
 	int len = strlen(elem)+1;
-	printf("elem: %s\n", elem);
 	va_start(args, elem);
 	char *arg = va_arg(args, char*);
 	while (arg) {
 		len += strlen(arg)+1;
-		printf("elem: %s\n", arg);
 		arg = va_arg(args, char*);
 	}
 	va_end(args);
@@ -76,9 +74,6 @@ char* build_path(const char* elem, ...)
 		arg = va_arg(args, char*);
 	}
 	va_end(args);
-
-	printf("build_path: %s\n", out);
-
 	return out;
 }
 

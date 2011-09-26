@@ -24,7 +24,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 int mkdir_with_parents(const char *dir, int mode);
 char* build_path(const char* elem, ...);
