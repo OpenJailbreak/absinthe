@@ -31,6 +31,10 @@
 #include "endianness.h"
 #include "common.h"
 
+#ifdef WIN32
+#define sleep(x) Sleep(x*1000)
+#endif
+
 enum dlmsg_mode {
 	DLMSG_DOWNLOAD_FILES = 0,
 	DLMSG_UPLOAD_FILES,
@@ -990,11 +994,11 @@ int mb2_crash(mb2_t* mb2) {
 
 	printf("Starting backup...\n");
 
-	mkdir(DUMMYBACKUPDIR, 0755);
+	mkdir_with_parents(DUMMYBACKUPDIR, 0755);
 
 	/* make sure backup device sub-directory exists */
 	char *devbackupdir = build_path(DUMMYBACKUPDIR, mb2->device->uuid, NULL);
-	mkdir(devbackupdir, 0755);
+	mkdir_with_parents(devbackupdir, 0755);
 
 	char *statusplist = build_path(devbackupdir, "Status.plist", NULL);
 	free(devbackupdir);

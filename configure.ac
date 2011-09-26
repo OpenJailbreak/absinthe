@@ -25,6 +25,11 @@ case "$host_os" in
 		ACCFLAGS+="-fPIC "
 		ACSHAREDLIBS+="-lpthread -lz -lm "
 	;;
+	mingw32)
+		SYSTYPE=win32
+		ACCFLAGS+="-DWIN32 "
+		ACSHAREDLIBS+="-lz -lm -lws2_32 -lgdi32 -lole32 "
+	;;
 	*)
 	;;
 esac
@@ -37,13 +42,14 @@ GLOBAL_CFLAGS=$ACCFLAGS
 AC_SUBST(GLOBAL_CFLAGS)
 
 LIBDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
-GLOBAL_LIBS=" $ACSHAREDLIBS \
+GLOBAL_LIBS=" \
  $LIBDIR/libimobiledevice.a \
  $LIBDIR/libplist.a \
  $LIBDIR/libxml2.a \
  $LIBDIR/libssl.a \
  $LIBDIR/libcrypto.a \
  $LIBDIR/libusbmuxd.a \
+ $ACSHAREDLIBS \ 
 "
 AC_SUBST(GLOBAL_LIBS)
 

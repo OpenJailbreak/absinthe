@@ -18,10 +18,19 @@
  **/
 #include "common.h"
 
+static int __mkdir(const char* path, int mode)
+{
+#ifdef WIN32
+	return mkdir(path);
+#else
+	return mkdir(path, mode);
+#endif
+}
+
 int mkdir_with_parents(const char *dir, int mode)
 {
 	if (!dir) return -1;
-	if (mkdir(dir, mode) == 0) {
+	if (__mkdir(dir, mode) == 0) {
 		return 0;
 	} else {
 		if (errno == EEXIST) return 0;	

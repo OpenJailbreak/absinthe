@@ -28,6 +28,10 @@
 #include "device.h"
 #include "crashreporter.h"
 
+#ifdef WIN32
+#define sleep(x) Sleep(x*1000)
+#endif
+
 int main(int argc, char* argv[]) {
 	int err = 0;
 
