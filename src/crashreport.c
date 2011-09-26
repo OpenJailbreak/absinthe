@@ -45,6 +45,20 @@ void crashreport_free(crashreport_t* report) {
 	}
 }
 
+char* crashreport_parse_name(const char* description) {
+	char name[256];
+	char* start = strstr(description, "Process:");
+	if (!start) {
+		return NULL;
+	}
+	start+=8;
+	if (sscanf(start, "%*[ ]%s ", name) == 1) {
+		return strdup(name);
+	} else {
+		return NULL;
+	}
+}
+
 arm_state_t* crashreport_parse_state(const char* description) {
 	arm_state_t* state = NULL;
 	char* start;
@@ -261,6 +275,14 @@ crashreport_t* crashreport_parse_plist(plist_t plist) {
 			error("Unable to allocate memory for crashreport\n");
 			return NULL;
 		}
+
+		crashreport->name = crashreport_parse_name(description);
+		if (crashreport->name == NULL) {
+			error("Unable to parse process name from crashreport\n");
+			crashreport_free(crashreport);
+			return NULL;
+		}
+		debug("Crashed process: %s\n", crashreport->name);
 
 		crashreport->state = crashreport_parse_state(description);
 		if(crashreport->state == NULL) {

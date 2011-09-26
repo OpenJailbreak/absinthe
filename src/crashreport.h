@@ -53,6 +53,7 @@ typedef struct thread_info_t {
 
 /* The actual crashreport object containing it's data */
 typedef struct crashreport_t {
+	char *name;
 	arm_state_t* state;
 	dylib_info_t** dylibs;
 	thread_info_t** threads;
@@ -62,6 +63,7 @@ crashreport_t* crashreport_create();
 void crashreport_free(crashreport_t* report);
 
 crashreport_t* crashreport_parse_plist(plist_t crash);
+char* crashreport_parse_name(const char* description);
 arm_state_t* crashreport_parse_state(const char* description);
 dylib_info_t** crashreport_parse_dylibs(const char* description);
 thread_info_t** crashreport_parse_threads(const char* description);
