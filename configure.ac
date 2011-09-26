@@ -10,7 +10,7 @@ AM_INIT_AUTOMAKE()
 AM_PROG_CC_C_O
 AC_CONFIG_HEADERS(config.h)
 
-ACCFLAGS="-m32 -g "
+ACCFLAGS="-m32 -I\$(top_srcdir)/include -DLIBXML_STATIC=1 -g "
 ACSHAREDLIBS=""
 
 SYSTYPE=
@@ -18,7 +18,7 @@ case "$host_os" in
 	darwin*)
 		SYSTYPE=osx
 		ACCFLAGS+="-fPIC -arch i386 "
-		ACSHAREDLIBS+="-lpthread -lz -lm "
+		ACSHAREDLIBS+="-lpthread -lz -lm -liconv "
 	;;
 	linux*)
 		SYSTYPE=linux
