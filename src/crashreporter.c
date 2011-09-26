@@ -23,6 +23,7 @@
 #include <stddef.h>
 
 #include "debug.h"
+#include "file.h"
 #include "lockdown.h"
 #include "crashreport.h"
 #include "crashreporter.h"
@@ -193,12 +194,11 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 	fclose(output);
 
 	afc_remove_path(crashreporter->copier->client, lastItem);
-/*
+
 	uint32_t size = 0;
 	plist_t plist = NULL;
 	int ferr = 0;
 	unsigned char* datas = NULL;
-	printf("lastItem %s\n",lastItem);
 	ferr = file_read(lastItem, &datas, &size);
 	if (ferr < 0) {
 		fprintf(stderr, "Unable to open %s\n", lastItem);
@@ -208,6 +208,9 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 	free(lastItem);
 	plist_from_xml(datas, size, &plist);
 	free(datas);
-*/
-	return crashreport_create();
+
+	if (!plist) {
+		return NULL;
+	}
+	return crashreport_parse_plist(plist);
 }
