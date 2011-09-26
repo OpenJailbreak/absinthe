@@ -30,7 +30,7 @@ case "$host_os" in
 esac
 
 if test "x$SYSTYPE" == "x"; then
-	AC_MSG_ERROR([Unsupported system type $UNAME])
+	AC_MSG_ERROR([Unsupported system type $host_os])
 fi
 
 GLOBAL_CFLAGS=$ACCFLAGS
