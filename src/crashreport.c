@@ -75,7 +75,7 @@ arm_state_t* crashreport_parse_state(const char* description) {
 	state = (arm_state_t*)malloc(sizeof(arm_state_t));
 	memset(state, 0, sizeof(arm_state_t));
 
-	num = sscanf(line, "    r0: 0x%08x    r1: 0x%08x      r2: 0x%08x      r3: 0x%08x", &state->r0, &state->r1, &state->r2, &state->r3);
+	num = sscanf(line, "%*[ ]r0: 0x%08x%*[ ]r1: 0x%08x%*[ ]r2: 0x%08x%*[ ]r3: 0x%08x", &state->r0, &state->r1, &state->r2, &state->r3);
 	if (num != 4) {
 		free(state);
 		return NULL;
@@ -90,7 +90,7 @@ arm_state_t* crashreport_parse_state(const char* description) {
 	memcpy(line, start, lf-start);
 	line[lf-start] = 0;
 
-	num = sscanf(line, "    r4: 0x%08x    r5: 0x%08x      r6: 0x%08x      r7: 0x%08x", &state->r4, &state->r5, &state->r6, &state->r7);
+	num = sscanf(line, "%*[ ]r4: 0x%08x%*[ ]r5: 0x%08x%*[ ]r6: 0x%08x%*[ ]r7: 0x%08x", &state->r4, &state->r5, &state->r6, &state->r7);
 	if (num != 4) {
 		free(state);
 		return NULL;
@@ -105,7 +105,7 @@ arm_state_t* crashreport_parse_state(const char* description) {
 	memcpy(line, start, lf-start);
 	line[lf-start] = 0;
 
-	num = sscanf(line, "    r8: 0x%08x    r9: 0x%08x     r10: 0x%08x     r11: 0x%08x", &state->r8, &state->r9, &state->r10, &state->r11);
+	num = sscanf(line, "%*[ ]r8: 0x%08x%*[ ]r9: 0x%08x%*[ ]r10: 0x%08x%*[ ]r11: 0x%08x", &state->r8, &state->r9, &state->r10, &state->r11);
 	if (num != 4) {
 		free(state);
 		return NULL;
@@ -120,7 +120,7 @@ arm_state_t* crashreport_parse_state(const char* description) {
 	memcpy(line, start, lf-start);
 	line[lf-start] = 0;
 
-	num = sscanf(line, "    ip: 0x%08x    sp: 0x%08x      lr: 0x%08x      pc: 0x%08x", &state->ip, &state->sp, &state->lr, &state->pc);
+	num = sscanf(line, "%*[ ]ip: 0x%08x%*[ ]sp: 0x%08x%*[ ]lr: 0x%08x%*[ ]pc: 0x%08x", &state->ip, &state->sp, &state->lr, &state->pc);
 	if (num != 4) {
 		free(state);
 		return NULL;
@@ -135,17 +135,17 @@ arm_state_t* crashreport_parse_state(const char* description) {
 	memcpy(line, start, lf-start);
 	line[lf-start] = 0;
 
-	num = sscanf(line, "  cpsr: 0x%08x", &state->cpsr);
+	num = sscanf(line, "%*[ ]cpsr: 0x%08x", &state->cpsr);
 	if (num != 1) {
 		free(state);
 		return NULL;
 	}
 
-	debug("r0:%08x r1:%08x  r2:%08x  r3:%08x\n"
-	       "r4:%08x r5:%08x  r6:%08x  r7:%08x\n"
-	       "r8:%08x r9:%08x r10:%08x r11:%08x\n"
-	       "ip:%08x sp:%08x  lr:%08x  pc:%08x\n"
-	       "cpsr:%08x\n",
+	debug("ARM State = {\n\tr0:%08x r1:%08x  r2:%08x  r3:%08x\n"
+	       "\tr4:%08x r5:%08x  r6:%08x  r7:%08x\n"
+	       "\tr8:%08x r9:%08x r10:%08x r11:%08x\n"
+	       "\tip:%08x sp:%08x  lr:%08x  pc:%08x\n"
+	       "\tcpsr:%08x\n}\n",
 	       state->r0, state->r1, state->r2, state->r3,
 	       state->r4, state->r5, state->r6, state->r7,
 	       state->r8, state->r9, state->r10, state->r11,
