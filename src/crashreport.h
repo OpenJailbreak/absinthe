@@ -47,16 +47,11 @@ typedef struct arm_state_t {
 	uint32_t cpsr;
 } arm_state_t;
 
-typedef struct thread_info_t {
-	void* x;  // TODO: Anyone?
-} thread_info_t;
-
 /* The actual crashreport object containing it's data */
 typedef struct crashreport_t {
 	char *name;
 	arm_state_t* state;
 	dylib_info_t** dylibs;
-	thread_info_t** threads;
 } crashreport_t;
 
 crashreport_t* crashreport_create();
@@ -66,6 +61,5 @@ crashreport_t* crashreport_parse_plist(plist_t crash);
 char* crashreport_parse_name(const char* description);
 arm_state_t* crashreport_parse_state(const char* description);
 dylib_info_t** crashreport_parse_dylibs(const char* description);
-thread_info_t** crashreport_parse_threads(const char* description);
 
 #endif /* CRASHREPORT_H_ */

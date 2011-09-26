@@ -256,10 +256,6 @@ dylib_info_t** crashreport_parse_dylibs(const char* description) {
 	return dylibs;
 }
 
-thread_info_t** crashreport_parse_threads(const char* description) {
-	return NULL;
-}
-
 crashreport_t* crashreport_parse_plist(plist_t plist) {
 	char* description = NULL;
 	plist_t description_node = NULL;
@@ -294,13 +290,6 @@ crashreport_t* crashreport_parse_plist(plist_t plist) {
 		crashreport->dylibs = crashreport_parse_dylibs(description);
 		if(crashreport->dylibs == NULL) {
 			error("Unable to parse dylib base addresses from crashreport\n");
-			crashreport_free(crashreport);
-			return NULL;
-		}
-
-		crashreport->threads = crashreport_parse_threads(description);
-		if(crashreport->threads == NULL) {
-			error("Unable to parse thread info from crashreport\n");
 			crashreport_free(crashreport);
 			return NULL;
 		}
