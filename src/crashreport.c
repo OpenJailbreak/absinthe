@@ -288,7 +288,7 @@ dylib_info_t** crashreport_parse_dylibs(const char* description) {
 #ifdef _DEBUG
 	{
 		debug("Number of binary images: %d {\n", num_dylibs);
-		int i;
+		int i = 0;
 		while (dylibs[i]) {
 			debug("\t%d:\t0x%08x: %s\n", i, dylibs[i]->offset, dylibs[i]->name);
 			i++;
