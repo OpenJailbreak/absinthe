@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 
 #define ROP_MOV_SP_R7 "\xA7\xF1\x00\x0D"
@@ -30,9 +31,9 @@
 #define ROP_POP_R4_R5_R7_PC "\xB0\xBD"
 
 int main(int argc, char* argv[]) {
-	uint64_t i = 0;
-	uint64_t found = 0;
-	uint64_t offset = 0;
+	unsigned int i = 0;
+	unsigned int found = 0;
+	unsigned int offset = 0;
 	unsigned char shift = 0;
 	unsigned char data[0x10];
 	unsigned int offsets[10][50000];
@@ -103,12 +104,13 @@ int main(int argc, char* argv[]) {
 								size = 20;
 							}
 							printf("\n\t{ 0x%08x, 0x%04x, 0x%04x },", i, size, shift);
+							index[0] += 1;
+							index[index[0]] = offset;
 						} else {
 							fprintf(stderr, "Already too many of these gadgets\n");
 							break;
 						}
-						index[0] += 1;
-						index[index[0]] = offset;
+
 					}
 					//}
 				}

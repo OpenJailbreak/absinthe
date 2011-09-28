@@ -16,7 +16,8 @@ absinthe_SOURCES = \
 	crashreporter.c \
 	crashreportmover.c \
 	crashreportcopy.c \
-	crashreport.c
+	crashreport.c \
+	dictionary.c
 
 absinthe_CFLAGS = $(AM_CFLAGS)
 absinthe_LDFLAGS = $(AM_LDFLAGS)

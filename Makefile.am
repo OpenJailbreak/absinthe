@@ -1,1 +1,1 @@
-SUBDIRS=src tools
+SUBDIRS=tools src 
