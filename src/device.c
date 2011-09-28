@@ -61,6 +61,9 @@ void device_free(device_t* device) {
 			free(device->uuid);
 			device->uuid = NULL;
 		}
+		if (device->client) {
+			idevice_free(device->client);
+		}
 		free(device);
 	}
 }
