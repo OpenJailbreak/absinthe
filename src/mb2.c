@@ -999,7 +999,7 @@ int mb2_crash(mb2_t* mb2) {
 
 	printf("Negotiated Protocol Version %.1f\n", remote_version);
 
-	printf("Starting backup...\n");
+	printf("Starting *special* restore...\n");
 
 	mkdir_with_parents(DUMMYBACKUPDIR, 0755);
 
@@ -1022,7 +1022,7 @@ int mb2_crash(mb2_t* mb2) {
 	plist_free(stpl);
 	free(statusplist);
 
-	err = mobilebackup2_send_request(mb2->client, "Backup", mb2->device->uuid, NULL, NULL);
+	err = mobilebackup2_send_request(mb2->client, "Restore", mb2->device->uuid, mb2->device->uuid, NULL);
 	if (err == MOBILEBACKUP2_E_SUCCESS) {
 		// enable crashing in mb2_handle_send_files()
 
