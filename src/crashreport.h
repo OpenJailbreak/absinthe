@@ -23,7 +23,7 @@
 #include <plist/plist.h>
 
  typedef struct dylib_info {
-	const char* name;
+	char* name;
 	uint32_t offset;
 } dylib_info_t;
 

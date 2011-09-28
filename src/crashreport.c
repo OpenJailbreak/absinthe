@@ -41,6 +41,23 @@ crashreport_t* crashreport_create() {
 
 void crashreport_free(crashreport_t* report) {
 	if (report) {
+		if (report->name) {
+			free(report->name);
+		}
+		if (report->state) {
+			free(report->state);
+		}
+		if (report->dylibs) {
+			int i = 0;
+			while (report->dylibs[i]) {
+				if (report->dylibs[i]->name) {
+					free(report->dylibs[i]->name);
+				}
+				free(report->dylibs[i]);
+				i++;
+			}
+			free(report->dylibs);
+		}
 		free(report);
 	}
 }
