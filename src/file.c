@@ -1,5 +1,5 @@
 /**
-  * GreenPois0n Apparition - file.c
+  * GreenPois0n Absinthe - file.c
   * Copyright (C) 2010 Chronic-Dev Team
   * Copyright (C) 2010 Joshua Hill
   *
@@ -19,8 +19,98 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "file.h"
+
+#define BUFSIZE 4096
+
+file_t* file_create() {
+	file_t* file = (file_t*) malloc(sizeof(file_t));
+	if (file) {
+		memset(file, '\0', sizeof(file_t));
+	}
+	return file;
+}
+
+file_t* file_open(const char* path) {
+	size_t got = 0;
+	unsigned char buffer[4096];
+
+	file_t* file = file_create();
+	if (file) {
+		file->desc = fopen(path, "rb");
+		if (file->desc == NULL) {
+			fprintf(stderr, "Unable to open file %s\n", path);
+			return NULL;
+		}
+
+		file->path = strdup(path);
+		if (file->path == NULL) {
+			fprintf(stderr, "Unable to allocate memory for file path\n");
+			file_free(file);
+			return NULL;
+		}
+		file->offset = 0;
+
+		fseek(file->desc, 0, SEEK_END);
+		file->size = ftell(file->desc);
+		fseek(file->desc, 0, SEEK_SET);
+
+		file->data = (unsigned char*) malloc(file->size);
+		if (file->data == NULL) {
+			fprintf(stderr, "Unable to allocate memory for file\n");
+			file_free(file);
+			return NULL;
+		}
+
+		while (file->offset < file->size) {
+			memset(buffer, '\0', BUFSIZE);
+			got = fread(buffer, 1, BUFSIZE, file->desc);
+			if (got > 0) {
+				file->offset += got;
+				memcpy(&file->data[file->offset], buffer, got);
+			} else {
+				break;
+			}
+		}
+		fprintf(stderr, "Read in %llu of %llu bytes from %s\n", file->offset, file->size, file->path);
+		// We have the data stored in memory now, so we don't need to keep this open anymore
+		//fseek(file->desc, 0, SEEK_SET);
+		file_close(file);
+		file->offset = 0;
+	}
+	return file;
+}
+
+void file_close(file_t* file) {
+	if (file) {
+		if (file->desc) {
+			fclose(file->desc);
+			file->desc = NULL;
+		}
+	}
+}
+
+void file_free(file_t* file) {
+	if (file) {
+		if (file->desc) {
+			file_close(file);
+			file->desc = NULL;
+		}
+		if (file->path) {
+			free(file->path);
+			file->path = NULL;
+		}
+		if(file->data) {
+			free(file->data);
+			file->data = NULL;
+		}
+		file->size = 0;
+		file->offset = 0;
+		free(file);
+	}
+}
 
 int file_read(const char* file, unsigned char** buf, unsigned int* length) {
 	FILE* fd = NULL;

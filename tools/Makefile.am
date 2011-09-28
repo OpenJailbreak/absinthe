@@ -6,6 +6,6 @@ bin_PROGRAMS = gizmo
 
 gizmo_SOURCES = gizmo.c
 
-gizmo_CFLAGS = $(AM_CFLAGS)
+gizmo_CFLAGS = $(AM_CFLAGS) -I../src
 gizmo_LDFLAGS = $(AM_LDFLAGS)
 gizmo_LDADD = $(AM_LDADD)

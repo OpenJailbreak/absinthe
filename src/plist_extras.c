@@ -53,5 +53,3 @@ int plist_write_to_filename(plist_t plist, const char *filename, enum plist_form
 
 	return 1;
 }
-
-

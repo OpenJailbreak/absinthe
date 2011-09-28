@@ -17,7 +17,10 @@ absinthe_SOURCES = \
 	crashreportmover.c \
 	crashreportcopy.c \
 	crashreport.c \
-	dictionary.c
+	dictionary.c \
+	dyldcache.c \
+	dyldimage.c \
+	dyldmap.c
 
 absinthe_CFLAGS = $(AM_CFLAGS)
 absinthe_LDFLAGS = $(AM_LDFLAGS)

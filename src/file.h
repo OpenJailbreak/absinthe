@@ -1,5 +1,5 @@
 /**
-  * GreenPois0n Apparition - file.h
+  * GreenPois0n Absinthe - file.h
   * Copyright (C) 2010 Chronic-Dev Team
   * Copyright (C) 2010 Joshua Hill
   *
@@ -19,6 +19,21 @@
 
 #ifndef FILE_H_
 #define FILE_H_
+
+#include <stdint.h>
+
+typedef struct file_t {
+	FILE* desc;
+	char* path;
+	uint64_t size;
+	uint64_t offset;
+	unsigned char* data;
+} file_t;
+
+file_t* file_create();
+void file_close(file_t* file);
+void file_free(file_t* file);
+file_t* file_open(const char* path);
 
 int file_read(const char* file, unsigned char** buf, unsigned int* length);
 int file_write(const char* file, unsigned char* buf, unsigned int length);

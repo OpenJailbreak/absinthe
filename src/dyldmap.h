@@ -1,7 +1,7 @@
 /**
-  * GreenPois0n Apparition - plist_extras.h
+  * GreenPois0n Absinthe - dyldmap.h
   * Copyright (C) 2010 Chronic-Dev Team
-  * Copyright (C) 2010 Nikias Bassen
+  * Copyright (C) 2010 Joshua Hill
   *
   * This program is free software: you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
@@ -17,19 +17,24 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef PLIST_EXTRAS_H
-#define PLIST_EXTRAS_H
+#ifndef DYLDMAP_H_
+#define DYLDMAP_H_
 
-#include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <plist/plist.h>
 
-enum plist_format_t {
-	PLIST_FORMAT_XML,
-	PLIST_FORMAT_BINARY
-};
+typedef struct dyldmap_info_t {
+	uint64_t address;
+	uint64_t size;
+	uint64_t offset;
+	uint32_t maxProt;
+	uint32_t initProt;
+} dyldmap_info_t;
 
-int plist_write_to_filename(plist_t plist, const char *filename, enum plist_format_t format);
+typedef struct dyldmap_t {
+	dyldmap_info_t* info;
+} dyldmap_t;
 
-#endif /* PLIST_EXTRAS_H */
+dyldmap_t* dyldmap_create();
+void dyldmap_free(dyldmap_t* map);
+
+#endif /* DYLDMAP_H_ */

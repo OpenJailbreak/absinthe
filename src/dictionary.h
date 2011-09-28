@@ -1,7 +1,7 @@
 /**
  * GreenPois0n Absinthe - dictionary.h
- * Copyrigdict (C) 2010 Chronic-Dev Team
- * Copyrigdict (C) 2010 Joshua Hill
+ * Copyright (C) 2010 Chronic-Dev Team
+ * Copyright (C) 2010 Joshua Hill
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

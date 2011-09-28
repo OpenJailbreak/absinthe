@@ -21,9 +21,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <plist/plist.h>
-#include <dirent.h>
+#define _POSIX_C_SOURCE
+
+#include <time.h>
 #include <errno.h>
+#include <dirent.h>
+#include <sys/types.h>.
+
+#include <plist/plist.h>
 
 #include "mb2.h"
 #include "debug.h"
@@ -193,7 +198,7 @@ static int mb2_handle_send_file(mb2_t* mb2s, const char *backup_dir, const char 
 
 	total = fst.st_size;
 
-	printf("Sending '%s' (%ld bytes)\n", path, total);
+	printf("Sending '%s' (%ud bytes)\n", path, (unsigned int) total);
 
 	if (total == 0) {
 		errcode = 0;
@@ -718,6 +723,8 @@ static int dlmsg_status_from_string(char *dlmsg) {
 		return DLMSG_DISCONNECT;
 	else if (!strcmp(dlmsg, "DLMessageProcessMessage"))
 		return DLMSG_PROCESS_MESSAGE;
+	else
+		return 0;
 }
 
 /* we process the messages here that instruct what to do while restoring or backing up */
@@ -819,7 +826,7 @@ static int mb2_process_messages(mb2_t* mb2, const char* backup_directory) {
 
 						remove(newpath);
 						if (rename(oldpath, newpath) < 0) {
-							printf("Renameing '%s' to '%s' failed: %s (%d)\n",
+							printf("Renaming '%s' to '%s' failed: %s (%d)\n",
 									oldpath, newpath, strerror(errno), errno);
 							errcode = errno_to_device_error(errno);
 							errdesc = strerror(errno);

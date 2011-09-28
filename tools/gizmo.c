@@ -22,6 +22,8 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "debug.h"
+
 #define ROP_MOV_SP_R7 "\xA7\xF1\x00\x0D"
 #define ROP_SUB_SP_R7 "\xA7\xF1"
 #define ROP_SUB_R7_RX "\x0D"
@@ -29,6 +31,78 @@
 #define ROP_POP_R4_R7_PC "\x90\xBD"
 #define ROP_POP_R4_TO_R7_PC "\xF0\xBD"
 #define ROP_POP_R4_R5_R7_PC "\xB0\xBD"
+
+uint32_t find_reference(FILE* target, uint32_t offset, uint32_t base) {
+	int i = 0;
+	int got = 0;
+	int found = 0;
+	unsigned char buffer[0x10];
+	uint32_t value = 0;
+	size_t bookmark = ftell(target);
+	fseek(target, 0, SEEK_END);
+	size_t size = ftell(target);
+	fseek(target, 0, SEEK_SET);
+
+	value = base + offset;
+	debug("Searching for 0x%08x\n", value);
+	for(i = 0; i < size; i++) {
+		fseek(target, i, SEEK_SET);
+		got = fread(buffer, 1, 4, target);
+		if(got == 4) {
+			value = *((unsigned int*) &buffer[0]);
+			if(value > 0x30000000 && value < 0x40000000) {
+				//fprintf(stderr, "Found reference interesting address at offset 0x%x\n", i);
+			}
+			if(value == base + offset) {
+				fprintf(stderr, "Found reference to ROP gadget at offset 0x%x\n", i);
+				found++;
+			}
+		}
+	}
+
+	if(found == 0) {
+		//error("No reference found for 0x%08x\n", base + offset);
+		i = 0;
+
+	} else {
+		info("Found %d references to 0x%08x\n", found, base + offset);
+	}
+
+	fseek(target, bookmark, SEEK_SET);
+	return i;
+}
+
+int check_ascii(unsigned char* data, unsigned int size) {
+	int i = 0;
+	int found = 0;
+	unsigned char value;
+	// Loop through each ROP gadget for this firmware and find one in a nice ascii
+	//  safe address for our stack pivot
+	for(i = 0; i < size; i++){
+		value = data[i];
+		// Make sure none of the bytes have their highest bit set
+		//  this ensures all bytes will pass the ASCII filter
+		//  and make sure the address has no NULL's in it this
+		//  will cause our string to terminate prematurely
+		if((value & '\x80') != 0 || (value & '\x7F') == 0) {
+			error("Byte not in ASCII range\n");
+			return -1;
+		}
+
+		// Last loop, so we're ascii compatiable string
+		if(size == i) {
+			found = 1;
+			break;
+		}
+	}
+
+	if(found == 0) {
+		error("String was not ASCII compatible\n");
+		return -1;
+	}
+	return 0;
+}
+
 
 int main(int argc, char* argv[]) {
 	unsigned int i = 0;
@@ -58,9 +132,10 @@ int main(int argc, char* argv[]) {
 		printf("#ifndef OFFSETS_H\n");
 		printf("#define OFFSETS_H\n\n");
 		printf("typedef struct rop_offsets_t {\n");
-		printf("\tunsigned int offset;\n");
-		printf("\tunsigned short size;\n");
-		printf("\tunsigned short shift;\n");
+		printf("\tuint32_t reference;\n");
+		printf("\tuint32_t offset;\n");
+		printf("\tuint16_t size;\n");
+		printf("\tuint16_t shift;\n");
 		printf("} rop_offsets_t;\n\n");
 		printf("const rop_offsets_t offsets[] = {");
 		for (i = 0; i < cache_size; i++) {
@@ -103,9 +178,16 @@ int main(int argc, char* argv[]) {
 							if(memcmp(data + 4, ROP_POP_R4_TO_R7_PC, 2) == 0) {
 								size = 20;
 							}
-							printf("\n\t{ 0x%08x, 0x%04x, 0x%04x },", i, size, shift);
 							index[0] += 1;
 							index[index[0]] = offset;
+							uint32_t ref = find_reference(fd, offset, (unsigned int) 0x30f1a000);
+							if(ref) {
+								info(" // Reference to 0x%08x found at 0x%08x\n", offset + (unsigned int) 0x30f1a000, ref);
+								printf("\n\t{ 0x%08x, 0x%08x, 0x%04x, 0x%04x },", ref, i, size, shift);
+								//if(check_ascii(ref, 4) < 0) {
+									//error("This reference contains an invalid character\n");
+								//}
+							}
 						} else {
 							fprintf(stderr, "Already too many of these gadgets\n");
 							break;
@@ -122,7 +204,6 @@ int main(int argc, char* argv[]) {
 			}
 		}
 		fclose(fd);
-		printf("\n\t{ 0x0, 0x0, 0x0 },");
 		printf("\n};\n\n");
 		printf("#endif\n");
 		//printf("\nFound %d gadgets in dyldcache\n");

@@ -1,7 +1,7 @@
 /**
-  * GreenPois0n Apparition - plist_extras.h
+  * GreenPois0n Absinthe - dyldimage.c
   * Copyright (C) 2010 Chronic-Dev Team
-  * Copyright (C) 2010 Nikias Bassen
+  * Copyright (C) 2010 Joshua Hill
   *
   * This program is free software: you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
@@ -17,19 +17,22 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef PLIST_EXTRAS_H
-#define PLIST_EXTRAS_H
-
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <plist/plist.h>
+#include <string.h>
 
-enum plist_format_t {
-	PLIST_FORMAT_XML,
-	PLIST_FORMAT_BINARY
-};
+#include "dyldimage.h"
 
-int plist_write_to_filename(plist_t plist, const char *filename, enum plist_format_t format);
+dyldimage_t* dyldimage_create() {
+	dyldimage_t* image = (dyldimage_t*) malloc(sizeof(dyldimage_t));
+	if(image) {
+		memset(image, '\0', sizeof(dyldimage_t));
+	}
+	return image;
+}
 
-#endif /* PLIST_EXTRAS_H */
+void dyldimage_free(dyldimage_t* image) {
+	if(image) {
+		free(image);
+	}
+}
