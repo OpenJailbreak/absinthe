@@ -45,7 +45,7 @@ mb2_t* mb2_open(device_t* device, uint16_t port);
 void mb2_free(mb2_t* mb2);
 
 int mb2_crash(mb2_t* mb2);
-int mb2_inject(mb2_t* mb2);
+int mb2_inject(mb2_t* mb2, char* data, int size);
 int mb2_exploit(mb2_t* mb2);
 
 #endif /* MB2_H_ */

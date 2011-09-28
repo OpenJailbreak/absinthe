@@ -59,6 +59,6 @@ AC_SUBST(GLOBAL_LIBS)
 GLOBAL_LDFLAGS="-static-libgcc"
 AC_SUBST(GLOBAL_LDFLAGS)
 
-AC_CONFIG_FILES(Makefile src/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile tools/Makefile)
 AC_OUTPUT
 
