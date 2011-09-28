@@ -1,0 +1,11 @@
+AM_CFLAGS = $(GLOBAL_CFLAGS)
+AM_LDFLAGS = $(GLOBAL_LDFLAGS)
+AM_LDADD = $(GLOBAL_LIBS)
+
+bin_PROGRAMS = gizmo
+
+gizmo_SOURCES = gizmo.c
+
+gizmo_CFLAGS = $(AM_CFLAGS)
+gizmo_LDFLAGS = $(AM_LDFLAGS)
+gizmo_LDADD = $(AM_LDADD)

