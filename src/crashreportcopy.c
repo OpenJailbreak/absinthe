@@ -56,6 +56,7 @@ crashreportcopy_t* crashreportcopy_connect(device_t* device) {
 		return NULL;
 	}
 	lockdown_close(lockdown);
+	lockdown_free(lockdown);
 
 	copier = crashreportcopy_open(device, port);
 	if(copier == NULL) {

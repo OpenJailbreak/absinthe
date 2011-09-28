@@ -60,6 +60,7 @@ crashreportmover_t* crashreportmover_connect(device_t* device) {
 		return NULL;
 	}
 	lockdown_close(lockdown);
+	lockdown_free(lockdown);
 
 	return mover;
 }
@@ -78,12 +79,16 @@ crashreportmover_t* crashreportmover_open(device_t* device, uint16_t port) {
 
 
 int crashreportmover_close(crashreportmover_t* mover) {
-	idevice_disconnect(mover->connection);
+	if (mover->connection) {
+		idevice_disconnect(mover->connection);
+		mover->connection = NULL;
+	}
 	return 0;
 }
 
 void crashreportmover_free(crashreportmover_t* mover) {
 	if(mover) {
+		crashreportmover_close(mover);
 		free(mover);
 	}
 }

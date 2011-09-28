@@ -41,6 +41,23 @@ crashreport_t* crashreport_create() {
 
 void crashreport_free(crashreport_t* report) {
 	if (report) {
+		if (report->name) {
+			free(report->name);
+		}
+		if (report->state) {
+			free(report->state);
+		}
+		if (report->dylibs) {
+			int i = 0;
+			while (report->dylibs[i]) {
+				if (report->dylibs[i]->name) {
+					free(report->dylibs[i]->name);
+				}
+				free(report->dylibs[i]);
+				i++;
+			}
+			free(report->dylibs);
+		}
 		free(report);
 	}
 }
@@ -310,10 +327,15 @@ crashreport_t* crashreport_parse_plist(plist_t plist) {
 	description_node = plist_dict_get_item(plist, "description");
 	if (description_node && plist_get_node_type(description_node) == PLIST_STRING) {
 		plist_get_string_val(description_node, &description);
+		if (!description) {
+			error("Unable to get description node");
+			return NULL;
+		}
 
 		crashreport = crashreport_create();
 		if (crashreport == NULL) {
 			error("Unable to allocate memory for crashreport\n");
+			free(description);
 			return NULL;
 		}
 
@@ -321,6 +343,7 @@ crashreport_t* crashreport_parse_plist(plist_t plist) {
 		if (crashreport->name == NULL) {
 			error("Unable to parse process name from crashreport\n");
 			crashreport_free(crashreport);
+			free(description);
 			return NULL;
 		}debug("Crashed process: %s\n", crashreport->name);
 
@@ -328,6 +351,7 @@ crashreport_t* crashreport_parse_plist(plist_t plist) {
 		if (crashreport->state == NULL) {
 			error("Unable to parse ARM state from crashreport\n");
 			crashreport_free(crashreport);
+			free(description);
 			return NULL;
 		}
 
@@ -335,8 +359,10 @@ crashreport_t* crashreport_parse_plist(plist_t plist) {
 		if (crashreport->dylibs == NULL) {
 			error("Unable to parse dylib base addresses from crashreport\n");
 			crashreport_free(crashreport);
+			free(description);
 			return NULL;
 		}
+		free(description);
 	}
 
 	return crashreport;

@@ -73,6 +73,7 @@ mb2_t* mb2_connect(device_t* device) {
 		return NULL;
 	}
 	lockdown_close(lockdown);
+	lockdown_free(lockdown);
 
 	mb2 = mb2_open(device, port);
 	if(mb2 == NULL) {
@@ -310,10 +311,12 @@ static void mb2_handle_send_files(mb2_t* mb2s, plist_t message, const char *back
 			continue;
 
 		if (mb2_handle_send_file(mb2s, backup_dir, str, &errplist) < 0) {
+			free(str);
 			//printf("Error when sending file '%s' to device\n", str);
 			// TODO: perhaps we can continue, we've got a multi status response?!
 			break;
 		}
+		free(str);
 	}
 
 	/* send terminating 0 dword */
@@ -739,6 +742,10 @@ static int mb2_process_messages(mb2_t* mb2, const char* backup_directory) {
 		}
 		mobilebackup2_receive_message(mb2->client, &message, &dlmsg);
 		if (!message || !dlmsg) {
+			if (message)
+				free(message);
+			if (dlmsg)
+				free(dlmsg);
 			if (mb2->poison_spilled) {
 				return 0xDEAD;
 			}
@@ -1013,6 +1020,7 @@ int mb2_crash(mb2_t* mb2) {
 	plist_dict_insert_item(stpl, "SnapshotState", plist_new_string("finished"));
 	plist_write_to_filename(stpl, statusplist, PLIST_FORMAT_BINARY);
 	plist_free(stpl);
+	free(statusplist);
 
 	err = mobilebackup2_send_request(mb2->client, "Backup", mb2->device->uuid, NULL, NULL);
 	if (err == MOBILEBACKUP2_E_SUCCESS) {
