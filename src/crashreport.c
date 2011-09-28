@@ -66,6 +66,7 @@ arm_state_t* crashreport_parse_state(const char* description) {
 	char* start = NULL;
 	arm_state_t* state = NULL;
 
+	// Find beginning of thread state section
 	start = strstr(description, "ARM Thread State");
 	if (!start) {
 		error("Couldn't find ARM state beginning\n");
