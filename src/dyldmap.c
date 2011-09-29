@@ -36,7 +36,7 @@ dyldmap_t* dyldmap_create() {
 dyldmap_t* dyldmap_parse(unsigned char* data) {
 	dyldmap_t* map = dyldmap_create();
 	if(map) {
-		// TODO: Parse image
+		memcpy(map, data, sizeof(dyldmap_t));
 	}
 	return map;
 }
@@ -49,6 +49,6 @@ void dyldmap_free(dyldmap_t* map) {
 
 
 void dyldmap_debug(dyldmap_t* image) {
-	printf("\tMap:\n");
-	printf("\n");
+	debug("\tMap:\n");
+	debug("\t\n");
 }

@@ -31,6 +31,8 @@ typedef struct dyldimage_info_t {
 } dyldimage_info_t;
 
 typedef struct dyldimage_t {
+	uint32_t index;
+	uint32_t count;
 	dyldimage_info_t* info;
 } dyldimage_t;
 
@@ -38,7 +40,7 @@ typedef struct dyldimage_t {
  * Dyld Image Functions
  */
 dyldimage_t* dyldimage_create();
-dyldimage_t* dyldimage_parse(unsigned char* data);
+dyldimage_t* dyldimage_parse(unsigned char* data, uint32_t offset);
 void dyldimage_free(dyldimage_t* image);
 void dyldimage_debug(dyldimage_t* image);
 
@@ -46,7 +48,7 @@ void dyldimage_debug(dyldimage_t* image);
  * Dyld Image Info Functions
  */
 dyldimage_info_t* dyldimage_info_create();
-dyldimage_info_t* dyldimage_info_parse(unsigned char* data);
+dyldimage_info_t* dyldimage_info_parse(unsigned char* data, uint32_t offset);
 void dyldimage_info_free(dyldimage_info_t* info);
 void dyldimage_info_debug(dyldimage_info_t* info);
 

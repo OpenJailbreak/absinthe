@@ -37,11 +37,16 @@ dyldimage_t* dyldimage_create() {
 	return image;
 }
 
-dyldimage_t* dyldimage_parse(unsigned char* data) {
+dyldimage_t* dyldimage_parse(unsigned char* data, uint32_t offset) {
+	unsigned char* buffer = &data[offset];
 	dyldimage_t* image = dyldimage_create();
 	if (image) {
-		memcpy(image, data, sizeof(dyldimage_t));
-		dyldimage_debug(image);
+		image->info = dyldimage_info_create();
+		if(image->info == NULL) {
+			error("Unable to allocate data for dyld image info\n");
+			return NULL;
+		}
+		memcpy(image->info, buffer, sizeof(dyldimage_info_t));
 	}
 	return image;
 }
@@ -78,10 +83,10 @@ dyldimage_info_t* dyldimage_info_create() {
 	return info;
 }
 
-dyldimage_info_t* dyldimage_info_parse(unsigned char* data) {
+dyldimage_info_t* dyldimage_info_parse(unsigned char* data, uint32_t offset) {
 	dyldimage_info_t* info = dyldimage_info_create();
 	if(info) {
-		memcpy(info, data, sizeof(dyldimage_info_t));
+		memcpy(info, &data[offset], sizeof(dyldimage_info_t));
 	}
 	return info;
 }

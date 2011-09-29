@@ -20,6 +20,9 @@
 #ifndef DYLDCACHE_H_
 #define DYLDCACHE_H_
 
+#include "dyldmap.h"
+#include "dyldimage.h"
+
 #include "common.h"
 #include "endianness.h"
 
@@ -63,23 +66,46 @@ typedef struct dyldcache_header_t {
 } dyldcache_header_t;
 
 typedef struct dyldcache_t {
-	architecture_t* arch;
 	dyldcache_header_t* header;
+	architecture_t* arch;
+	dyldimage_t** images;
+	dyldmap_t** maps;
 } dyldcache_t;
 
+/*
+ * Dyldcache Functions
+ */
 dyldcache_t* dyldcache_create();
 dyldcache_t* dyldcache_open(const char* path);
 void dyldcache_debug(dyldcache_t* cache);
 void dyldcache_free(dyldcache_t* cache);
 
+/*
+ * Dyldcache Architecture Functions
+ */
 architecture_t* dyldcache_architecture_create();
 architecture_t* dyldcache_architecture_parse(unsigned char* data);
 void dyldcache_architecture_debug(architecture_t* arch);
 void dyldcache_architecture_free(architecture_t* arch);
 
+/*
+ * Dyldcache Header Functions
+ */
 dyldcache_header_t* dyldcache_header_create();
 dyldcache_header_t* dyldcache_header_parse(unsigned char* data);
 void dyldcache_header_debug(dyldcache_header_t* header);
 void dyldcache_header_free(dyldcache_header_t* header);
+
+/*
+ * Dyldcache Images Functions
+ */
+void dyldcache_images_debug(dyldcache_t* cache);
+void dyldcache_images_free(dyldcache_t* cache);
+
+/*
+ * Dyldcache Maps Functions
+ */
+void dyldcache_maps_debug(dyldcache_t* cache);
+void dyldcache_maps_free(dyldcache_t* cache);
 
 #endif /* DYLDCACHE_H_ */
