@@ -20,7 +20,9 @@
 #ifndef MACHO_SECTION_H_
 #define MACHO_SECTION_H_
 
-typedef struct macho_header_t {
+#include "common.h"
+
+typedef struct macho_section_info_t {
 	uint32_t magic;
 } macho_section_info_t;
 

@@ -26,7 +26,7 @@
 #include "macho_command.h"
 
 /*
- * Mach-O Segment Functions
+ * Mach-O Command Functions
  */
 macho_command_t* macho_command_create() {
 	macho_command_t* command = NULL;
@@ -47,7 +47,7 @@ void macho_command_free(macho_command_t* command) {
 }
 
 /*
- * Mach-O Segment Info Functions
+ * Mach-O Command Info Functions
  */
 macho_command_info_t* macho_command_info_create() {
 	macho_command_info_t* info = NULL;

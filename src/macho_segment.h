@@ -20,7 +20,7 @@
 #ifndef MACHO_SEGMENT_H_
 #define MACHO_SEGMENT_H_
 
-typedef struct macho_header_t {
+typedef struct macho_segment_info_t {
 	uint32_t magic;
 } macho_segment_info_t;
 

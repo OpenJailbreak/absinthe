@@ -21,6 +21,9 @@
 #define MACHO_H_
 
 #include "common.h"
+#include "macho_segment.h"
+#include "macho_section.h"
+#include "macho_command.h"
 
 typedef struct macho_header_t {
 	uint32_t magic;
@@ -43,7 +46,31 @@ void macho_free(macho_t* macho);
  */
 macho_header_t* macho_header_create();
 macho_header_t* macho_header_load(unsigned char* data, unsigned int offset);
-void macho_header_debug(macho_t* macho);
-void macho_header_free(macho_t* macho);
+void macho_header_debug(macho_header_t* header);
+void macho_header_free(macho_header_t* header);
+
+/*
+ * Mach-O Segments Functions
+ */
+macho_segment_t** macho_segments_create(uint32_t count);
+macho_segment_t** macho_segments_load(macho_t* macho);
+void macho_segments_debug(macho_segment_t** segments);
+void macho_segments_free(macho_segment_t** segments);
+
+/*
+ * Mach-O Sections Functions
+ */
+macho_section_t** macho_sections_create(uint32_t count);
+macho_section_t** macho_sections_load(macho_t* macho);
+void macho_sections_debug(macho_section_t** sections);
+void macho_sections_free(macho_section_t** sections);
+
+/*
+ * Mach-O Commands Functions
+ */
+macho_command_t** macho_commands_create(uint32_t count);
+macho_command_t** macho_commands_load(macho_t* macho);
+void macho_commands_debug(macho_command_t** commands);
+void macho_commands_free(macho_command_t** commands);
 
 #endif /* MACHO_H_ */
