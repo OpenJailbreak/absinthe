@@ -33,10 +33,15 @@ dyldmap_t* dyldmap_create() {
 	return map;
 }
 
-dyldmap_t* dyldmap_parse(unsigned char* data) {
+dyldmap_t* dyldmap_parse(unsigned char* data, uint32_t offset) {
+	unsigned char* buffer = &data[offset];
 	dyldmap_t* map = dyldmap_create();
-	if(map) {
-		memcpy(map, data, sizeof(dyldmap_t));
+	if (map) {
+		map->info = dyldmap_info_parse(data, offset);
+		if(map->info == NULL) {
+			error("Unable to allocate data for dyld map info\n");
+			return NULL;
+		}
 	}
 	return map;
 }
@@ -48,7 +53,41 @@ void dyldmap_free(dyldmap_t* map) {
 }
 
 
-void dyldmap_debug(dyldmap_t* image) {
-	debug("\tMap:\n");
-	debug("\t\n");
+void dyldmap_debug(dyldmap_t* map) {
+	if(map) {
+		debug("\tMap:\n");
+		debug("\t\n");
+	}
+}
+
+/*
+ * Dyldcache Map Info Functions
+ */
+dyldmap_info_t* dyldmap_info_create() {
+	dyldmap_info_t* info = (dyldmap_info_t*) malloc(sizeof(dyldmap_info_t));
+	if(info) {
+		memset(info, '\0', sizeof(dyldmap_info_t));
+	}
+	return info;
+}
+
+dyldmap_info_t* dyldmap_info_parse(unsigned char* data, uint32_t offset) {
+	dyldmap_info_t* info = dyldmap_info_create();
+	if(info) {
+		memcpy(info, &data[offset], sizeof(dyldmap_info_t));
+	}
+	return info;
+}
+
+void dyldmap_info_debug(dyldmap_info_t* info) {
+	if(info) {
+		debug("\tInfo:\n");
+		debug("\t\n");
+	}
+}
+
+void dyldmap_info_free(dyldmap_info_t* info) {
+	if(info) {
+		free(info);
+	}
 }

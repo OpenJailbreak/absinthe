@@ -34,10 +34,20 @@ typedef struct dyldmap_t {
 	dyldmap_info_t* info;
 } dyldmap_t;
 
+/*
+ * Dyldcache Map Functions
+ */
 dyldmap_t* dyldmap_create();
-dyldmap_t* dyldmap_parse(unsigned char* data);
+dyldmap_t* dyldmap_parse(unsigned char* data, uint32_t offset);
 void dyldmap_debug(dyldmap_t* image);
 void dyldmap_free(dyldmap_t* map);
 
+/*
+ * Dyldcache Map Info Functions
+ */
+dyldmap_info_t* dyldmap_info_create();
+dyldmap_info_t* dyldmap_info_parse(unsigned char* data, uint32_t offset);
+void dyldmap_info_debug(dyldmap_info_t* map);
+void dyldmap_info_free(dyldmap_info_t* map);
 
 #endif /* DYLDMAP_H_ */

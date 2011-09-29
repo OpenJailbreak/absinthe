@@ -41,7 +41,7 @@ dyldimage_t* dyldimage_parse(unsigned char* data, uint32_t offset) {
 	unsigned char* buffer = &data[offset];
 	dyldimage_t* image = dyldimage_create();
 	if (image) {
-		image->info = dyldimage_info_create();
+		image->info = dyldimage_info_parse(data, offset);
 		if(image->info == NULL) {
 			error("Unable to allocate data for dyld image info\n");
 			return NULL;
