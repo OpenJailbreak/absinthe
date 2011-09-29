@@ -285,7 +285,7 @@ dyldimage_t** dyldcache_images_load(dyldcache_t* cache) {
 void dyldcache_images_debug(dyldimage_t** images) {
 	if (images) {
 		debug("\tImages:\n");
-		int i;
+		int i = 0;
 		while (images[i]) {
 			dyldimage_debug(images[i]);
 			i++;
