@@ -23,6 +23,7 @@
 #include "dyldmap.h"
 #include "dyldimage.h"
 
+#include "file.h"
 #include "common.h"
 #include "endianness.h"
 
@@ -70,6 +71,7 @@ typedef struct dyldcache_t {
 	architecture_t* arch;
 	dyldimage_t** images;
 	dyldmap_t** maps;
+	file_t* file;
 	uint32_t offset;
 	uint32_t count;
 	unsigned int size;

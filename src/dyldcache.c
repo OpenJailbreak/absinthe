@@ -55,8 +55,8 @@ dyldcache_t* dyldcache_open(const char* path) {
 
 	cache = dyldcache_create();
 	if (cache) {
-		file = file_create();
-		if (file == NULL) {
+		cache->file = file_create();
+		if (cache->file == NULL) {
 			error("Unable to allocate memory for file object\n");
 			dyldcache_free(cache);
 			return NULL;
@@ -101,12 +101,12 @@ dyldcache_t* dyldcache_open(const char* path) {
 		}
 
 		// what's that?
-		file->data = buffer;
-		file->size = length;
-		file->offset = 0;
-		file->path = strdup(path);
+		cache->file->data = buffer;
+		cache->file->size = length;
+		cache->file->offset = 0;
+		cache->file->path = strdup(path);
 
-		file_free(file);
+		file_free(cache->file);
 
 		dyldcache_debug(cache);
 	}
@@ -134,6 +134,10 @@ void dyldcache_free(dyldcache_t* cache) {
 		if (cache->data) {
 			free(cache->data);
 			cache->data = NULL;
+		}
+		if(cache->file) {
+			file_free(cache->file);
+			cache->file = NULL;
 		}
 		free(cache);
 	}
@@ -278,6 +282,7 @@ dyldimage_t** dyldcache_images_load(dyldcache_t* cache) {
 				return NULL;
 			}
 		}
+		//dyldcache_images_debug(maps);
 	}
 	return images;
 }
@@ -339,7 +344,7 @@ dyldmap_t** dyldcache_maps_load(dyldcache_t* cache) {
 			}
 			cache->count++;
 		}
-		dyldcache_maps_debug(maps);
+		//dyldcache_maps_debug(maps);
 	}
 	return maps;
 }
