@@ -88,8 +88,8 @@ void dyldmap_info_debug(dyldmap_info_t* info) {
 		debug("\t\t\t address = 0x%08x\n", (uint32_t)info->address);
 		debug("\t\t\t    size = 0x%08x\n", (uint32_t)info->size);
 		debug("\t\t\t  offset = 0x%08x\n", (uint32_t)info->offset);
-		debug("\t\t\t maxProt = 0x%08x\n", info->maxProt);
-		debug("\t\t\tinitProt = 0x%08x\n", info->initProt);
+		debug("\t\t\t maxProt = %s\n", prot2str(info->maxProt));
+		debug("\t\t\tinitProt = %s\n", prot2str(info->initProt));
 		debug("\t\t}\n");
 	}
 }

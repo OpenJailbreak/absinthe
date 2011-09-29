@@ -18,6 +18,7 @@
  **/
 #ifndef COMMON_H
 #define COMMON_H
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
@@ -27,7 +28,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BUFSMALL    0x40
+#define BUFMEDIUM   0x400
+#define BUFLARGE    0x4000
+
 int mkdir_with_parents(const char *dir, int mode);
 char* build_path(const char* elem, ...);
+char* prot2str(uint32_t prot);
 
 #endif /* COMMON_H */

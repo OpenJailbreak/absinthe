@@ -78,3 +78,23 @@ char* build_path(const char* elem, ...)
 	return out;
 }
 
+/*
+ * This function converts the unix permission bits into understandable letters. OMG!
+ */
+char* prot2str(uint32_t prot) {
+	int i = 0;
+	char* str = (char*) malloc(BUFSMALL);
+	if(str) {
+		memset(str, '\0', BUFSMALL);
+		if(prot & 4) {
+			str[i++] = 'w';
+		} else str[i++] = '-';
+		if(prot & 2) {
+			str[i++] = 'r';
+		} else str[i++] = '-';
+		if(prot & 1) {
+			str[i++] = 'x';
+		} else str[i++] = '-';
+	}
+	return str;
+}

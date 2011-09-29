@@ -22,6 +22,10 @@
 
 #include "common.h"
 
+#define DYLDMAP_EXEC   1
+#define DYLDMAP_WRITE  2
+#define DYLDMAP_READ   4
+
 typedef struct dyldmap_info_t {
 	uint64_t address;
 	uint64_t size;
