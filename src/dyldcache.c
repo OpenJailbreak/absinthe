@@ -22,7 +22,10 @@
 #include <string.h>
 
 #include "file.h"
+#include "debug.h"
+#include "common.h"
 #include "dyldcache.h"
+#include "endianness.h"
 
 /*
  * Dyldcache Functions
@@ -63,6 +66,13 @@ dyldcache_t* dyldcache_open(const char* path) {
 			dyldcache_free(cache);
 			return NULL;
 		}
+
+		cache->arch = dyldcache_architecture_parse(&(cache->header->magic));
+		if(cache->arch == NULL) {
+			fprintf(stderr, "Unable to parse architecture from dyldcache header\n");
+			dyldcache_free(cache);
+			return NULL;
+		}
 		file->data = buffer;
 		file->size = length;
 		file->offset = 0;
@@ -86,9 +96,66 @@ void dyldcache_free(dyldcache_t* cache) {
 void dyldcache_debug(dyldcache_t* cache) {
 	if(cache) {
 		printf("Dyldcache:\n");
-		if(cache->header) {
-			dyldcache_header_debug(cache->header);
+		if(cache->header) dyldcache_header_debug(cache->header);
+		if(cache->arch) dyldcache_architecture_debug(cache->arch);
+	}
+}
+
+/*
+ * Dyldcache Architecture Functions
+ */
+architecture_t* dyldcache_architecture_create() {
+	architecture_t* arch = (architecture_t*) malloc(sizeof(architecture_t));
+	if(arch) {
+		memset(arch, '\0', sizeof(architecture_t*));
+	}
+	return arch;
+}
+
+architecture_t* dyldcache_architecture_parse(unsigned char* data) {
+	unsigned char* found = NULL;
+	architecture_t* arch = dyldcache_architecture_create();
+	if(arch) {
+		found = strstr(data, DYLDARCH_ARMV6);
+		if(found) {
+			arch->name = DYLDARCH_ARMV6;
+			arch->cpu_type = kArmType;
+			arch->cpu_subtype = kArmv6;
+			arch->cpu_endian = kLittleEndian;
+			return arch;
 		}
+
+		found = strstr(data, DYLDARCH_ARMV7);
+		if(found) {
+			arch->name = DYLDARCH_ARMV7;
+			arch->cpu_type = kArmType;
+			arch->cpu_subtype = kArmv7;
+			arch->cpu_endian = kLittleEndian;
+			return arch;
+		}
+
+		// TODO: Add other architectures in here. We only need iPhone for now.
+	}
+
+	if(found == NULL) {
+		fprintf(stderr, "Unknown architechure encountered! %s\n", data);
+	}
+
+	return arch;
+}
+
+void dyldcache_architecture_debug(architecture_t* arch) {
+	printf("\tArchitecture:\n");
+	printf("\t\tname = %s\n", arch->name);
+	printf("\t\tcpu_id = %d\n", arch->cpu_type);
+	printf("\t\tcpu_sub_id = %d\n", arch->cpu_subtype);
+	printf("\t\tcpu_endian = %s\n", arch->cpu_endian == kLittleEndian ? "little endian" : "big endian");
+	printf("\n");
+}
+
+void dyldcache_architecture_free(architecture_t* arch) {
+	if(arch) {
+		free(arch);
 	}
 }
 

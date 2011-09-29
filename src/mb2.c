@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 1
 
 #include <time.h>
 #include <errno.h>

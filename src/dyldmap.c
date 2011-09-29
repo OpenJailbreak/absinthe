@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "debug.h"
+#include "common.h"
 #include "dyldmap.h"
 
 dyldmap_t* dyldmap_create() {
@@ -31,8 +33,22 @@ dyldmap_t* dyldmap_create() {
 	return map;
 }
 
+dyldmap_t* dyldmap_parse(unsigned char* data) {
+	dyldmap_t* map = dyldmap_create();
+	if(map) {
+		// TODO: Parse image
+	}
+	return map;
+}
+
 void dyldmap_free(dyldmap_t* map) {
 	if(map) {
 		free(map);
 	}
+}
+
+
+void dyldmap_debug(dyldmap_t* image) {
+	printf("\tMap:\n");
+	printf("\n");
 }

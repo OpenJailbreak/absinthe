@@ -99,4 +99,9 @@
 #define htole64 le64toh
 #endif
 
+typedef enum {
+	kBigEndian,
+	kLittleEndian
+} endian_t;
+
 #endif /* ENDIANNESS_H */

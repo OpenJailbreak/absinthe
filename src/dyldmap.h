@@ -20,7 +20,7 @@
 #ifndef DYLDMAP_H_
 #define DYLDMAP_H_
 
-#include <stdint.h>
+#include "common.h"
 
 typedef struct dyldmap_info_t {
 	uint64_t address;
@@ -35,6 +35,9 @@ typedef struct dyldmap_t {
 } dyldmap_t;
 
 dyldmap_t* dyldmap_create();
+dyldmap_t* dyldmap_parse(unsigned char* data);
+void dyldmap_debug(dyldmap_t* image);
 void dyldmap_free(dyldmap_t* map);
+
 
 #endif /* DYLDMAP_H_ */

@@ -34,7 +34,20 @@ typedef struct dyldimage_t {
 	dyldimage_info_t* info;
 } dyldimage_t;
 
+/*
+ * Dyld Image Functions
+ */
 dyldimage_t* dyldimage_create();
+dyldimage_t* dyldimage_parse(unsigned char* data);
 void dyldimage_free(dyldimage_t* image);
+void dyldimage_debug(dyldimage_t* image);
+
+/*
+ * Dyld Image Info Functions
+ */
+dyldimage_info_t* dyldimage_info_create();
+dyldimage_info_t* dyldimage_info_parse(unsigned char* data);
+void dyldimage_info_free(dyldimage_info_t* info);
+void dyldimage_info_debug(dyldimage_info_t* info);
 
 #endif /* DYLDIMAGE_H_ */
