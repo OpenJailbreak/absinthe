@@ -20,7 +20,7 @@
 #ifndef DYLDCACHE_H_
 #define DYLDCACHE_H_
 
-#include "common.h"
+#include <stdint.h>
 
 #define DYLDCACHE_DIR "/var/db/dyld"
 #define DYLDCACHE_NAME "dyld_shared_cache"

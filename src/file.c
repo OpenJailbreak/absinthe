@@ -34,8 +34,8 @@ file_t* file_create() {
 }
 
 file_t* file_open(const char* path) {
-	size_t got = 0;
-	unsigned char buffer[4096];
+	uint64_t got = 0;
+	uint8_t buffer[4096];
 
 	file_t* file = file_create();
 	if (file) {
@@ -51,12 +51,12 @@ file_t* file_open(const char* path) {
 			file_free(file);
 			return NULL;
 		}
-		file->offset = 0;
 
 		fseek(file->desc, 0, SEEK_END);
 		file->size = ftell(file->desc);
 		fseek(file->desc, 0, SEEK_SET);
 
+		file->offset = 0;
 		file->data = (unsigned char*) malloc(file->size);
 		if (file->data == NULL) {
 			fprintf(stderr, "Unable to allocate memory for file\n");
@@ -64,12 +64,13 @@ file_t* file_open(const char* path) {
 			return NULL;
 		}
 
-		while (file->offset < file->size) {
+		uint64_t offset = 0;
+		while (offset < file->size) {
 			memset(buffer, '\0', BUFSIZE);
 			got = fread(buffer, 1, BUFSIZE, file->desc);
 			if (got > 0) {
-				file->offset += got;
-				memcpy(&file->data[file->offset], buffer, got);
+				offset += got;
+				memcpy(&(file->data[offset]), buffer, got);
 			} else {
 				break;
 			}

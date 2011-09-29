@@ -136,6 +136,7 @@ printf("\n");
 		if((i % 0x10) == 0 && i != 0) printf("\n");
 		printf(" 0x%08x", *((unsigned int*) &buffer[i]));
 	}
+	printf("\n");
 
 	buffer[size] = 0;
 	*length = size;

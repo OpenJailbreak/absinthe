@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include"file.h"
+#include "file.h"
 #include "dyldcache.h"
 
 /*
@@ -36,17 +36,38 @@ dyldcache_t* dyldcache_create() {
 }
 
 dyldcache_t* dyldcache_open(const char* path) {
+	int err = 0;
+	unsigned int length = 0;
+	unsigned char* buffer = NULL;
 	file_t* file = NULL;
 	dyldcache_t* cache = NULL;
 
 	cache = dyldcache_create();
 	if(cache) {
-		file = file_open(path);
-		cache->header = dyldcache_header_parse(file->data);
-		if(cache->header == NULL) {
-			fprintf(stderr, "Unable to parse dyldcache header\n");
+		file = file_create();
+		if(file == NULL) {
+			fprintf(stderr, "Unable to allocate memory for file object\n");
+			dyldcache_free(cache);
 			return NULL;
 		}
+		err = file_read(path, &buffer, &length);
+		if(err < 0) {
+			fprintf(stderr, "Unable to open file at path %s\n", path);
+			dyldcache_free(cache);
+			return NULL;
+		}
+
+		cache->header = dyldcache_header_parse(buffer);
+		if(cache->header == NULL) {
+			fprintf(stderr, "Unable to parse dyldcache header\n");
+			dyldcache_free(cache);
+			return NULL;
+		}
+		file->data = buffer;
+		file->size = length;
+		file->offset = 0;
+		file->path = strdup(path);
+
 		dyldcache_debug(cache);
 	}
 	return cache;
@@ -77,7 +98,7 @@ void dyldcache_debug(dyldcache_t* cache) {
 dyldcache_header_t* dyldcache_header_create() {
 	dyldcache_header_t* header = (dyldcache_header_t*) malloc(sizeof(dyldcache_header_t));
 	if(header) {
-		memset(header, '\0', sizeof(header));
+		memset(header, '\0', sizeof(dyldcache_header_t));
 	}
 	return header;
 }
@@ -99,12 +120,12 @@ dyldcache_header_t* dyldcache_header_parse(unsigned char* data) {
 void dyldcache_header_debug(dyldcache_header_t* header) {
 	printf("\tHeader:\n");
 	printf("\t\tmagic = %s\n", header->magic);
-	printf("\t\tmapping_offset = %du\n", header->mapping_offset);
-	printf("\t\tmapping_count = %du\n", header->mapping_count);
-	printf("\t\timages_offset = %du\n", header->images_offset);
-	printf("\t\timages_count = %du\n", header->images_count);
-	printf("\t\tbase_address = %llu\n", header->base_address);
-	printf("\t\tcodesign_offset = %llu\n", header->codesign_offset);
+	printf("\t\tmapping_offset = %u\n", header->mapping_offset);
+	printf("\t\tmapping_count = %u\n", header->mapping_count);
+	printf("\t\timages_offset = %u\n", header->images_offset);
+	printf("\t\timages_count = %u\n", header->images_count);
+	printf("\t\tbase_address = 0x%qX\n", header->base_address);
+	printf("\t\tcodesign_offset = 0x%qX\n", header->codesign_offset);
 	printf("\t\tcodesign_size = %llu\n", header->codesign_size);
 	printf("\n");
 }
