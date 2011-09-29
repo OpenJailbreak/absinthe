@@ -48,6 +48,9 @@ dyldmap_t* dyldmap_parse(unsigned char* data, uint32_t offset) {
 
 void dyldmap_free(dyldmap_t* map) {
 	if(map) {
+		if (map->info) {
+			dyldmap_info_free(map->info);
+		}
 		free(map);
 	}
 }
@@ -81,8 +84,13 @@ dyldmap_info_t* dyldmap_info_parse(unsigned char* data, uint32_t offset) {
 
 void dyldmap_info_debug(dyldmap_info_t* info) {
 	if(info) {
-		debug("\tInfo:\n");
-		debug("\t\n");
+		debug("\t\tInfo {\n");
+		debug("\t\t\t address = 0x%08x\n", (uint32_t)info->address);
+		debug("\t\t\t    size = 0x%08x\n", (uint32_t)info->size);
+		debug("\t\t\t  offset = 0x%08x\n", (uint32_t)info->offset);
+		debug("\t\t\t maxProt = 0x%08x\n", info->maxProt);
+		debug("\t\t\tinitProt = 0x%08x\n", info->initProt);
+		debug("\t\t}\n");
 	}
 }
 

@@ -63,11 +63,11 @@ void dyldimage_free(dyldimage_t* image) {
 
 void dyldimage_debug(dyldimage_t* image) {
 	if (image) {
-		debug("\tImage:\n");
+		debug("\t\tImage {\n");
 		if (image->info) {
 			dyldimage_info_debug(image->info);
 		}
-		debug("\t\n");
+		debug("\t\t}\n");
 	}
 }
 
@@ -98,12 +98,10 @@ void dyldimage_info_free(dyldimage_info_t* info) {
 }
 void dyldimage_info_debug(dyldimage_info_t* info) {
 	if (info) {
-		debug("\t\tInfo:\n");
 		debug("\t\t\taddress = 0x%qx\n", info->address);
-		debug("\t\t\tinode = 0x%qx\n", info->inode);
+		debug("\t\t\t  inode = 0x%qx\n", info->inode);
 		debug("\t\t\tmodtime = 0x%qx\n", info->modtime);
-		debug("\t\t\toffset = 0x%08x\n", info->offset);
-		debug("\t\t\tpad = 0x%08x\n", info->pad);
-		debug("\t\t\n");
+		debug("\t\t\t offset = 0x%08x\n", info->offset);
+		debug("\t\t\t    pad = 0x%08x\n", info->pad);
 	}
 }

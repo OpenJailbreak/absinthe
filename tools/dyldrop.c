@@ -35,6 +35,7 @@ int main(int argc, char* argv[]) {
 
 	debug("Creating dyldcache from %s\n", dyldcache_path);
 	dyldcache_t* cache = dyldcache_open(dyldcache_path);
+	free(dyldcache_path);	
 	if(cache == NULL) {
 		error("Unable to allocate memory for dyldcache\n");
 		goto panic;

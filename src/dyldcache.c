@@ -93,10 +93,20 @@ dyldcache_t* dyldcache_open(const char* path) {
 			return NULL;
 		}
 
+		cache->maps = dyldcache_maps_load(cache);
+		if (cache->maps == NULL) {
+			error("Unable to load maps from dyldcache\n");
+			dyldcache_free(cache);
+			return NULL;
+		}
+
+		// what's that?
 		file->data = buffer;
 		file->size = length;
 		file->offset = 0;
 		file->path = strdup(path);
+
+		file_free(file);
 
 		dyldcache_debug(cache);
 	}
@@ -109,6 +119,22 @@ void dyldcache_free(dyldcache_t* cache) {
 			dyldcache_header_free(cache->header);
 			cache->header = NULL;
 		}
+		if (cache->maps) {
+			dyldcache_maps_free(cache->maps);
+			cache->maps = NULL;
+		}
+		if (cache->images) {
+			dyldcache_images_free(cache->images);
+			cache->images = NULL;
+		}
+		if (cache->arch) {
+			dyldcache_architecture_free(cache->arch);
+			cache->arch = NULL;
+		}
+		if (cache->data) {
+			free(cache->data);
+			cache->data = NULL;
+		}
 		free(cache);
 	}
 }
@@ -117,8 +143,8 @@ void dyldcache_debug(dyldcache_t* cache) {
 	if (cache) {
 		debug("Dyldcache:\n");
 		if (cache->header) dyldcache_header_debug(cache->header);
-		if (cache->images) dyldcache_images_debug(cache);
-		if (cache->maps) dyldcache_maps_debug(cache);
+		if (cache->images) dyldcache_images_debug(cache->images);
+		if (cache->maps) dyldcache_maps_debug(cache->maps);
 	}
 }
 
@@ -222,7 +248,7 @@ void dyldcache_header_debug(dyldcache_header_t* header) {
  * Dyldcache Images Functions
  */
 dyldimage_t** dyldcache_images_create(uint32_t count) {
-	uint32_t size = count * sizeof(dyldimage_t*);
+	uint32_t size = (count+1) * sizeof(dyldimage_t*);
 	dyldimage_t** images = (dyldimage_t**) malloc(size);
 	if (images) {
 		memset(images, '\0', size);
@@ -246,7 +272,7 @@ dyldimage_t** dyldcache_images_load(dyldcache_t* cache) {
 		}
 
 		for (i = 0; i < count; i++) {
-			images[i] = dyldimage_parse(cache->data, cache->header->images_offset);
+			images[i] = dyldimage_parse(cache->data, cache->header->images_offset + i*sizeof(dyldimage_info_t));
 			if (images[i] == NULL) {
 				error("Unable to parse dyld image from cache\n");
 				return NULL;
@@ -259,14 +285,23 @@ dyldimage_t** dyldcache_images_load(dyldcache_t* cache) {
 void dyldcache_images_debug(dyldimage_t** images) {
 	if (images) {
 		debug("\tImages:\n");
-		//debug("\t\taddress = 0x%qx\n", cache->images[0]->info->address);
+		int i;
+		while (images[i]) {
+			dyldimage_debug(images[i]);
+			i++;
+		}
 		debug("\n");
 	}
 }
 
 void dyldcache_images_free(dyldimage_t** images) {
 	if (images) {
-		// TODO: Loop through each image and free it
+		// Loop through each image and free it
+		int i = 0;
+		while (images[i]) {
+			dyldimage_free(images[i]);
+			i++;
+		}
 		free(images);
 		images = NULL;
 	}
@@ -276,7 +311,7 @@ void dyldcache_images_free(dyldimage_t** images) {
  * Dyldcache Maps Functions
  */
 dyldmap_t** dyldcache_maps_create(uint32_t count) {
-	uint32_t size = count * sizeof(dyldmap_t*);
+	uint32_t size = (count+1) * sizeof(dyldmap_t*);
 	dyldmap_t** maps = (dyldmap_t**) malloc(size);
 	if (maps) {
 		memset(maps, '\0', size);
@@ -297,13 +332,14 @@ dyldmap_t** dyldcache_maps_load(dyldcache_t* cache) {
 		}
 
 		for (i = 0; i < count; i++) {
-			maps[i] = dyldmap_parse(cache->data, cache->header->mapping_offset);
+			maps[i] = dyldmap_parse(cache->data, cache->header->mapping_offset + i*sizeof(dyldmap_info_t));
 			if (maps[i] == NULL) {
 				error("Unable to parse dyld map from cache\n");
 				return NULL;
 			}
 			cache->count++;
 		}
+		dyldcache_maps_debug(maps);
 	}
 	return maps;
 }
@@ -311,14 +347,23 @@ dyldmap_t** dyldcache_maps_load(dyldcache_t* cache) {
 void dyldcache_maps_debug(dyldmap_t** maps) {
 	if (maps) {
 		debug("\tMaps:\n");
-		//debug("\t\taddress = 0x%qx\n", cache->maps[0]->info->address);
+		int i = 0;
+		while (maps[i]) {
+			dyldmap_info_debug(maps[i]->info);
+			i++;
+		}
 		debug("\n");
 	}
 }
 
 void dyldcache_maps_free(dyldmap_t** maps) {
 	if (maps) {
-		// TODO: Loop through each map and free it
+		int i = 0;
+		// Loop through each map and free it
+		while (maps[i]) {
+			dyldmap_free(maps[i]);
+			i++;
+		}
 		free(maps);
 	}
 }
