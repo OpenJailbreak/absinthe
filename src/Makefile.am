@@ -20,7 +20,12 @@ absinthe_SOURCES = \
 	dictionary.c \
 	dyldcache.c \
 	dyldimage.c \
-	dyldmap.c
+	dyldmap.c \
+	macho.c \
+	macho_segment.c \
+	macho_section.c \
+	macho_command.c \
+	architecture.c
 
 absinthe_CFLAGS = $(AM_CFLAGS)
 absinthe_LDFLAGS = $(AM_LDFLAGS)

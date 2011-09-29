@@ -1,5 +1,5 @@
 /**
- * GreenPois0n Absinthe - mb2.h
+ * GreenPois0n Absinthe - template.h
  * Copyright (C) 2010 Chronic-Dev Team
  * Copyright (C) 2010 Joshua Hill
  *
@@ -17,33 +17,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef MACHO_H_
-#define MACHO_H_
-
-#include "common.h"
+#ifndef MACHO_SECTION_H_
+#define MACHO_SECTION_H_
 
 typedef struct macho_header_t {
 	uint32_t magic;
-} macho_header_t;
+} template_info_t;
 
-typedef struct macho_t {
-	macho_header_t* header;
-} macho_t;
-
-/*
- * Mach-O Functions
- */
-macho_t* macho_create();
-macho_t* macho_open(const char* path);
-void macho_debug(macho_t* macho);
-void macho_free(macho_t* macho);
+typedef struct template_t {
+	template_info_t* info;
+} template_t;
 
 /*
- * Mach-O Header Functions
+ * Mach-O Segment Functions
  */
-macho_header_t* macho_header_create();
-macho_header_t* macho_header_load(unsigned char* data, unsigned int offset);
-void macho_header_debug(macho_t* macho);
-void macho_header_free(macho_t* macho);
+template_t* template_create();
+template_t* template_load(unsigned char* data, unsigned int offset);
+void template_debug(template_t* command);
+void template_free(template_t* command);
 
-#endif /* MACHO_H_ */
+/*
+ * Mach-O Segment Info Functions
+ */
+template_info_t* template_info_create();
+template_info_t* template_info_load(unsigned char* data, unsigned int offset);
+void template_info_debug(template_info_t* info);
+void template_info_free(template_info_t* info);
+
+#endif /* MACHO_SECTION_H_ */

@@ -1,5 +1,5 @@
 /**
- * GreenPois0n Absinthe - mb2.h
+ * GreenPois0n Absinthe - architecture.h
  * Copyright (C) 2010 Chronic-Dev Team
  * Copyright (C) 2010 Joshua Hill
  *
@@ -17,33 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef MACHO_H_
-#define MACHO_H_
+#ifndef ARCHITECTURE_H_
+#define ARCHITECTURE_H_
 
-#include "common.h"
 
-typedef struct macho_header_t {
-	uint32_t magic;
-} macho_header_t;
 
-typedef struct macho_t {
-	macho_header_t* header;
-} macho_t;
 
-/*
- * Mach-O Functions
- */
-macho_t* macho_create();
-macho_t* macho_open(const char* path);
-void macho_debug(macho_t* macho);
-void macho_free(macho_t* macho);
-
-/*
- * Mach-O Header Functions
- */
-macho_header_t* macho_header_create();
-macho_header_t* macho_header_load(unsigned char* data, unsigned int offset);
-void macho_header_debug(macho_t* macho);
-void macho_header_free(macho_t* macho);
-
-#endif /* MACHO_H_ */
+#endif /* ARCHITECTURE_H_ */

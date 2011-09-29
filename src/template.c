@@ -1,5 +1,5 @@
 /**
- * GreenPois0n Absinthe - mb2.h
+ * GreenPois0n Absinthe - template.c
  * Copyright (C) 2010 Chronic-Dev Team
  * Copyright (C) 2010 Joshua Hill
  *
@@ -21,46 +21,48 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "macho.h"
+#include "debug.h"
+#include "common.h"
+#include "template.h"
 
 /*
- * Mach-O Functions
+ * Mach-O Segment Functions
  */
-macho_t* macho_create() {
-	macho_t* macho = NULL;
-	return macho;
+template_t* template_create() {
+	template_t* command = NULL;
+	return command;
 }
 
-macho_t* macho_open(const char* path) {
-	macho_t* macho = NULL;
-	return macho;
+template_t* template_load(unsigned char* data, unsigned int offset) {
+	template_t* command = template_create();
+	return command;
 }
 
-void macho_debug(macho_t* macho) {
+void template_debug(template_t* command) {
 
 }
 
-void macho_free(macho_t* macho) {
+void template_free(template_t* command) {
 
 }
 
 /*
- * Mach-O Header Functions
+ * Mach-O Segment Info Functions
  */
-macho_header_t* macho_header_create() {
-	macho_header_t* header = NULL;
-	return header;
+template_info_t* template_info_create() {
+	template_info_t* info = NULL;
+	return info;
 }
 
-macho_header_t* macho_header_load(unsigned char* data, unsigned int offset) {
-	macho_header_t* header = macho_header_create();
-	return header;
+template_info_t* template_info_load(unsigned char* data, unsigned int offset) {
+	template_info_t* info = template_info_create();
+	return info;
 }
 
-void macho_header_debug(macho_t* macho) {
+void template_info_debug(template_info_t* info) {
 
 }
 
-void macho_header_free(macho_t* macho) {
+void template_info_free(template_info_t* info) {
 
 }

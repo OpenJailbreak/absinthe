@@ -106,8 +106,6 @@ dyldcache_t* dyldcache_open(const char* path) {
 		cache->file->offset = 0;
 		cache->file->path = strdup(path);
 
-		file_free(cache->file);
-
 		dyldcache_debug(cache);
 	}
 	return cache;

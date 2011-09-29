@@ -1,5 +1,5 @@
 /**
- * GreenPois0n Absinthe - mb2.h
+ * GreenPois0n Absinthe - macho_command.h
  * Copyright (C) 2010 Chronic-Dev Team
  * Copyright (C) 2010 Joshua Hill
  *
@@ -17,33 +17,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef MACHO_H_
-#define MACHO_H_
-
-#include "common.h"
+#ifndef MACHO_SECTION_H_
+#define MACHO_SECTION_H_
 
 typedef struct macho_header_t {
 	uint32_t magic;
-} macho_header_t;
+} macho_command_info_t;
 
-typedef struct macho_t {
-	macho_header_t* header;
-} macho_t;
-
-/*
- * Mach-O Functions
- */
-macho_t* macho_create();
-macho_t* macho_open(const char* path);
-void macho_debug(macho_t* macho);
-void macho_free(macho_t* macho);
+typedef struct macho_command_t {
+	macho_command_info_t* info;
+} macho_command_t;
 
 /*
- * Mach-O Header Functions
+ * Mach-O Segment Functions
  */
-macho_header_t* macho_header_create();
-macho_header_t* macho_header_load(unsigned char* data, unsigned int offset);
-void macho_header_debug(macho_t* macho);
-void macho_header_free(macho_t* macho);
+macho_command_t* macho_command_create();
+macho_command_t* macho_command_load(unsigned char* data, unsigned int offset);
+void macho_command_debug(macho_command_t* command);
+void macho_command_free(macho_command_t* command);
 
-#endif /* MACHO_H_ */
+/*
+ * Mach-O Segment Info Functions
+ */
+macho_command_info_t* macho_command_info_create();
+macho_command_info_t* macho_command_info_load(unsigned char* data, unsigned int offset);
+void macho_command_info_debug(macho_command_info_t* info);
+void macho_command_info_free(macho_command_info_t* info);
+
+#endif /* MACHO_SECTION_H_ */

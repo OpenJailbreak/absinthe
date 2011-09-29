@@ -61,7 +61,7 @@ int check_ascii_string(const char* string, size_t length) {
 	}
 
 	// We return an index to the invalid character, or 0 if everything was successful
-	if(valid) i = 0;
+	if (valid) i = 0;
 	return i;
 }
 
@@ -100,6 +100,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 	mb2_free(mb2);
+	mb2 = NULL;
 
 	info("Giving the device a moment to write the crash report...\n");
 	sleep(3);
@@ -186,7 +187,7 @@ int main(int argc, char* argv[]) {
 
 	// All done, not sure if we should clean this up yet
 	info("Closing MobileBackup2 service\n");
-	mb2_free(mb2);
+	if (mb2) mb2_free(mb2);
 
 	// If open, then close and free structures
 	info("Cleaning up\n");
