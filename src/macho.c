@@ -152,7 +152,7 @@ macho_header_t* macho_header_load(macho_t* macho) {
 	unsigned int size = 0;
 	unsigned int offset = 0;
 	unsigned char* data = NULL;
-	macho_t* header = NULL;
+	macho_header_t* header = NULL;
 	if (macho) {
 		data = macho->data;
 		size = macho->size;
@@ -295,7 +295,7 @@ void macho_segments_free(macho_segment_t** segments) {
  * Mach-O Sections Functions
  */
 macho_section_t** macho_sections_create(uint32_t count) {
-	macho_segment_t** sections = NULL;
+	macho_section_t** sections = NULL;
 	return sections;
 }
 
