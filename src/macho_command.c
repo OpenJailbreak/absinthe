@@ -35,18 +35,45 @@ macho_command_t* macho_command_create() {
 	}
 	return command;
 }
-
+/*
+#define	MACHO_CMD_SEGMENT          0x1  // segment of this file to be mapped
+#define	MACHO_CMD_SYMTAB           0x2  // link-edit stab symbol table info
+#define	MACHO_CMD_SYMSEG           0x3  // link-edit gdb symbol table info (obsolete)
+#define	MACHO_CMD_THREAD           0x4  // thread
+#define	MACHO_CMD_UNIXTHREAD       0x5  // unix thread (includes a stack)
+#define	MACHO_CMD_LOADFVMLIB       0x6  // load a specified fixed VM shared library
+#define	MACHO_CMD_IDFVMLIB         0x7  // fixed VM shared library identification
+#define	MACHO_CMD_IDENT            0x8  // object identification info (obsolete)
+#define MACHO_CMD_FVMFILE          0x9  // fixed VM file inclusion (internal use)
+#define MACHO_CMD_PREPAGE          0xA  // prepage command (internal use)
+#define	MACHO_CMD_DYSYMTAB         0xB  // dynamic link-edit symbol table info
+#define	MACHO_CMD_LOAD_DYLIB       0xC  // load a dynamically linked shared library
+#define	MACHO_CMD_ID_DYLIB         0xD  // dynamically linked shared lib ident
+#define MACHO_CMD_LOAD_DYLINKER    0xE  // load a dynamic linker
+#define MACHO_CMD_ID_DYLINKER      0xF  // dynamic linker identification
+#define	MACHO_CMD_PREBOUND_DYLIB   0x10 // modules prebound for a dynamically linked shared library
+#define	MACHO_CMD_ROUTINES         0x11 // image routines
+#define	MACHO_CMD_SUB_FRAMEWORK    0x12 // sub framework
+#define	MACHO_CMD_SUB_UMBRELLA     0x13 // sub umbrella
+#define	MACHO_CMD_SUB_CLIENT       0x14 // sub client
+#define	MACHO_CMD_SUB_LIBRARY      0x15 // sub library
+#define	MACHO_CMD_TWOLEVEL_HINTS   0x16 // two-level namespace lookup hints
+#define	MACHO_CMD_PREBIND_CKSUM    0x17 // prebind checksum
+*/
 macho_command_t* macho_command_load(unsigned char* data, unsigned int offset) {
 	unsigned int size = 0;
 	macho_command_t* command = macho_command_create();
-	if (command) {
-		command->info = macho_command_info_load(data, offset);
-		if (command->info == NULL) {
-			error("Unable to load Mach-O command info\n");
-			macho_command_free(command);
-			return NULL;
+	macho_command_info_t* info = (macho_command_info_t*) &data[offset];
+	if (info) {
+		switch(info->cmd) {
+		case MACHO_CMD_SEGMENT:
+			macho_segment_load(data, offset);
+			break;
+
+		default:
+			break;
 		}
-		macho_command_debug(command);
+		command->size = command->info->cmdsize;
 	}
 	return command;
 }
@@ -77,6 +104,7 @@ void macho_command_free(macho_command_t* command) {
 macho_command_info_t* macho_command_info_create() {
 	macho_command_info_t* info = (macho_command_info_t*) malloc(sizeof(macho_command_info_t));
 	if (info) {
+		debug("Mach-O Command Info Created\n");
 		memset(info, '\0', sizeof(macho_command_info_t));
 	}
 	return info;
@@ -85,10 +113,11 @@ macho_command_info_t* macho_command_info_create() {
 macho_command_info_t* macho_command_info_load(unsigned char* data, unsigned int offset) {
 	macho_command_info_t* info = macho_command_info_create();
 	if (info) {
-		//debug("Command Offset = 0x%x\n", offset);
-		memcpy(info, &data[offset], sizeof(macho_command_info_t*));
+		debug("Macho-O Command Info Loaded\n");
+		debug("Data = 0x%x, Offset = 0x%x\n", data, offset);
+		debug("Value = 0x%x\n", data[offset]);
+		memcpy(info, data[offset], sizeof(macho_command_info_t));
 	}
-	macho_command_info_debug(info);
 	return info;
 }
 
