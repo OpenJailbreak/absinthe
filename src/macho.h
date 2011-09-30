@@ -27,10 +27,22 @@
 
 typedef struct macho_header_t {
 	uint32_t magic;
+	uint32_t cputype;
+	uint32_t cpusubtype;
+	uint32_t filetype;
+	uint32_t ncmds;
+	uint32_t sizeofcmds;
+	uint32_t flags;
 } macho_header_t;
 
 typedef struct macho_t {
+	char* path;
+	file_t* file;
 	macho_header_t* header;
+	uint32_t command_count;
+	uint32_t segment_count;
+	macho_command_t** commands;
+	macho_segment_t** segments;
 } macho_t;
 
 /*
@@ -41,6 +53,8 @@ macho_t* macho_open(const char* path);
 void macho_debug(macho_t* macho);
 void macho_free(macho_t* macho);
 
+int macho_handle_command(macho_t* macho, macho_command_t* command);
+
 /*
  * Mach-O Header Functions
  */
@@ -48,6 +62,14 @@ macho_header_t* macho_header_create();
 macho_header_t* macho_header_load(unsigned char* data, unsigned int offset);
 void macho_header_debug(macho_header_t* header);
 void macho_header_free(macho_header_t* header);
+
+/*
+ * Mach-O Commands Functions
+ */
+macho_command_t** macho_commands_create(uint32_t count);
+macho_command_t** macho_commands_load(macho_t* macho);
+void macho_commands_debug(macho_command_t** commands);
+void macho_commands_free(macho_command_t** commands);
 
 /*
  * Mach-O Segments Functions
@@ -64,13 +86,5 @@ macho_section_t** macho_sections_create(uint32_t count);
 macho_section_t** macho_sections_load(macho_t* macho);
 void macho_sections_debug(macho_section_t** sections);
 void macho_sections_free(macho_section_t** sections);
-
-/*
- * Mach-O Commands Functions
- */
-macho_command_t** macho_commands_create(uint32_t count);
-macho_command_t** macho_commands_load(macho_t* macho);
-void macho_commands_debug(macho_command_t** commands);
-void macho_commands_free(macho_command_t** commands);
 
 #endif /* MACHO_H_ */
