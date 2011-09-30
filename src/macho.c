@@ -229,15 +229,17 @@ macho_command_t** macho_commands_load(macho_t* macho) {
 			return NULL;
 		}
 
+		macho_command_t* command = NULL;
 		debug("Loading Mach-O commands array\n");
 		for (i = 0; i < count; i++) {
-			debug("Loading Mach-O command %d into array\n", i);
-			commands[i] = macho_command_load(macho->data, macho->offset);
-			if (commands[i] == NULL) {
-				error("Unable to parse Mach-O load command\n");
-				macho_commands_free(commands);
-				return NULL;
-			}
+			debug("Loading Mach-O command %d from offset 0x%x\n", i, macho->offset);
+			command = (macho_command_t*) macho->data[macho->offset]; //macho_command_load(macho->data, macho->offset);
+			//if (commands[i] == NULL) {
+				//error("Unable to parse Mach-O load command\n");
+				//macho_commands_free(commands);
+				//return NULL;
+			//}
+			macho->offset += command->size;
 		}
 	}
 	return commands;
