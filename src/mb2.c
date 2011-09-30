@@ -67,6 +67,11 @@ mb2_t* mb2_connect(device_t* device) {
 	mb2_t* mb2 = NULL;
 	lockdown_t* lockdown = NULL;
 
+	if(device == NULL) {
+		error("Invalid arguments\n");
+		return NULL;
+	}
+
 	lockdown = lockdown_open(device);
 	if(lockdown == NULL) {
 		error("Unable to open connection to lockdownd\n");

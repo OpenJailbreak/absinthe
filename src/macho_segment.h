@@ -20,12 +20,31 @@
 #ifndef MACHO_SEGMENT_H_
 #define MACHO_SEGMENT_H_
 
-typedef struct macho_segment_info_t {
-	uint32_t magic;
-} macho_segment_info_t;
+#include "common.h"
+#include "macho_section.h"
+
+typedef struct macho_segment_cmd_t {
+	uint32_t cmd;
+	uint32_t cmdsize;
+	char segname[16];
+	uint32_t vmaddr;
+	uint32_t vmsize;
+	uint32_t fileoff;
+	uint32_t filesize;
+	uint32_t maxprot;
+	uint32_t initprot;
+	uint32_t nsects;
+	uint32_t flags;
+} macho_segment_cmd_t;
 
 typedef struct macho_segment_t {
-	macho_segment_info_t* info;
+	char* name;
+	uint32_t size;
+	uint32_t offset;
+	uint32_t address;
+	unsigned char* data;
+	macho_segment_cmd_t* cmd;
+	macho_section_t** sections;
 } macho_segment_t;
 
 /*
@@ -39,9 +58,9 @@ void macho_segment_free(macho_segment_t* segment);
 /*
  * Mach-O Segment Info Functions
  */
-macho_segment_info_t* macho_segment_info_create();
-macho_segment_info_t* macho_segment_info_load(unsigned char* data, unsigned int offset);
-void macho_segment_info_debug(macho_segment_info_t* info);
-void macho_segment_info_free(macho_segment_info_t* info);
+macho_segment_cmd_t* macho_segment_cmd_create();
+macho_segment_cmd_t* macho_segment_cmd_load(unsigned char* data, unsigned int offset);
+void macho_segment_cmd_debug(macho_segment_cmd_t* cmd);
+void macho_segment_cmd_free(macho_segment_cmd_t* cmd);
 
 #endif /* MACHO_SEGMENT_H_ */

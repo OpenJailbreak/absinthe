@@ -20,19 +20,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libimobiledevice/lockdown.h>
 
+#include <libimobiledevice/lockdown.h>
+#include <libimobiledevice/libimobiledevice.h>
+
+#include "debug.h"
+#include "common.h"
 #include "device.h"
 #include "lockdown.h"
 
 lockdown_t* lockdown_open(device_t* device) {
 	lockdownd_client_t lockdownd = NULL;
 	if (lockdownd_client_new_with_handshake(device->client, &lockdownd, "absinthe") != LOCKDOWN_E_SUCCESS) {
+		error("Unable to pair with lockdownd\n");
 		return NULL;
 	}
 
 	lockdown_t* lockdown = (lockdown_t*) malloc(sizeof(lockdown_t));
 	if (lockdown == NULL) {
+		error("Unable to allocate memory for lockdown object\n");
 		return NULL;
 	}
 	memset(lockdown, '\0', sizeof(lockdown_t));
@@ -43,20 +49,17 @@ lockdown_t* lockdown_open(device_t* device) {
 }
 
 int lockdown_start_service(lockdown_t* lockdown, const char* service, uint16_t* port) {
-	uint16_t port_value = 0;
-	lockdownd_start_service(lockdown->client, service, &port_value);
+	uint16_t p = 0;
+	lockdownd_start_service(lockdown->client, service, &p);
 
-	if (port_value) {
-		printf("Started %s successfully on port %d!\n", service, port_value);
-		*port = port_value;
-		return 0;
-	} else {
-
-		printf("%s failed to start!\n", service);
+	if (p == 0) {
+		error("%s failed to start!\n", service);
 		return -1;
 	}
 
-	return -1;
+	debug("Started %s successfully on port %d!\n", service, p);
+	*port = p;
+	return 0;
 }
 
 int lockdown_stop_service(lockdown_t* lockdown, const char* service) {

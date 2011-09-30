@@ -22,11 +22,22 @@
 
 #include "common.h"
 
+#define MACHO_CMD_SEGMENT 0x1
+#define	LC_SYMTAB	0x2
+#define	LC_UNIXTHREAD	0x5
+#define LC_UUID		0x1b
+#define LC_CODE_SIGNATURE 0x1d
+
 typedef struct macho_command_info_t {
-	uint32_t magic;
+	uint32_t cmd;
+	uint32_t cmdsize;
 } macho_command_info_t;
 
 typedef struct macho_command_t {
+	uint32_t cmd;
+	uint32_t size;
+	uint32_t offset;
+	unsigned char* data;
 	macho_command_info_t* info;
 } macho_command_t;
 

@@ -49,20 +49,20 @@ void macho_segment_free(macho_segment_t* segment) {
 /*
  * Mach-O Segment Info Functions
  */
-macho_segment_info_t* macho_segment_info_create() {
-	macho_segment_info_t* info = NULL;
+macho_segment_cmd_t* macho_segment_cmd_create() {
+	macho_segment_cmd_t* info = NULL;
 	return info;
 }
 
-macho_segment_info_t* macho_segment_info_load(unsigned char* data, unsigned int offset) {
-	macho_segment_info_t* info = macho_segment_info_create();
+macho_segment_cmd_t* macho_segment_cmd_load(unsigned char* data, unsigned int offset) {
+	macho_segment_cmd_t* info = macho_segment_cmd_create();
 	return info;
 }
 
-void macho_segment_info_debug(macho_segment_info_t* info) {
+void macho_segment_cmd_debug(macho_segment_cmd_t* cmd) {
 
 }
 
-void macho_segment_info_free(macho_segment_info_t* info) {
+void macho_segment_cmd_free(macho_segment_cmd_t* cmd	) {
 
 }

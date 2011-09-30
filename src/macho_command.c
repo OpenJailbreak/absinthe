@@ -29,40 +29,80 @@
  * Mach-O Command Functions
  */
 macho_command_t* macho_command_create() {
-	macho_command_t* command = NULL;
+	macho_command_t* command = (macho_command_t*) malloc(sizeof(macho_command_t));
+	if (command) {
+		memset(command, '\0', sizeof(macho_command_t));
+	}
 	return command;
 }
 
 macho_command_t* macho_command_load(unsigned char* data, unsigned int offset) {
+	unsigned int size = 0;
 	macho_command_t* command = macho_command_create();
+	if (command) {
+		command->info = macho_command_info_load(data, offset);
+		if (command->info == NULL) {
+			error("Unable to load Mach-O command info\n");
+			macho_command_free(command);
+			return NULL;
+		}
+		macho_command_debug(command);
+	}
 	return command;
 }
 
 void macho_command_debug(macho_command_t* command) {
-
+	if (command) {
+		debug("\tCommand:\n");
+		if(command->info) {
+			macho_command_info_debug(command->info);
+		}
+		debug("\t\n");
+	}
 }
 
 void macho_command_free(macho_command_t* command) {
-
+	if(command) {
+		if(command->info) {
+			macho_command_info_free(command->info);
+			command->info = NULL;
+		}
+		free(command);
+	}
 }
 
 /*
  * Mach-O Command Info Functions
  */
 macho_command_info_t* macho_command_info_create() {
-	macho_command_info_t* info = NULL;
+	macho_command_info_t* info = (macho_command_info_t*) malloc(sizeof(macho_command_info_t));
+	if (info) {
+		memset(info, '\0', sizeof(macho_command_info_t));
+	}
 	return info;
 }
 
 macho_command_info_t* macho_command_info_load(unsigned char* data, unsigned int offset) {
 	macho_command_info_t* info = macho_command_info_create();
+	if (info) {
+		//debug("Command Offset = 0x%x\n", offset);
+		memcpy(info, &data[offset], sizeof(macho_command_info_t*));
+	}
+	macho_command_info_debug(info);
 	return info;
 }
 
 void macho_command_info_debug(macho_command_info_t* info) {
-
+	if (info) {
+		debug("\tInfo:\n");
+		debug("\t\t    cmd = %d\n", info->cmd);
+		debug("\t\tcmdsize = %d\n", info->cmd);
+		debug("\t\n");
+	}
 }
 
 void macho_command_info_free(macho_command_info_t* info) {
-
+	if (info) {
+		free(info);
+	}
 }

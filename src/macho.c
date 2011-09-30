@@ -37,42 +37,19 @@ macho_t* macho_create() {
 	return macho;
 }
 
-macho_t* macho_open(const char* path) {
+macho_t* macho_load(unsigned char* data, unsigned int size) {
 	int i = 0;
 	int err = 0;
 	macho_t* macho = NULL;
-	unsigned int size = 0;
-	unsigned char* data = NULL;
 
 	macho = macho_create();
 	if (macho) {
-		macho->file = file_create();
-		if (macho->file == NULL) {
-			error("Unable to create file object\n");
-			return NULL;
-		}
-
-		debug("Reading Mach-O file from path\n");
-		err = file_read(path, &data, &size);
-		if (err < 0) {
-			error("Unable to read Mach-O file\n");
-			macho_free(macho);
-			return NULL;
-		}
-		macho->file->data = data;
-		macho->file->size = size;
-		macho->file->path = path;
-
-		debug("Copying path into Mach-O object\n");
-		macho->path = strdup(path);
-		if (macho->path == NULL) {
-			error("Unable to copy Mach-O path\n");
-			macho_free(macho);
-			return NULL;
-		}
+		macho->offset = 0;
+		macho->data = data;
+		macho->size = size;
 
 		debug("Loading Mach-O header\n");
-		macho->header = macho_header_load(data, size);
+		macho->header = macho_header_load(macho);
 		if (macho->header == NULL) {
 			error("Unable to load Mach-O header information\n");
 			macho_free(macho);
@@ -80,6 +57,7 @@ macho_t* macho_open(const char* path) {
 		}
 
 		debug("Loading Mach-O command\n");
+		macho->command_count = macho->header->ncmds;
 		macho->commands = macho_commands_load(macho);
 		if (macho->commands == NULL) {
 			error("Unable to parse Mach-O load commands\n");
@@ -97,19 +75,37 @@ macho_t* macho_open(const char* path) {
 	return macho;
 }
 
+macho_t* macho_open(const char* path) {
+	int err = 0;
+	macho_t* macho = NULL;
+	unsigned int size = 0;
+	unsigned char* data = NULL;
+
+	if (path) {
+		debug("Reading Mach-O file from path\n");
+		err = file_read(path, &data, &size);
+		if (err < 0) {
+			error("Unable to read Mach-O file\n");
+			macho_free(macho);
+			return NULL;
+		}
+
+		debug("Creating Mach-O object from file\n");
+		macho = macho_load(data, size);
+		if (macho == NULL) {
+			error("Unable to load Mach-O file\n");
+			return NULL;
+		}
+	}
+	return macho;
+}
+
 void macho_debug(macho_t* macho) {
 	if (macho) {
 		debug("Mach-O:\n");
-
-		if (macho->header)
-			macho_header_debug(macho->header);
-
-		if (macho->commands)
-			macho_commands_debug(macho->commands);
-
-		if (macho->segments)
-			macho_segments_debug(macho->segments);
-
+		if (macho->header) macho_header_debug(macho->header);
+		if (macho->commands) macho_commands_debug(macho->commands);
+		if (macho->segments) macho_segments_debug(macho->segments);
 		debug("\n");
 	}
 }
@@ -124,15 +120,19 @@ void macho_free(macho_t* macho) {
 			macho_commands_free(macho->commands);
 			macho->commands = NULL;
 		}
+
 		if (macho->segments) {
 			macho_segments_free(macho->segments);
 			macho->segments = NULL;
 		}
-		if (macho->path) {
-			free(macho->path);
-			macho->path = NULL;
 
+		if(macho->data) {
+			free(macho->data);
+			macho->size = 0;
+			macho->offset = 0;
+			macho->data = NULL;
 		}
+
 		free(macho);
 	}
 }
@@ -148,10 +148,20 @@ macho_header_t* macho_header_create() {
 	return header;
 }
 
-macho_header_t* macho_header_load(unsigned char* data, unsigned int offset) {
-	macho_header_t* header = macho_header_create();
-	if (header) {
-		memcpy(header, &data[offset], sizeof(macho_header_t));
+macho_header_t* macho_header_load(macho_t* macho) {
+	unsigned int size = 0;
+	unsigned int offset = 0;
+	unsigned char* data = NULL;
+	macho_t* header = NULL;
+	if (macho) {
+		data = macho->data;
+		size = macho->size;
+		offset = macho->offset;
+		header = macho_header_create();
+		if (header) {
+			memcpy(header, &data[offset], sizeof(macho_header_t));
+			macho->offset += sizeof(macho_header_t);
+		}
 	}
 	return header;
 }
@@ -177,15 +187,21 @@ void macho_header_free(macho_header_t* header) {
 }
 
 int macho_handle_command(macho_t* macho, macho_command_t* command) {
-	if(macho) {
+	int ret = 0;
+	if (macho) {
 		// If load command is a segment command, then load a segment
 		//  if a symbol table, then load a symbol table... etc...
-		switch(command->info->magic) {
+		switch (command->info->cmd) {
+		case MACHO_CMD_SEGMENT:
+			//macho_segment_load(command->data, command->)
+			break;
+
 		default:
-			return -1;
+			ret = -1;
+			break;
 		}
 	}
-	return 0;
+	return ret;
 }
 
 /*
@@ -206,15 +222,21 @@ macho_command_t** macho_commands_load(macho_t* macho) {
 	macho_command_t** commands = NULL;
 	if (macho) {
 		count = macho->command_count;
+		debug("Creating Mach-O commands array\n");
 		commands = macho_commands_create(count);
-		if (commands) {
-			for (i = 0; i < count; i++) {
-				commands[i] = macho_command_load(macho->file->data, macho->file->offset);
-				if (commands[i] == NULL) {
-					error("Unable to parse Mach-O load command\n");
-					macho_commands_free(commands);
-					return NULL;
-				}
+		if (commands == NULL) {
+			error("Unable to create Mach-O commands array\n");
+			return NULL;
+		}
+
+		debug("Loading Mach-O commands array\n");
+		for (i = 0; i < count; i++) {
+			debug("Loading Mach-O command %d into array\n", i);
+			commands[i] = macho_command_load(macho->data, macho->offset);
+			if (commands[i] == NULL) {
+				error("Unable to parse Mach-O load command\n");
+				macho_commands_free(commands);
+				return NULL;
 			}
 		}
 	}

@@ -36,11 +36,12 @@ typedef struct macho_header_t {
 } macho_header_t;
 
 typedef struct macho_t {
-	char* path;
-	file_t* file;
-	macho_header_t* header;
+	uint8_t* data;
+	uint32_t size;
+	uint32_t offset;
 	uint32_t command_count;
 	uint32_t segment_count;
+	macho_header_t* header;
 	macho_command_t** commands;
 	macho_segment_t** segments;
 } macho_t;
@@ -50,6 +51,7 @@ typedef struct macho_t {
  */
 macho_t* macho_create();
 macho_t* macho_open(const char* path);
+macho_t* macho_load(unsigned char* data, unsigned int size);
 void macho_debug(macho_t* macho);
 void macho_free(macho_t* macho);
 
@@ -59,7 +61,7 @@ int macho_handle_command(macho_t* macho, macho_command_t* command);
  * Mach-O Header Functions
  */
 macho_header_t* macho_header_create();
-macho_header_t* macho_header_load(unsigned char* data, unsigned int offset);
+macho_header_t* macho_header_load(macho_t* macho);
 void macho_header_debug(macho_header_t* header);
 void macho_header_free(macho_header_t* header);
 
