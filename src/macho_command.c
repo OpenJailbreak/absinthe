@@ -63,16 +63,9 @@ macho_command_t* macho_command_create() {
 macho_command_t* macho_command_load(unsigned char* data, unsigned int offset) {
 	unsigned int size = 0;
 	macho_command_t* command = macho_command_create();
-	macho_command_info_t* info = (macho_command_info_t*) &data[offset];
+	macho_command_info_t* info = macho_command_info_load(data, offset); //(macho_command_info_t*) &data[offset];
 	if (info) {
-		switch(info->cmd) {
-		case MACHO_CMD_SEGMENT:
-			macho_segment_load(data, offset);
-			break;
-
-		default:
-			break;
-		}
+		command->info = info;
 		command->size = command->info->cmdsize;
 	}
 	return command;
@@ -116,7 +109,7 @@ macho_command_info_t* macho_command_info_load(unsigned char* data, unsigned int 
 		debug("Macho-O Command Info Loaded\n");
 		debug("Data = 0x%x, Offset = 0x%x\n", data, offset);
 		debug("Value = 0x%x\n", data[offset]);
-		memcpy(info, data[offset], sizeof(macho_command_info_t));
+		memcpy(info, data+offset, sizeof(macho_command_info_t));
 	}
 	return info;
 }
@@ -125,7 +118,7 @@ void macho_command_info_debug(macho_command_info_t* info) {
 	if (info) {
 		debug("\tInfo:\n");
 		debug("\t\t    cmd = %d\n", info->cmd);
-		debug("\t\tcmdsize = %d\n", info->cmd);
+		debug("\t\tcmdsize = %d\n", info->cmdsize);
 		debug("\t\n");
 	}
 }

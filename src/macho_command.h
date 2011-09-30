@@ -62,6 +62,7 @@ typedef struct macho_command_t {
 
 /*
  * Mach-O Command Functions
+*/
 macho_command_t* macho_command_create();
 macho_command_t* macho_command_load(unsigned char* data, unsigned int offset);
 void macho_command_debug(macho_command_t* command);
