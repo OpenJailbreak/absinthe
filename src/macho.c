@@ -70,7 +70,7 @@ macho_t* macho_load(unsigned char* data, unsigned int size) {
 			macho_handle_command(macho, macho->commands[i]);
 		}
 		// TODO: Remove the line below this once debugging is finished
-		macho_debug(macho);
+		//macho_debug(macho);
 	}
 	return macho;
 }
