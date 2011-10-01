@@ -65,6 +65,26 @@ macho_t* macho_load(unsigned char* data, unsigned int size) {
 			return NULL;
 		}
 
+		// initialize the buffers for the different types.
+		uint32_t seg_count = 0;
+		uint32_t unk_count = 0;
+		for (i = 0; i < macho->command_count; i++) {
+			switch (macho->commands[i]->info->cmd) {
+				case MACHO_CMD_SEGMENT:
+					seg_count++;
+					break;
+				default:
+					unk_count++;
+					break;
+			}
+		}
+
+		macho->segments = macho_segments_create(seg_count);
+
+		if (unk_count > 0) {
+			warn("WARNING: %d unhandled Mach-O Commands\n", unk_count);
+		}
+
 		debug("Handling %d Mach-O commands\n", macho->command_count);
 		for (i = 0; i < macho->command_count; i++) {
 			macho_handle_command(macho, macho->commands[i]);
@@ -193,9 +213,15 @@ int macho_handle_command(macho_t* macho, macho_command_t* command) {
 		//  if a symbol table, then load a symbol table... etc...
 		switch (command->info->cmd) {
 		case MACHO_CMD_SEGMENT:
-			//macho_segment_load(command->data, command->)
+			{
+				macho_segment_t* seg = macho_segment_load(macho->data, command->offset);
+				if (seg) {
+					macho->segments[macho->segment_count++] = seg;
+				} else {
+					error("Could not load segment at offset 0x%x\n", command->offset);
+				}
+			}
 			break;
-
 		default:
 			ret = -1;
 			break;
@@ -271,7 +297,12 @@ void macho_commands_free(macho_command_t** commands) {
  * Mach-O Segments Functions
  */
 macho_segment_t** macho_segments_create(uint32_t count) {
-	macho_segment_t** segments = NULL;
+	if (count == 0) return NULL;
+	int size = (count+1) * sizeof(macho_segment_t*);
+	macho_segment_t** segments = (macho_segment_t**)malloc(size);
+	if (segments) {
+		memset(segments, '\0', size);
+	}
 	return segments;
 }
 
@@ -282,6 +313,11 @@ macho_segment_t** macho_segments_load(macho_t* macho) {
 
 void macho_segments_debug(macho_segment_t** segments) {
 	debug("\tSegments:\n");
+	int i = 0;
+	while (segments[i]) {
+		macho_segment_debug(segments[i]);
+		i++;
+	}
 	debug("\n");
 }
 
