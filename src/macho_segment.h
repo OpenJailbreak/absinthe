@@ -43,7 +43,7 @@ typedef struct macho_segment_t {
 	uint32_t offset;
 	uint32_t address;
 	unsigned char* data;
-	macho_segment_cmd_t* cmd;
+	macho_segment_cmd_t* command;
 	macho_section_t** sections;
 } macho_segment_t;
 

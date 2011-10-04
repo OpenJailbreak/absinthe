@@ -104,7 +104,7 @@ macho_command_info_t* macho_command_info_create() {
 }
 
 macho_command_info_t* macho_command_info_load(unsigned char* data, unsigned int offset) {
-	macho_command_info_t* info = macho_command_info_create();
+	macho_command_info_t* info = (macho_command_info_t*) data;
 	if (info) {
 		debug("Mach-O Command Info Loaded\n");
 		memcpy(info, data+offset, sizeof(macho_command_info_t));

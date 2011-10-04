@@ -29,21 +29,38 @@
  * Mach-O Segment Functions
  */
 macho_segment_t* macho_segment_create() {
-	macho_segment_t* segment = NULL;
+	macho_segment_t* segment = (macho_segment_t*) malloc(sizeof(macho_segment_t));
+	if(segment) {
+		memset(segment, '\0', sizeof(macho_segment_t));
+	}
 	return segment;
 }
 
 macho_segment_t* macho_segment_load(unsigned char* data, unsigned int offset) {
+	unsigned char* address = NULL;
 	macho_segment_t* segment = macho_segment_create();
+	if(segment) {
+		segment->offset = offset;
+		segment->data = &data[offset];
+		//segment->command = macho_segment_cmd_load(segment);
+		if(segment->command == NULL) {
+			error("Unable to load segment info\n");
+			macho_segment_free(segment);
+			return NULL;
+		}
+	}
 	return segment;
 }
 
 void macho_segment_debug(macho_segment_t* segment) {
-
+	debug("Segment:\n");
+	debug("\n");
 }
 
 void macho_segment_free(macho_segment_t* segment) {
-
+	if(segment) {
+		free(segment);
+	}
 }
 
 /*

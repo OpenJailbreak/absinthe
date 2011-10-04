@@ -55,6 +55,7 @@ typedef struct macho_command_info_t {
 typedef struct macho_command_t {
 	uint32_t cmd;
 	uint32_t size;
+	uint32_t index;
 	uint32_t offset;
 	unsigned char* data;
 	macho_command_info_t* info;

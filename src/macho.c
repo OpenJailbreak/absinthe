@@ -193,7 +193,7 @@ int macho_handle_command(macho_t* macho, macho_command_t* command) {
 		//  if a symbol table, then load a symbol table... etc...
 		switch (command->info->cmd) {
 		case MACHO_CMD_SEGMENT:
-			//macho_segment_load(command->data, command->)
+			macho_segment_load(macho->data, macho->offset);
 			break;
 
 		default:
