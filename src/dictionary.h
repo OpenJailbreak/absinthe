@@ -86,7 +86,7 @@ dictionary_t* dictionary_create();
 void dictionary_free(dictionary_t* dict);
 void dictionary_debug(dictionary_t* dict);
 
-int dictionary_make_attack(uint32_t address, char** data, int* length);
+int dictionary_make_attack(uint32_t address, uint32_t salt, char** data, int* length);
 
 dictionary_value_t* dictionary_get_values(dictionary_t* dict);
 void dictionary_set_values(dictionary_t* dict, dictionary_value_t *ptr);

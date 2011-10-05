@@ -66,11 +66,11 @@ int main(int argc, char* argv) {
 			//debug("Checking if string is ASCII safe\n");
 			if(check_ascii_pointer(address)) {
 				//debug("Safe ASCII pointer contains 0x%08x\n", value);
-				//debug("0x%08x, 0x%08x\n", address, value);
+				debug("0x%08x, 0x%08x\n", address, value);
 				//printf("print 0x%08x\n", value);
 				//printf("print *+$\n");
 				//printf("print *+$\n");
-				file_append("pointer.db", &address, 4);
+				//file_append("pointer.db", &address, 4);
 			} else {
 				//error("Error!! This pointer will not get past the ASCII filter\n");
 			}

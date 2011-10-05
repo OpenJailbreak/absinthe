@@ -42,6 +42,6 @@ crashreporter_t* crashreporter_connect(device_t* device);
 crashreporter_t* crashreporter_open(device_t* device, uint16_t port);
 void crashreporter_free(crashreporter_t* crashreporter);
 
-crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter);
+crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter, int salt);
 
 #endif

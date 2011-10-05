@@ -105,7 +105,7 @@ void crashreporter_free(crashreporter_t* crashreporter) {
 }
 
 
-crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
+crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter, int salt) {
 	char** list = NULL;
 	afc_error_t err = AFC_E_SUCCESS;
 	if(crashreporter == NULL) {
@@ -205,6 +205,8 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 		free(lastItem);
 		return NULL;
 	}
+
+	printf("CRASH: %d - 20 %s\n", salt, lastItem);
 	free(lastItem);
 	plist_from_xml(datas, size, &plist);
 	free(datas);
