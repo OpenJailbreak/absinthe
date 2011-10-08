@@ -1,5 +1,5 @@
 /**
- * GreenPois0n Gizmo - gizmo.c
+ * GreenPois0n Absinthe - gizmo.c
  * Copyright (C) 2010 Chronic-Dev Team
  * Copyright (C) 2010 Joshua Hill
  *

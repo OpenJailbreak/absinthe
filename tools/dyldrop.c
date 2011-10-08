@@ -28,30 +28,28 @@
 #include "dyldcache.h"
 
 int main(int argc, char* argv[]) {
+	int i = 0;
 	int ret = 0;
 	if(argc != 3) {
-		info("Usage: ./dyldrop <dyldcache> <kernel>\n");
+		info("Usage: ./dyldrop <dyldcache>\n");
 		return 0;
 	}
 	char* cache_path = strdup(argv[1]);
-	char* macho_path = strdup(argv[2]);
-/*
+
 	debug("Creating dyldcache from %s\n", cache_path);
 	dyldcache_t* cache = dyldcache_open(cache_path);
 	if(cache == NULL) {
 		error("Unable to allocate memory for dyldcache\n");
 		goto panic;
 	}
-	//dyldcache_free(cache);
-*/
-	debug("Creating macho from %s\n", macho_path);
-	macho_t* macho = macho_open(macho_path);
-	if(macho == NULL) {
-		error("Unable to allocate memory for macho\n");
-		goto panic;
-	}
-	//macho_free(macho);
 
+	for(i = 0; i < cache->header->images_count; i++) {
+		dyldimage_t* image = cache->images[i];
+		file_write(image->name, image->data, image->size);
+	}
+
+	dyldcache_free(cache);
+	cache = NULL;
 	goto finish;
 
 panic:
@@ -59,9 +57,7 @@ panic:
 
 finish:
 	debug("Cleaning up\n");
-	if(macho) macho_free(macho);
-	//if(cache) dyldcache_free(cache);
-	if(macho_path) free(macho_path);
+	if(cache) dyldcache_free(cache);
 	if(cache_path) free(cache_path);
 	return ret;
 }

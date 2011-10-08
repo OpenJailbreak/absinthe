@@ -39,7 +39,43 @@ void dictionary_free(dictionary_t* dict) {
 	}
 }
 
+int randomize_string(unsigned char* buffer, unsigned int size, int times) {
+	int i = 0;
+	int bits = size * 8;
+	memset(buffer, '\1', size);
+	for(i = 0; i < times; i++) {
+			// Here we're going to flip some bits and record the type of crash we get
+			int bit = random() % bits; // returns a number 0x0 to size * 8
+			//debug("Bit = %d\n", bit);
+			int index = bit/8; // returns the byte index of the bit we're going to change
+			//debug("Index = 0x%02x\n", index);
+			//debug("Original byte found was 0x%x\n", buffer[index]);
+
+			int shift = bit - (index*8); // the index of the bit from the byte
+			//debug("Shift = %d\n", shift);
+			char bit_mask = 1 << shift;
+			//debug("BitMask = 0x%x\n\n", bit_mask);
+			buffer[index] ^= bit_mask;
+			//debug("New byte is 0x%x\n", buffer[index]);
+			buffer[index] &= ~0x80;
+	}
+	return 0;
+}
+
 int dictionary_make_attack(uint32_t address, uint32_t salt, char** data, int* length) {
+	int i = 0;
+	int count = 20;
+	int bits = 0x10 * 8;
+	unsigned int size = 0x48;
+	unsigned char* buffer = (unsigned char*) malloc(size);
+	memset(buffer, '\1', size);
+	randomize_string(buffer, 0x10, 0x10);
+	randomize_string(&buffer[0x10], 0x10, 0x10);
+	return 0;
+}
+
+
+/*
 	int i = 0;
 	int size = 0x40;
 	int bits = 0x10 * 8;
@@ -72,9 +108,9 @@ int dictionary_make_attack(uint32_t address, uint32_t salt, char** data, int* le
 			if(buffer[index] == 0 || buffer[index] > 0x7F) buffer[index] = 1;
 		}
 
-		ibuffer[4] = 0x3F202020;
-		ibuffer[5] = 0x3F202020;
-		ibuffer[6] = 0x3F303030;
+		ibuffer[4] = 0x3F202020 + (salt*4);
+		ibuffer[5] = 0x3F202020 + (salt*4);
+		ibuffer[6] = 0x3F303030 + (salt*4);
 		//ibuffer[7] = 0x3F0a0b0c;
 		//ibuffer[8] = 0x3F0d0e0f;
 	}
@@ -87,7 +123,7 @@ int dictionary_make_attack(uint32_t address, uint32_t salt, char** data, int* le
 	*length = size;
 	return 0;
 }
-
+*/
 	/*
 	int size = 0x40;
 	unsigned char* buffer = malloc(size);

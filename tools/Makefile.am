@@ -32,3 +32,11 @@ pointingdb_SOURCES = pointingdb.c \
 pointingdb_CFLAGS = $(AM_CFLAGS) -I../src
 pointingdb_LDFLAGS = $(AM_LDFLAGS)
 pointingdb_LDADD = $(AM_LDADD)
+
+pointingdb_SOURCES = pointingdb.c \
+				../src/common.c \
+				../src/file.c
+				
+pointingdb_CFLAGS = $(AM_CFLAGS) -I../src
+pointingdb_LDFLAGS = $(AM_LDFLAGS)
+pointingdb_LDADD = $(AM_LDADD)

