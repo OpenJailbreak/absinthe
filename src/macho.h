@@ -21,6 +21,7 @@
 #define MACHO_H_
 
 #include "common.h"
+#include "macho_symtab.h"
 #include "macho_segment.h"
 #include "macho_section.h"
 #include "macho_command.h"
@@ -41,9 +42,11 @@ typedef struct macho_t {
 	uint32_t offset;
 	uint32_t command_count;
 	uint32_t segment_count;
+	uint32_t symtab_count;
 	macho_header_t* header;
 	macho_command_t** commands;
 	macho_segment_t** segments;
+	macho_symtab_t** symtabs;
 } macho_t;
 
 /*
@@ -80,6 +83,13 @@ macho_segment_t** macho_segments_create(uint32_t count);
 macho_segment_t** macho_segments_load(macho_t* macho);
 void macho_segments_debug(macho_segment_t** segments);
 void macho_segments_free(macho_segment_t** segments);
+
+/*
+ * Mach-O Symtab Functions
+ */
+macho_symtab_t** macho_symtabs_create(uint32_t count);
+void macho_symtabs_debug(macho_symtab_t** segments);
+void macho_symtabs_free(macho_symtab_t** segments);
 
 /*
  * Mach-O Sections Functions

@@ -67,6 +67,7 @@ macho_command_t* macho_command_load(unsigned char* data, unsigned int offset) {
 	if (info) {
 		command->info = info;
 		command->size = command->info->cmdsize;
+		command->offset = offset;
 	}
 	return command;
 }

@@ -19,8 +19,8 @@ dyldrop_SOURCES = dyldrop.c \
 				 ../src/macho_command.c \
 				 ../src/macho_segment.c \
 				 ../src/macho_section.c \
-				 ../src/macho_symbol.c
-				 
+				 ../src/macho_symbol.c \
+				../src/macho_symtab.c				 
 dyldrop_CFLAGS = $(AM_CFLAGS) -I../src
 dyldrop_LDFLAGS = $(AM_LDFLAGS)
 dyldrop_LDADD = $(AM_LDADD)

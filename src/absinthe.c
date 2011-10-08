@@ -145,13 +145,13 @@ int main(int argc, char* argv[]) {
 	int verbose = 0;
 	char* dylib = NULL;
 	char* cache = NULL;
-	int aslr_slide = 0;
-	char* pointer = NULL;
-	char* target = NULL;
-	int entropy = 0;
-	int salt = 0;
+	unsigned long aslr_slide = 0;
+	unsigned long pointer = NULL;
+	unsigned long target = NULL;
+	unsigned long entropy = 0;
+	unsigned long salt = 0;
 	char* uuid = NULL;
-	int loop = 0;
+	unsigned long loop = 0;
 
 	while ((opt = getopt_long(argc, argv, "hvd:c:a:p:t:e:s:u:l:", longopts, &optindex)) > 0) {
 		switch (opt) {
@@ -172,23 +172,23 @@ int main(int argc, char* argv[]) {
 			break;
 
 		case 'a':
-			aslr_slide = atoi(optarg);
+			aslr_slide = strtoul(optarg, NULL, 0);
 			break;
 
 		case 'p':
-			pointer = optarg;
+			pointer = strtoul(optarg, NULL, 0);
 			break;
 
 		case 't':
-			target = optarg;
+			target = strtoul(optarg, NULL, 0);
 			break;
 
 		case 'e':
-			entropy = atoi(optarg);
+			entropy = strtoul(optarg, NULL, 0);
 			break;
 
 		case 's':
-			salt = atoi(optarg);
+			salt = strtoul(optarg, NULL, 0);
 			break;
 
 		case 'u':
@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
 			break;
 
 		case 'l':
-			loop = atoi(optarg);
+			loop = strtoul(optarg, NULL, 0);
 			break;
 
 		default:
