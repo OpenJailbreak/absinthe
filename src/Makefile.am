@@ -23,6 +23,7 @@ absinthe_SOURCES = \
 	dyldmap.c \
 	macho.c \
 	macho_segment.c \
+	macho_symtab.c \
 	macho_section.c \
 	macho_command.c \
 	architecture.c

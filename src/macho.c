@@ -67,11 +67,15 @@ macho_t* macho_load(unsigned char* data, unsigned int size) {
 
 		// initialize the buffers for the different types.
 		uint32_t seg_count = 0;
+		uint32_t symtab_count = 0;
 		uint32_t unk_count = 0;
 		for (i = 0; i < macho->command_count; i++) {
 			switch (macho->commands[i]->info->cmd) {
 				case MACHO_CMD_SEGMENT:
 					seg_count++;
+					break;
+				case MACHO_CMD_SYMTAB:
+					symtab_count++;
 					break;
 				default:
 					unk_count++;
@@ -80,6 +84,7 @@ macho_t* macho_load(unsigned char* data, unsigned int size) {
 		}
 
 		macho->segments = macho_segments_create(seg_count);
+		macho->symtabs = macho_symtabs_create(symtab_count);
 
 		if (unk_count > 0) {
 			warn("WARNING: %d unhandled Mach-O Commands\n", unk_count);
@@ -209,16 +214,29 @@ void macho_header_free(macho_header_t* header) {
 int macho_handle_command(macho_t* macho, macho_command_t* command) {
 	int ret = 0;
 	if (macho) {
+		printf("handle command %x\n", command->info->cmd);
 		// If load command is a segment command, then load a segment
 		//  if a symbol table, then load a symbol table... etc...
 		switch (command->info->cmd) {
 		case MACHO_CMD_SEGMENT:
+			// segment of this file to be mapped
 			{
 				macho_segment_t* seg = macho_segment_load(macho->data, command->offset);
 				if (seg) {
 					macho->segments[macho->segment_count++] = seg;
 				} else {
 					error("Could not load segment at offset 0x%x\n", command->offset);
+				}
+			}
+			break;
+		case MACHO_CMD_SYMTAB:
+			// link-edit stab symbol table info
+			{
+				macho_symtab_t* symtab = macho_symtab_load(macho->data, command->offset);
+				if (symtab) {
+					macho->symtabs[macho->symtab_count++];
+				} else {
+					error("Could not load symtab at offset 0x%x\n", command->offset);
 				}
 			}
 			break;
@@ -325,6 +343,36 @@ void macho_segments_free(macho_segment_t** segments) {
 	// TODO: Loop through and free each item
 	if (segments) {
 		free(segments);
+	}
+}
+
+/*
+ * Mach-O Symtab Functions
+ */
+macho_symtab_t** macho_symtabs_create(uint32_t count) {
+	if (count == 0) return NULL;
+	int size = (count+1) * sizeof(macho_symtab_t*);
+	macho_symtab_t** symtabs = (macho_symtab_t**)malloc(size);
+	if (symtabs) {
+		memset(symtabs, '\0', size);
+	}
+	return symtabs;
+}
+
+void macho_symtabs_debug(macho_symtab_t** symtabs) {
+	debug("\tSymtabs:\n");
+	int i = 0;
+	while (symtabs[i]) {
+		macho_symtab_debug(symtabs[i]);
+		i++;
+	}
+	debug("\n");
+}
+
+void macho_symtabs_free(macho_symtab_t** symtabs) {
+	// TODO: Loop through and free each item
+	if (symtabs) {
+		free(symtabs);
 	}
 }
 
