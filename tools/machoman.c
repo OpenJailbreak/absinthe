@@ -25,7 +25,7 @@
 #include "common.h"
 
 int main(int argc, char* argv[]) {
-	if(argc > 1) {
+	if(argc != 2) {
 		info("Usage: ./machoman <mach-o file>\n");
 		return -1;
 	}
