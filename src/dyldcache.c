@@ -55,12 +55,6 @@ dyldcache_t* dyldcache_open(const char* path) {
 
 	cache = dyldcache_create();
 	if (cache) {
-		cache->file = file_create();
-		if (cache->file == NULL) {
-			error("Unable to allocate memory for file object\n");
-			dyldcache_free(cache);
-			return NULL;
-		}
 		err = file_read(path, &buffer, &length);
 		if (err < 0) {
 			error("Unable to open file at path %s\n", path);
@@ -99,12 +93,6 @@ dyldcache_t* dyldcache_open(const char* path) {
 			dyldcache_free(cache);
 			return NULL;
 		}
-
-		// what's that?
-		cache->file->data = buffer;
-		cache->file->size = length;
-		cache->file->offset = 0;
-		cache->file->path = strdup(path);
 
 		dyldcache_debug(cache);
 	}
