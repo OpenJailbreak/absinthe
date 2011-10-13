@@ -30,7 +30,7 @@
 int main(int argc, char* argv[]) {
 	int i = 0;
 	int ret = 0;
-	if(argc != 3) {
+	if(argc != 2) {
 		info("Usage: ./dyldrop <dyldcache>\n");
 		return 0;
 	}
