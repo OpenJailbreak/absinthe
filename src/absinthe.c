@@ -102,7 +102,7 @@ crashreport_t* fetch_crashreport(device_t* device) {
 	crashreporter_t* reporter = crashreporter_connect(device);
 	if (reporter == NULL) {
 		error("Unable to open connection to crash reporter\n");
-		return -1;
+		return NULL;
 	}
 
 	// Read in the last crash since that's probably our fault anyways. Since dylib
@@ -112,7 +112,7 @@ crashreport_t* fetch_crashreport(device_t* device) {
 	crashreport_t* crash = crashreporter_last_crash(reporter);
 	if (crash == NULL) {
 		error("Unable to read last crash\n");
-		return -1;
+		return NULL;
 	}
 	crashreporter_free(reporter);
 	return crash;
@@ -157,8 +157,8 @@ int main(int argc, char* argv[]) {
 	char* dylib = NULL;
 	char* cache = NULL;
 	unsigned long aslr_slide = 0;
-	unsigned long pointer = NULL;
-	unsigned long target = NULL;
+	unsigned long pointer = 0;
+	unsigned long target = 0;
 	unsigned long entropy = 0;
 	unsigned long salt = 0;
 	char* uuid = NULL;
