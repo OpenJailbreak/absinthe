@@ -60,7 +60,7 @@ int main(int argc, char* argv) {
 		//debug("Database read, reconstructing addresses and filtering ASCII\n");
 		for(i = 0; i < size; i+=4) {
 			value = *((uint32_t*) &data[i]);
-			if(value == NULL || (value & 0xFF000000) == 0) continue;
+			if((value == 0) || ((value & 0xFF000000) == 0)) continue;
 			address = base + i;
 			//debug("Read pointer 0x%08x at offset 0x%x\n", address, i);
 			//debug("Checking if string is ASCII safe\n");
