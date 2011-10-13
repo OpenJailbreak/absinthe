@@ -35,17 +35,26 @@
 #define sleep(x) Sleep(x*1000)
 #endif
 
+/////////////////////////////////////////////////////////////////////////////////////////
+/// TODO: We need to add an event handler for when devices are connected. This handler //
+///         needs to wait for iTunes to autostart and kill it before it can start the  //
+///         syncing process and mess up our connection.                                //
+/////////////////////////////////////////////////////////////////////////////////////////
+
 static struct option longopts[] = {
-	{ "uuid",    required_argument, NULL, 'u' },
-	{ "help",    no_argument,       NULL, 'h' },
+	{ "help",        no_argument,         NULL,   'h' },
+	{ "verbose",     required_argument,   NULL,   'v' },
+	{ "uuid",        required_argument,   NULL,   'u' },
+	{ "loop",        required_argument,   NULL,   'l' },
+	{ "salt",        required_argument,   NULL,   's' },
+	{ "entropy",     required_argument,   NULL,   'e' },
+	{ "target",      required_argument,   NULL,   't' },
+	{ "pointer",     required_argument,   NULL,   'p' },
+	{ "aslr-slide",  required_argument,   NULL,   'a' },
+	{ "cache",       required_argument,   NULL,   'c' },
+	{ "dylib",       required_argument,   NULL,   'd' },
 	{ NULL, 0, NULL, 0 }
 };
-
-////////////////////////////////////////////////////////////////////////////////////////
-// TODO: We need to add an event handler for when devices are connected. This handler //
-//         needs to wait for iTunes to autostart and kill it before it can start the  //
-//         syncing process and mess up our connection.                                //
-////////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum {
 	kFalse = 0, kTrue = 1
@@ -120,7 +129,9 @@ int bruteforce_string() {
 void usage(int argc, char* argv[]) {
 	char* name = strrchr(argv[0], '/');
 	printf("Usage: %s [OPTIONS]\n", (name ? name + 1 : argv[0]));
-	printf("Restore/upgrade IPSW firmware FILE to an iPhone/iPod Touch.\n");
+	printf("Copyright 2011, Chronic-Dev LLC\n");
+	printf("Jailbreak iOS5.0 using ub3rl33t MobileBackup2 exploit.\n");
+	printf("Discovered by Nikias Bassen, Exploited by Joshua Hill\n");
 	printf("  General\n");
 	printf("    -h, --help\t\t\tprints usage information\n");
 	printf("    -v, --verbose\t\tprints debuging info while running\n");
