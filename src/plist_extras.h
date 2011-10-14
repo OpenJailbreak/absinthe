@@ -30,6 +30,7 @@ enum plist_format_t {
 	PLIST_FORMAT_BINARY
 };
 
+int plist_read_from_filename(plist_t *plist, const char *filename);
 int plist_write_to_filename(plist_t plist, const char *filename, enum plist_format_t format);
 
 #endif /* PLIST_EXTRAS_H */

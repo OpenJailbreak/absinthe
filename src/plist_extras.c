@@ -19,6 +19,58 @@
 
 #include "plist_extras.h"
 
+static void buffer_read_from_filename(const char *filename, char **buffer, uint64_t *length)
+{
+	FILE *f;
+	uint64_t size;
+
+	*length = 0;
+
+	f = fopen(filename, "rb");
+	if (!f) {
+		return;
+	}
+
+	fseek(f, 0, SEEK_END);
+	size = ftell(f);
+	rewind(f);
+
+	if (size == 0) {
+		return;
+	}
+
+	*buffer = (char*)malloc(sizeof(char)*size);
+	fread(*buffer, sizeof(char), size, f);
+	fclose(f);
+
+	*length = size;
+}
+
+int plist_read_from_filename(plist_t *plist, const char *filename)
+{
+	char *buffer = NULL;
+	uint64_t length;
+
+	if (!filename)
+		return 0;
+
+	buffer_read_from_filename(filename, &buffer, &length);
+
+	if (!buffer) {
+		return 0;
+	}
+
+	if ((length > 8) && (memcmp(buffer, "bplist00", 8) == 0)) {
+		plist_from_bin(buffer, length, plist);
+	} else {
+		plist_from_xml(buffer, length, plist);
+	}
+
+	free(buffer);
+
+	return 1;
+}
+
 static void buffer_write_to_filename(const char *filename, const char *buffer, uint64_t length)
 {
 	FILE *f;

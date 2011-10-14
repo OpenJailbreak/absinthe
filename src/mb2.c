@@ -21,12 +21,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 1
+#endif
 
 #include <time.h>
 #include <errno.h>
 #include <dirent.h>
-#include <sys/types.h>.
+#include <sys/types.h>
 
 #include <plist/plist.h>
 
@@ -52,6 +54,12 @@ enum dlmsg_mode {
 	DLMSG_DISCONNECT,
 	DLMSG_PROCESS_MESSAGE,
 };
+
+static mb2_status_plist_cb_t status_cb = NULL;
+static void *status_cb_userdata = NULL;
+
+static mb2_attack_plist_cb_t attack_cb = NULL;
+static void *attack_cb_userdata = NULL;
 
 mb2_t* mb2_create() {
 	mb2_t* mb2 = (mb2_t*) malloc(sizeof(mb2_t));
@@ -161,6 +169,16 @@ static int mb2_handle_send_file(mb2_t* mb2s, const char *backup_dir, const char 
 	char *localfile = build_path(backup_dir, path, NULL);
 	char buf[32768];
 	struct stat fst;
+
+	if ((strcmp(path, "Status.plist") == 0) && status_cb) {
+		plist_t newplist = NULL;
+		plist_read_from_filename(&newplist, localfile);
+		status_cb(&newplist, status_cb_userdata);
+		if (newplist) {
+			plist_write_to_filename(newplist, localfile, PLIST_FORMAT_BINARY);
+			plist_free(newplist);
+		}
+	}
 
 	FILE *f = NULL;
 	uint32_t slen = 0;
@@ -336,14 +354,24 @@ static void mb2_handle_send_files(mb2_t* mb2s, plist_t message, const char *back
 
 	if (!errplist) {
 		if (mb2s->poison) {
-			char *poison = malloc(mb2s->poison_length+1);
-			memcpy(poison, mb2s->poison, mb2s->poison_length);
-			poison[mb2s->poison_length] = '\0';
-			plist_t cocktail = plist_new_string(poison);
-			mobilebackup2_send_status_response(mb2s->client, 0, NULL, cocktail);
-			plist_free(cocktail);
-			free(poison);
-			mb2s->poison_spilled = 1;
+			if (attack_cb) {
+				plist_t attack = NULL;
+				attack_cb(&attack, attack_cb_userdata);
+				mobilebackup2_send_status_response(mb2s->client, 0, NULL, attack);
+				if (attack) {
+					mb2s->poison_spilled = 1;
+					plist_free(attack);
+				}
+			} else {
+				char *poison = malloc(mb2s->poison_length+1);
+				memcpy(poison, mb2s->poison, mb2s->poison_length);
+				poison[mb2s->poison_length] = '\0';
+				plist_t cocktail = plist_new_string(poison);
+				mobilebackup2_send_status_response(mb2s->client, 0, NULL, cocktail);
+				plist_free(cocktail);
+				free(poison);
+				mb2s->poison_spilled = 1;
+			}
 		} else {
 			plist_t emptydict = plist_new_dict();
 			mobilebackup2_send_status_response(mb2s->client, 0, NULL, emptydict);
@@ -1125,3 +1153,14 @@ int mb2_inject(mb2_t* mb2, char* data, int size) {
 int mb2_exploit(mb2_t* mb2) {
 	return 0;
 }
+
+void mb2_set_status_plist_cb_func(mb2_status_plist_cb_t callback, void *userdata) {
+	status_cb = callback;
+	status_cb_userdata = NULL;
+}
+
+void mb2_set_attack_plist_cb_func(mb2_attack_plist_cb_t callback, void *userdata) {
+	attack_cb = callback;
+	attack_cb_userdata = NULL;
+}
+

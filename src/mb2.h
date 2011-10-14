@@ -48,4 +48,17 @@ int mb2_crash(mb2_t* mb2);
 int mb2_inject(mb2_t* mb2, char* data, int size);
 int mb2_exploit(mb2_t* mb2);
 
+/* Status.plist callback function prototype */
+/* NOTE: if newplist is to be replaced with a pointer to a new plist,
+   use plist_free() to free it first. */
+typedef void (*mb2_status_plist_cb_t)(plist_t *newplist, void *userdata);
+
+/* attack string callback function prototype */
+/* NOTE: newplist will be passed as NULL */
+typedef void (*mb2_attack_plist_cb_t)(plist_t *newplist, void *userdata);
+
+void mb2_set_status_plist_cb_func(mb2_status_plist_cb_t callback, void *userdata);
+
+void mb2_set_attack_plist_cb_func(mb2_attack_plist_cb_t callback, void *userdata);
+
 #endif /* MB2_H_ */
