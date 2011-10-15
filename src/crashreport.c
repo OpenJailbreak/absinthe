@@ -62,6 +62,10 @@ void crashreport_free(crashreport_t* report) {
 	}
 }
 
+void crashreport_debug(crashreport_t* report) {
+	// TODO: Implement crashreport_debug function
+}
+
 char* crashreport_parse_name(const char* description) {
 	char name[256];
 	char* start = strstr(description, "Process:");

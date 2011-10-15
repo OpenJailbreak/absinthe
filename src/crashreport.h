@@ -56,6 +56,7 @@ typedef struct crashreport_t {
 
 crashreport_t* crashreport_create();
 void crashreport_free(crashreport_t* report);
+void crashreport_debug(crashreport_t* report);
 
 crashreport_t* crashreport_parse_plist(plist_t crash);
 char* crashreport_parse_name(const char* description);
