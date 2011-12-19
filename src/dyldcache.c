@@ -80,13 +80,6 @@ dyldcache_t* dyldcache_open(const char* path) {
 			return NULL;
 		}
 
-		cache->images = dyldcache_images_load(cache);
-		if (cache->images == NULL) {
-			error("Unable to load images from dyldcache\n");
-			dyldcache_free(cache);
-			return NULL;
-		}
-
 		cache->maps = dyldcache_maps_load(cache);
 		if (cache->maps == NULL) {
 			error("Unable to load maps from dyldcache\n");
@@ -94,7 +87,14 @@ dyldcache_t* dyldcache_open(const char* path) {
 			return NULL;
 		}
 
-		dyldcache_debug(cache);
+		cache->images = dyldcache_images_load(cache);
+		if (cache->images == NULL) {
+			error("Unable to load images from dyldcache\n");
+			dyldcache_free(cache);
+			return NULL;
+		}
+
+		//dyldcache_debug(cache);
 	}
 	return cache;
 }
@@ -251,6 +251,7 @@ dyldimage_t** dyldcache_images_load(dyldcache_t* cache) {
 	uint32_t count = 0;
 	uint32_t offset = 0;
 	uint8_t* buffer = NULL;
+	dyldimage_t* image = NULL;
 	dyldimage_t** images = NULL;
 
 	if (cache) {
@@ -262,11 +263,18 @@ dyldimage_t** dyldcache_images_load(dyldcache_t* cache) {
 		}
 
 		for (i = 0; i < count; i++) {
-			images[i] = dyldimage_parse(cache->data, cache->header->images_offset + i*sizeof(dyldimage_info_t));
-			if (images[i] == NULL) {
+			image = dyldimage_parse(cache->data, cache->header->images_offset + i*sizeof(dyldimage_info_t));
+			if (image == NULL) {
 				error("Unable to parse dyld image from cache\n");
 				return NULL;
 			}
+			image->map = dyldcache_map_address(cache, image->address);
+			image->offset = image->address - image->map->address;
+			image->data = &cache->data[image->offset];
+			if(i != 0) {
+				images[i-1]->size = image->offset - images[i-1]->offset;
+			}
+			images[i] = image;
 		}
 		//dyldcache_images_debug(maps);
 	}
@@ -357,4 +365,20 @@ void dyldcache_maps_free(dyldmap_t** maps) {
 		}
 		free(maps);
 	}
+}
+
+dyldmap_t* dyldcache_map_image(dyldcache_t* cache, dyldimage_t* image) {
+	return dyldcache_map_address(cache, image->address);
+}
+
+dyldmap_t* dyldcache_map_address(dyldcache_t* cache, uint64_t address) {
+	int i = 0;
+	dyldmap_t* map = NULL;
+	for(i = 0; i < cache->header->mapping_count; i++) {
+		map = cache->maps[i];
+		if(dyldmap_contains(map, address) == kTrue) {
+			return map;
+		}
+	}
+	return NULL;
 }

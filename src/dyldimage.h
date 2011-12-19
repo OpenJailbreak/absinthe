@@ -22,6 +22,8 @@
 
 #include <stdint.h>
 
+#include "dyldmap.h"
+
 typedef struct dyldimage_info_t {
 	uint64_t address;
 	uint64_t modtime;
@@ -32,10 +34,13 @@ typedef struct dyldimage_info_t {
 
 typedef struct dyldimage_t {
 	char* name;
+	char* path;
 	uint8_t* data;
 	uint32_t size;
 	uint32_t index;
-	uint32_t count;
+	uint32_t offset;
+	uint64_t address;
+	dyldmap_t* map;
 	dyldimage_info_t* info;
 } dyldimage_t;
 

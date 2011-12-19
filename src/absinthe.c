@@ -26,6 +26,7 @@
 #include "mb2.h"
 #include "debug.h"
 #include "device.h"
+#include "boolean.h"
 #include "dictionary.h"
 #include "crashreporter.h"
 
@@ -57,10 +58,6 @@ static struct option longopts[] = {
 	{ "dylib",       required_argument,   NULL,   'd' },
 	{ NULL, 0, NULL, 0 }
 };
-
-typedef enum {
-	kFalse = 0, kTrue = 1
-} bool;
 
 int check_ascii_string(const char* string, size_t length) {
 	size_t i = 0;
