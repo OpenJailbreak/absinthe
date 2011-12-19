@@ -48,7 +48,7 @@ dyldimage_t* dyldimage_parse(unsigned char* data, uint32_t offset) {
 			return NULL;
 		}
 		image->path = &data[image->info->offset];
-		image->name = strrchr(image->path, '/');
+		image->name = strrchr(image->path, '/')+1;
 		image->address = image->info->address;
 		image->size = 0;
 	}

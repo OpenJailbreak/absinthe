@@ -55,7 +55,7 @@ macho_symtab_t* macho_symtab_load(unsigned char* data, unsigned int offset) {
 				symtab->symbols[i].n_un.n_name = (char*)(data+symtab->cmd->stroff + off);
 			}
 		}
-		macho_symtab_debug(symtab);
+		//macho_symtab_debug(symtab);
 	}
 	return symtab;
 }
@@ -96,7 +96,7 @@ macho_symtab_cmd_t* macho_symtab_cmd_load(unsigned char* data, unsigned int offs
 	macho_symtab_cmd_t* cmd = macho_symtab_cmd_create();
 	if (cmd) {
 		memcpy(cmd, data+offset, sizeof(macho_symtab_cmd_t));
-		macho_symtab_cmd_debug(cmd);
+		//macho_symtab_cmd_debug(cmd);
 	}
 	return cmd;
 }

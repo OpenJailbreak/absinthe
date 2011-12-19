@@ -98,7 +98,7 @@ void macho_command_free(macho_command_t* command) {
 macho_command_info_t* macho_command_info_create() {
 	macho_command_info_t* info = (macho_command_info_t*) malloc(sizeof(macho_command_info_t));
 	if (info) {
-		debug("Mach-O Command Info Created\n");
+		//debug("Mach-O Command Info Created\n");
 		memset(info, '\0', sizeof(macho_command_info_t));
 	}
 	return info;
@@ -107,7 +107,7 @@ macho_command_info_t* macho_command_info_create() {
 macho_command_info_t* macho_command_info_load(unsigned char* data, unsigned int offset) {
 	macho_command_info_t* info = (macho_command_info_t*)macho_command_info_create();
 	if (info) {
-		debug("Mach-O Command Info Loaded\n");
+		//debug("Mach-O Command Info Loaded\n");
 		memcpy(info, data+offset, sizeof(macho_command_info_t));
 	}
 	return info;

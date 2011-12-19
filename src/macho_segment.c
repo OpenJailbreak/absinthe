@@ -87,7 +87,7 @@ macho_segment_cmd_t* macho_segment_cmd_load(unsigned char* data, unsigned int of
 	macho_segment_cmd_t* cmd = macho_segment_cmd_create();
 	if (cmd) {
 		memcpy(cmd, data+offset, sizeof(macho_segment_cmd_t));
-		macho_segment_cmd_debug(cmd);
+		//macho_segment_cmd_debug(cmd);
 	}
 	return cmd;
 }
