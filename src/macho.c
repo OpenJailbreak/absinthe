@@ -125,6 +125,10 @@ if (path) {
 return macho;
 }
 
+uint32_t macho_lookup(macho_t* macho, const char* sym) {
+	return 0;
+}
+
 void macho_debug(macho_t* macho) {
 if (macho) {
 	debug("Mach-O:\n");

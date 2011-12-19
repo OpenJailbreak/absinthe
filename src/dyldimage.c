@@ -23,6 +23,7 @@
 
 #include "debug.h"
 #include "common.h"
+#include "dyldmap.h"
 #include "dyldimage.h"
 
 /*
@@ -46,7 +47,10 @@ dyldimage_t* dyldimage_parse(unsigned char* data, uint32_t offset) {
 			error("Unable to allocate data for dyld image info\n");
 			return NULL;
 		}
-		memcpy(image->info, buffer, sizeof(dyldimage_info_t));
+		image->path = &data[image->info->offset];
+		image->name = strrchr(image->path, '/');
+		image->address = image->info->address;
+		image->size = 0;
 	}
 	return image;
 }

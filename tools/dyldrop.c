@@ -30,22 +30,44 @@
 int main(int argc, char* argv[]) {
 	int i = 0;
 	int ret = 0;
-	if(argc != 2) {
-		info("Usage: ./dyldrop <dyldcache>\n");
+	char* path = NULL;
+	char* symbol = NULL;
+	void* address = NULL;
+	macho_t* dylib = NULL;
+	dyldimage_t* image = NULL;
+	dyldcache_t* cache = NULL;
+
+	if(argc != 3) {
+		info("Usage: ./dyldrop <dyldcache> <symbol>\n");
 		return 0;
 	}
-	char* cache_path = strdup(argv[1]);
+	path = strdup(argv[1]);
+	symbol = strdup(argv[2]);
 
-	debug("Creating dyldcache from %s\n", cache_path);
-	dyldcache_t* cache = dyldcache_open(cache_path);
+	debug("Creating dyldcache from %s\n", path);
+	cache = dyldcache_open(path);
 	if(cache == NULL) {
 		error("Unable to allocate memory for dyldcache\n");
 		goto panic;
 	}
 
 	for(i = 0; i < cache->header->images_count; i++) {
-		dyldimage_t* image = cache->images[i];
-		file_write(image->name, image->data, image->size);
+		image = cache->images[i];
+		debug("Loaded image %s\n", strrchr(image->name, '/'));
+		dylib = macho_load(image->data, image->size);
+		if(dylib == NULL) {
+			debug("Unable to parse Mach-O file in cache\n");
+			continue;
+		}
+		//macho_debug(dylib);
+
+		address = macho_lookup(dylib, symbol);
+		if(address != NULL) {
+			printf("#define %s (void*)0x%08x\n", symbol, address);
+		}
+
+		macho_free(dylib);
+		dylib = NULL;
 	}
 
 	dyldcache_free(cache);
@@ -58,6 +80,7 @@ panic:
 finish:
 	debug("Cleaning up\n");
 	if(cache) dyldcache_free(cache);
-	if(cache_path) free(cache_path);
+	if(dylib) macho_free(dylib);
+	if(path) free(path);
 	return ret;
 }
