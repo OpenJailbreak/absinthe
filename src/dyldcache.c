@@ -271,9 +271,7 @@ dyldimage_t** dyldcache_images_load(dyldcache_t* cache) {
 			image->map = dyldcache_map_address(cache, image->address);
 			image->offset = image->address - image->map->address;
 			image->data = &cache->data[image->offset];
-			if(i != 0) {
-				images[i-1]->size = image->offset - images[i-1]->offset;
-			}
+			image->size = *(uint32_t*)(image->data + 0x38);
 			images[i] = image;
 		}
 		//dyldcache_images_debug(maps);
