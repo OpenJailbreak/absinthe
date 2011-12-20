@@ -38,7 +38,7 @@ macho_t* macho_create() {
 	return macho;
 }
 
-macho_t* macho_load(unsigned char* data, unsigned int size) {
+macho_t* macho_load(unsigned char* data, unsigned int size, dyldcache_t* cache) {
 	int i = 0;
 	int err = 0;
 	macho_t* macho = NULL;
@@ -87,8 +87,10 @@ macho_t* macho_load(unsigned char* data, unsigned int size) {
 		macho->segments = macho_segments_create(seg_count);
 		macho->symtabs = macho_symtabs_create(symtab_count);
 
+		macho->cache = cache;
+
 		if (unk_count > 0) {
-			warn("WARNING: %d unhandled Mach-O Commands\n", unk_count);
+			error("WARNING: %d unhandled Mach-O Commands\n", unk_count);
 		}
 
 		//debug("Handling %d Mach-O commands\n", macho->command_count);
@@ -117,7 +119,7 @@ macho_t* macho_open(const char* path) {
 		}
 
 		//debug("Creating Mach-O object from file\n");
-		macho = macho_load(data, size);
+		macho = macho_load(data, size, NULL);
 		if (macho == NULL) {
 			error("Unable to load Mach-O file\n");
 			return NULL;
@@ -134,11 +136,12 @@ uint32_t macho_lookup(macho_t* macho, const char* sym) {
 	for (i = 0; i < macho->symtab_count; i++) {
 		symtab = macho->symtabs[i];
 		for (j = 0; j < symtab->nsyms; j++) {
-			nl = symtab->symbols;
+			nl = &symtab->symbols[j];
 			if (nl->n_un.n_name != NULL) {
-				printf("%s\n", nl->n_un.n_name);
+				//printf("%s\n", nl->n_un.n_name);
 				if (strcmp(sym, nl->n_un.n_name) == 0) {
 					printf("FOUND IT GOD DAMNIT!!!\n");
+					return nl->n_value;
 				}
 			}
 		}
@@ -177,7 +180,6 @@ void macho_free(macho_t* macho) {
 		}
 
 		if (macho->data) {
-			free(macho->data);
 			macho->size = 0;
 			macho->offset = 0;
 			macho->data = NULL;
@@ -259,10 +261,9 @@ int macho_handle_command(macho_t* macho, macho_command_t* command) {
 		case MACHO_CMD_SYMTAB:
 			// link-edit stab symbol table info
 		{
-			macho_symtab_t* symtab = macho_symtab_load(macho->data,
-					command->offset);
+			macho_symtab_t* symtab = macho_symtab_load(macho->data+command->offset, (macho->cache) ? macho->cache->data : macho->data);
 			if (symtab) {
-				macho->symtabs[macho->symtab_count++];
+				macho->symtabs[macho->symtab_count++] = symtab;
 			} else {
 				error(
 						"Could not load symtab at offset 0x%x\n", command->offset);

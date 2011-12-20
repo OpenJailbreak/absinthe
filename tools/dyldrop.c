@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
 		image = cache->images[i];
 		debug("Found %s\n", image->name);
 		if (strcmp(dylib, image->name) == 0) {
-			macho = macho_load(image->data, image->size);
+			macho = macho_load(image->data, image->size, cache);
 			if (macho == NULL) {
 				debug("Unable to parse Mach-O file in cache\n");
 				continue;

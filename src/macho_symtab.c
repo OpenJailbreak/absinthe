@@ -36,10 +36,10 @@ macho_symtab_t* macho_symtab_create() {
 	return symtab;
 }
 
-macho_symtab_t* macho_symtab_load(unsigned char* data, unsigned int offset) {
+macho_symtab_t* macho_symtab_load(unsigned char* cmd, unsigned char* data) {
 	macho_symtab_t* symtab = macho_symtab_create();
 	if (symtab) {
-		symtab->cmd = macho_symtab_cmd_load(data, offset);
+		symtab->cmd = macho_symtab_cmd_load(cmd);
 		if (!symtab->cmd) {
 			macho_symtab_free(symtab);
 			return NULL;
@@ -92,10 +92,10 @@ macho_symtab_cmd_t* macho_symtab_cmd_create() {
 	return info;
 }
 
-macho_symtab_cmd_t* macho_symtab_cmd_load(unsigned char* data, unsigned int offset) {
+macho_symtab_cmd_t* macho_symtab_cmd_load(unsigned char* data) {
 	macho_symtab_cmd_t* cmd = macho_symtab_cmd_create();
 	if (cmd) {
-		memcpy(cmd, data+offset, sizeof(macho_symtab_cmd_t));
+		memcpy(cmd, data, sizeof(macho_symtab_cmd_t));
 		//macho_symtab_cmd_debug(cmd);
 	}
 	return cmd;
