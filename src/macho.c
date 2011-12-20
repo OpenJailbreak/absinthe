@@ -138,9 +138,7 @@ uint32_t macho_lookup(macho_t* macho, const char* sym) {
 		for (j = 0; j < symtab->nsyms; j++) {
 			nl = &symtab->symbols[j];
 			if (nl->n_un.n_name != NULL) {
-				//printf("%s\n", nl->n_un.n_name);
 				if (strcmp(sym, nl->n_un.n_name) == 0) {
-					printf("FOUND IT GOD DAMNIT!!!\n");
 					return nl->n_value;
 				}
 			}
