@@ -32,15 +32,20 @@ int main(int argc, char* argv[]) {
 	char* path = NULL;
 	char* dylib = NULL;
 	char* symbol = NULL;
-	void* address = NULL;
+	uint32_t address = 0;
 	macho_t* macho = NULL;
 	dyldimage_t* image = NULL;
 	dyldcache_t* cache = NULL;
 
-	if (argc != 4) {
-		info("Usage: ./dyldrop <dyldcache> <dylib> <symbol>\n");
+	if ((argc != 4) && (argc != 3)) {
+		char *name = strrchr(argv[0], '/');
+		name = name ? name + 1 : argv[0];
+		info("Usage: %s <dyldcache> <dylib> <symbol>\n"
+		     "       %s <mach-o> <symbol>\n", name, name);
 		return 0;
 	}
+
+	if (argc == 4) {
 	path = strdup(argv[1]);
 	dylib = strdup(argv[2]);
 	symbol = strdup(argv[3]);
@@ -64,7 +69,7 @@ int main(int argc, char* argv[]) {
 			//macho_debug(dylib);
 
 			address = macho_lookup(macho, symbol);
-			if (address != NULL) {
+			if (address != 0) {
 				printf("#define %s (void*)0x%08x\n", symbol, address);
 			}
 
@@ -72,8 +77,24 @@ int main(int argc, char* argv[]) {
 			//macho = NULL;
 		}
 	}
-	if(address = NULL) {
+	} else if (argc == 3) {
+		path = strdup(argv[1]);
+		symbol = strdup(argv[2]);
 
+		macho = macho_open(path);
+		if (macho == NULL) {
+			debug("Unable to parse Mach-O file\n");
+		}
+		//macho_debug(dylib);
+
+		address = macho_lookup(macho, symbol);
+		if (address != 0) {
+			printf("#define %s (void*)0x%08x\n", symbol, address);
+		}
+	}
+
+	if(address == 0) {
+		goto panic;
 	}
 
 	dyldcache_free(cache);
