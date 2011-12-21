@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
 			int found = 0;
 			for (i = 0; i < macho->segment_count; i++) {
 				macho_segment_t* seg = macho->segments[i];
-				if ((offset >= seg->offset) && (offset <= seg->offset + seg->size)) {
+				if ((offset >= seg->offset) && (offset < seg->offset + seg->size)) {
 					vaddr = offset + seg->address;
 					found = 1;
 					break;
