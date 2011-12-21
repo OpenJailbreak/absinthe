@@ -25,8 +25,8 @@
 #include "common.h"
 
 int main(int argc, char* argv[]) {
-	if(argc != 2) {
-		info("Usage: ./machoman <mach-o file>\n");
+	if(argc < 2 || argc > 3) {
+		info("Usage: ./machoman <mach-o file> [offset]\n");
 		return -1;
 	}
 
@@ -35,7 +35,36 @@ int main(int argc, char* argv[]) {
 		error("Unable to open macho file\n");
 	}
 
-	macho_debug(macho);
+	if (argc == 3) {
+		uint32_t offset = 0;
+		sscanf(argv[2], "%i", &offset);
+
+		if (macho->segment_count == 0) {
+			error("no segments?\n");
+			goto leave;
+		} else {
+			int i;
+			uint32_t vaddr = 0;
+			int found = 0;
+			for (i = 0; i < macho->segment_count; i++) {
+				macho_segment_t* seg = macho->segments[i];
+				if ((offset >= seg->offset) && (offset <= seg->offset + seg->size)) {
+					vaddr = offset + seg->address;
+					found = 1;
+					break;
+				}
+			}
+			if (found) {
+				printf("0x%08x\n", vaddr);
+			} else {
+				printf("Not found...\n");
+			}
+		}
+	} else {
+		macho_debug(macho);
+	}
+
+leave:
 	macho_free(macho);
 	return 0;
 }
