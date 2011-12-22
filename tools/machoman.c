@@ -25,6 +25,7 @@
 #include "common.h"
 
 enum {
+	OP_NONE,
 	OP_INFO,
 	OP_VIRT,
 	OP_SEARCH
@@ -66,7 +67,7 @@ int main(int argc, char* argv[])
 	uint32_t offset = 0;
 	char* search = NULL;
 	int search_len = 0;
-	int mode = OP_INFO;
+	int mode = (argc < 2) ? OP_NONE : OP_INFO;
 	int i;
 
 	/* parse cmdline args */
@@ -92,6 +93,11 @@ int main(int argc, char* argv[])
 			mode = OP_SEARCH;
 			continue;
 		}
+	}
+
+	if (mode == OP_NONE) {
+		print_usage(argc, argv);
+		return 0;
 	}
 
 	macho_t* macho = macho_open(argv[1]);
