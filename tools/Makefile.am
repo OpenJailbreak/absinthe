@@ -2,7 +2,7 @@ AM_CFLAGS = $(GLOBAL_CFLAGS)
 AM_LDFLAGS = $(GLOBAL_LDFLAGS)
 AM_LDADD = $(GLOBAL_LIBS)
 
-bin_PROGRAMS = gizmo dyldrop pointingdb machoman
+bin_PROGRAMS = gizmo dyldrop pointingdb machoman mb2insert
 
 gizmo_SOURCES = gizmo.c
 gizmo_CFLAGS = $(AM_CFLAGS) -I../src
@@ -44,4 +44,15 @@ machoman_SOURCES = machoman.c \
 machoman_CFLAGS = $(AM_CFLAGS) -I../src
 machoman_LDFLAGS = $(AM_LDFLAGS)
 machoman_LDADD = $(AM_LDADD)
+
+mb2insert_SOURCES = mb2insert.c \
+				idevicebackup2.c \
+				../src/file.c \
+				../src/backup.c \
+				../src/backup_file.c \
+				../src/mbdb.c \
+				../src/mbdb_record.c
+mb2insert_CFLAGS = $(AM_CFLAGS) -I. -I../src
+mb2insert_LDFLAGS = $(AM_LDFLAGS)
+mb2insert_LDADD = $(AM_LDADD)
 
