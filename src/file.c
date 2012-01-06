@@ -115,7 +115,7 @@ void file_free(file_t* file) {
 
 int file_read(const char* file, unsigned char** buf, unsigned int* length) {
 	FILE* fd = NULL;
-	fd = fopen(file, "r+");
+	fd = fopen(file, "rb");
 	if(fd == NULL) {
 		return -1;
 	}
@@ -140,7 +140,7 @@ int file_read(const char* file, unsigned char** buf, unsigned int* length) {
 
 int file_write(const char* file, unsigned char* buf, unsigned int length) {
 	FILE* fd = NULL;
-	fd = fopen(file, "w+");
+	fd = fopen(file, "wb");
 	if(fd == NULL) {
 		return -1;
 	}
@@ -152,4 +152,40 @@ int file_write(const char* file, unsigned char* buf, unsigned int length) {
 	}
 	fclose(fd);
 	return bytes;
+}
+
+int file_copy(const char* from, const char* to)
+{
+	FILE* ffr = NULL;
+	FILE* fto = NULL;
+	char buf[8192];
+	size_t size;
+
+	ffr = fopen(from, "rb");
+	if(ffr == NULL) {
+		fprintf(stderr, "could not open source file '%s' for reading\n", from);
+		return -1;
+	}
+	fto = fopen(to, "wb");
+	if(fto == NULL) {
+		fprintf(stderr, "could not open target file '%s' for writing\n", to);
+		fclose(ffr);
+		return -1;
+	}
+
+	while (!feof(ffr)) {
+		size = fread(buf, 1, sizeof(buf), ffr);
+		if (size > 0) {
+			size_t bytes = fwrite(buf, 1, size, fto);
+			if (bytes != size) {
+				fclose(fto);
+				fclose(ffr);
+				return -1;
+			}
+		}
+	}
+	fclose(fto);
+	fclose(ffr);
+
+	return 0;
 }

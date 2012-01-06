@@ -1,7 +1,8 @@
 /**
-  * GreenPois0n Absinthe - file.h
+  * GreenPois0n Apparition - backup.h
   * Copyright (C) 2010 Chronic-Dev Team
   * Copyright (C) 2010 Joshua Hill
+  * Copyright (C) 2012 Hanéne Samara
   *
   * This program is free software: you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
@@ -17,26 +18,29 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef FILE_H_
-#define FILE_H_
+#ifndef BACKUP_H_
+#define BACKUP_H_
 
-#include <stdint.h>
+#include "backup_file.h"
+#include "mbdb.h"
 
-typedef struct file_t {
-	FILE* desc;
+typedef struct backup_t {
 	char* path;
-	uint64_t size;
-	uint64_t offset;
-	unsigned char* data;
-} file_t;
+	//mbdx_t* mbdx;
+	mbdb_t* mbdb;
+	/*plist_t info;
+	plist_t status;
+	plist_t manifest;
+	backup_file_t** files;
+	unsigned int count;
+	unsigned char* uuid;
+	unsigned char* directory;*/
+} backup_t;
 
-file_t* file_create();
-void file_close(file_t* file);
-void file_free(file_t* file);
-file_t* file_open(const char* path);
+backup_t* backup_open(const char* directory, const char* uuid);
+int backup_get_file_index(backup_t* backup, const char* domain, const char* path);
+backup_file_t* backup_get_file(backup_t* backup, const char* domain, const char* path);
+int backup_update_file(backup_t* backup, backup_file_t* bfile);
+void backup_free(backup_t* backup);
 
-int file_read(const char* file, unsigned char** buf, unsigned int* length);
-int file_write(const char* file, unsigned char* buf, unsigned int length);
-int file_copy(const char* from, const char* to);
-
-#endif /* FILE_H_ */
+#endif /* BACKUP_H_ */

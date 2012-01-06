@@ -1,7 +1,8 @@
 /**
-  * GreenPois0n Absinthe - file.h
+  * GreenPois0n Apparition - mbdb.h
   * Copyright (C) 2010 Chronic-Dev Team
   * Copyright (C) 2010 Joshua Hill
+  * Copyright (C) 2012 Hanéne Samara
   *
   * This program is free software: you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
@@ -17,26 +18,33 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef FILE_H_
-#define FILE_H_
+#ifndef MBDB_H
+#define MBDB_H
 
-#include <stdint.h>
+#include "mbdb_record.h"
 
-typedef struct file_t {
-	FILE* desc;
-	char* path;
-	uint64_t size;
-	uint64_t offset;
-	unsigned char* data;
-} file_t;
+#define MBDB_MAGIC "\x6d\x62\x64\x62\x05\x00"
 
-file_t* file_create();
-void file_close(file_t* file);
-void file_free(file_t* file);
-file_t* file_open(const char* path);
 
-int file_read(const char* file, unsigned char** buf, unsigned int* length);
-int file_write(const char* file, unsigned char* buf, unsigned int length);
-int file_copy(const char* from, const char* to);
+typedef struct mbdb_header {
+    unsigned char magic[6];		       // 'mbdb\5\0'
+} mbdb_header_t;
 
-#endif /* FILE_H_ */
+typedef struct mbdb_t {
+    unsigned int size;
+    unsigned char* data;
+    mbdb_header_t* header;
+    int num_records;
+    mbdb_record_t** records;
+} mbdb_t;
+
+extern mbdb_t* apparition_mbdb;
+
+mbdb_t* mbdb_create();
+mbdb_t* mbdb_open(unsigned char* file);
+mbdb_t* mbdb_parse(unsigned char* data, unsigned int size);
+mbdb_record_t* mbdb_get_record(mbdb_t* mbdb, unsigned int offset);
+void mbdb_free(mbdb_t* mbdb);
+
+#endif
+
