@@ -168,7 +168,6 @@ mbdb_record_t* mbdb_record_parse(unsigned char* data) {
 	offset += 1;
 
 	if (record->property_count > 0) {
-		printf("Oha! properties: %d\n", record->property_count);
 		record->properties = (mbdb_record_property_t**)malloc(sizeof(mbdb_record_property_t*) * record->property_count);
 		int i;
 		for (i = 0; i < record->property_count; i++) {
@@ -541,10 +540,27 @@ int mbdb_record_build(mbdb_record_t* record, unsigned char** data, unsigned int*
 	memcpy(&data_buf[offset], &flag, 1);
 	offset++;
 
-	unsigned char prop = 0; //record->property_count;
+	unsigned char prop = record->property_count;
 	memcpy(&data_buf[offset], &prop, 1);
 	offset++;
-	// TODO add properties
+
+	// add properties
+	int i;
+	for (i = 0; i < (int)prop; i++) {
+		mbdb_record_property_t* property = record->properties[i];
+
+		unsigned short pnsize = htobe16(property->name_size);
+		memcpy(&data_buf[offset], &pnsize, 2);
+		offset+=2;
+		memcpy(&data_buf[offset], property->name, property->name_size);
+		offset+=property->name_size;
+
+		unsigned short pvsize = htobe16(property->value_size);
+		memcpy(&data_buf[offset], &pvsize, 2);
+		offset+=2;
+		memcpy(&data_buf[offset], property->value, property->value_size);
+		offset+=property->value_size;
+	}
 
 	if (record->this_size != offset) {
 		*data = NULL;
