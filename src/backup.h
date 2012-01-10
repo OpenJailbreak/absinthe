@@ -39,6 +39,7 @@ typedef struct backup_t {
 
 backup_t* backup_open(const char* directory, const char* uuid);
 int backup_get_file_index(backup_t* backup, const char* domain, const char* path);
+char* backup_get_file_path(backup_t* backup, backup_file_t* bfile);
 backup_file_t* backup_get_file(backup_t* backup, const char* domain, const char* path);
 int backup_update_file(backup_t* backup, backup_file_t* bfile);
 void backup_free(backup_t* backup);

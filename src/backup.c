@@ -94,6 +94,42 @@ backup_file_t* backup_get_file(backup_t* backup, const char* domain, const char*
 	return backup_file_create_from_record(rec);
 }
 
+char* backup_get_file_path(backup_t* backup, backup_file_t* bfile)
+{
+	int res = 0;
+
+	if (!backup || !bfile) {
+		return NULL;
+	}
+	if (!backup->mbdb) {
+		fprintf(stderr, "%s: ERROR: no mbdb in given backup_t\n", __func__);
+		return NULL;
+	}
+
+	char* bfntmp = (char*)malloc(bfile->mbdb_record->domain_size + 1 + bfile->mbdb_record->path_size + 1);
+	strcpy(bfntmp, bfile->mbdb_record->domain);
+	strcat(bfntmp, "-");
+	strcat(bfntmp, bfile->mbdb_record->path);
+
+	char* backupfname = (char*)malloc(strlen(backup->path)+1+40+1);
+	unsigned char sha1[20] = {0, };
+	SHA1(bfntmp, strlen(bfntmp), sha1);
+	free(bfntmp);
+
+	strcpy(backupfname, backup->path);
+	strcat(backupfname, "/");
+
+	int i;
+	char* p = backupfname + strlen(backup->path) + 1;
+	for (i = 0; i < 20; i++) {
+		sprintf(p + i*2, "%02x", sha1[i]);
+	}
+
+	fprintf(stderr, "backup filename is %s\n", backupfname);
+
+	return backupfname;
+}
+
 int backup_update_file(backup_t* backup, backup_file_t* bfile)
 {
 	int res = 0;
