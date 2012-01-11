@@ -16,6 +16,7 @@
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
 #include <libimobiledevice/afc.h>
+#include <libimobiledevice/sbservices.h>
 
 #include "idevicebackup2.h"
 #include "backup.h"
@@ -182,11 +183,11 @@ static char *generate_guid() /*{{{*/
 	return guid;
 } /*}}}*/
 
-static void prefs_remove_entry_if_present(plist_t pl) /*{{{*/
+static void prefs_remove_entry_if_present(plist_t* pl) /*{{{*/
 {
 	char* guid = NULL;
 	plist_dict_iter iter = NULL;
-	plist_t ns = plist_dict_get_item(pl, "NetworkServices");
+	plist_t ns = plist_dict_get_item(*pl, "NetworkServices");
 	if (!ns || (plist_get_node_type(ns) != PLIST_DICT)) {
 		fprintf(stderr, "no NetworkServices node?!\n");
 		return;
@@ -229,7 +230,7 @@ static void prefs_remove_entry_if_present(plist_t pl) /*{{{*/
 		return;
 	}
 
-	plist_t sets = plist_dict_get_item(pl, "Sets");
+	plist_t sets = plist_dict_get_item(*pl, "Sets");
 	if (!sets || (plist_get_node_type(sets) != PLIST_DICT)) {
 		fprintf(stderr, "no Sets node?!\n");
 		return;
@@ -283,7 +284,7 @@ static void prefs_remove_entry_if_present(plist_t pl) /*{{{*/
 	}
 } /*}}}*/
 
-static void prefs_add_entry(plist_t pl) /*{{{*/
+static void prefs_add_entry(plist_t* pl) /*{{{*/
 {
 	plist_t dict = NULL;
 	plist_t arr = NULL;
@@ -336,14 +337,14 @@ static void prefs_add_entry(plist_t pl) /*{{{*/
 	plist_dict_insert_item(conn, "IPv6", plist_new_dict());	
 
 	// get NetworkServices node
-	plist_t ns = plist_dict_get_item(pl, "NetworkServices");
+	plist_t ns = plist_dict_get_item(*pl, "NetworkServices");
 	if (!ns || (plist_get_node_type(ns) != PLIST_DICT)) {
 		fprintf(stderr, "ERROR: no NetworkServices node?!\n");
 		return;
 	}
 
 	// get current set
-	plist_t cset = plist_dict_get_item(pl, "CurrentSet");
+	plist_t cset = plist_dict_get_item(*pl, "CurrentSet");
 	if (!cset || (plist_get_node_type(cset) != PLIST_STRING)) {
 		fprintf(stderr, "ERROR: no CurrentSet node found\n");
 		return;
@@ -360,7 +361,7 @@ static void prefs_add_entry(plist_t pl) /*{{{*/
 	}
 
 	// locate /Sets/{SetGUID}/Network/Service node
-	plist_t netsvc = plist_access_path(pl, 4, "Sets", curset+6, "Network", "Service");
+	plist_t netsvc = plist_access_path(*pl, 4, "Sets", curset+6, "Network", "Service");
 	if (!netsvc) {
 		fprintf(stderr, "ERROR: Could not access /Sets/%s/Network/Service node\n", curset+6);
 		free(curset);
@@ -368,7 +369,7 @@ static void prefs_add_entry(plist_t pl) /*{{{*/
 	}
 
 	// locate /Sets/{SetGUID}/Network/Global/IPv4/ServiceOrder node
-	plist_t order = plist_access_path(pl, 6, "Sets", curset+6, "Network", "Global", "IPv4", "ServiceOrder");
+	plist_t order = plist_access_path(*pl, 6, "Sets", curset+6, "Network", "Global", "IPv4", "ServiceOrder");
 	if (!order) {
 		fprintf(stderr, "ERROR: Could not access /Sets/%s/Network/Global/IPv4/ServiceOrder node\n", curset+6);
 		free(curset);
@@ -401,7 +402,7 @@ static void prefs_add_entry(plist_t pl) /*{{{*/
 	free(guid);
 } /*}}}*/
 
-static void process_preferences_plist(plist_t pl)
+static void process_preferences_plist(plist_t* pl)
 {
 	printf("Checking preferences.plist and removing any previous entry\n");
 	prefs_remove_entry_if_present(pl);
@@ -517,7 +518,7 @@ int main(int argc, char** argv)
 	}
 
 	backup_file_t* bf;
-	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.plist");
+	/*bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.plist");
 	if (bf) {
 		fprintf(stderr, "com.apple.ipsec.plist already present, replacing\n");
 		backup_file_assign_file_data(bf, ipsec_plist, strlen(ipsec_plist), 0);
@@ -552,7 +553,7 @@ int main(int argc, char** argv)
 			backup_write_mbdb(backup);
 		}
 	}
-	backup_file_free(bf);
+	backup_file_free(bf);*/
 
 	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/preferences.plist");
 	if (bf) {
@@ -563,7 +564,7 @@ int main(int argc, char** argv)
 		}
 
 		unsigned char* prefs = NULL;
-		unsigned int plen = 0;
+		uint32_t plen = 0;
 
 		if (file_read(fn, &prefs, &plen) > 8) {
 			plist_t pl = NULL;
@@ -573,9 +574,10 @@ int main(int argc, char** argv)
 				plist_from_xml(prefs, plen, &pl);
 			}
 			free(prefs);
+			plen = 0;
 			prefs = NULL;
 
-			process_preferences_plist(pl);
+			process_preferences_plist(&pl);
 
 			plist_to_bin(pl, (char**)&prefs, &plen);
 
@@ -658,19 +660,83 @@ int main(int argc, char** argv)
 		printf("Could not connect to AFC\n");
 		return -1;
 	}
-	lockdownd_client_free(lckd);
-	lckd = NULL;
 
 	printf("moving back files...\n");
 
 	list = NULL;
 	if (afc_read_directory(afc, "/"AFCTMP, &list) != AFC_E_SUCCESS) {
 		fprintf(stderr, "Uh, oh, the folder '%s' does not exist or is not accessible...\n", AFCTMP);
-		goto leave;
 	}
 
 	int i = 0;
-	while (list[i]) {
+	while (list && list[i]) {
+		if (!strcmp(list[i], ".") || !strcmp(list[i], "..")) {
+			i++;
+			continue;
+		}
+		printf("%s\n", list[i]);
+
+		char* tmpname = (char*)malloc(1+strlen(list[i])+1);
+		strcpy(tmpname, "/");
+		strcat(tmpname, list[i]);
+		rmdir_recursive_afc(afc, tmpname, 1);
+
+		char* tmxname = (char*)malloc(1+strlen(AFCTMP)+1+strlen(list[i])+1);
+		strcpy(tmxname, "/"AFCTMP"/");
+		strcat(tmxname, list[i]);
+
+		printf("moving %s to %s\n", tmxname, tmpname);
+		afc_rename_path(afc, tmxname, tmpname);
+
+		free(tmxname);
+		free(tmpname);
+
+		i++;
+	}
+	free_dictionary(list);
+
+	printf("waiting for device to finish booting...\n");
+
+	int retries = 100;
+	int done = 0;
+	sbservices_client_t sbsc = NULL;
+	plist_t state = NULL;
+
+	while (!done && (retries-- > 0)) {
+		port = 0;
+		lockdownd_start_service(lckd, "com.apple.springboardservices", &port);
+		if (!port) {
+			continue;
+		}
+		sbsc = NULL;
+		sbservices_client_new(device, port, &sbsc);
+		if (!sbsc) {
+			continue;
+		}
+		if (sbservices_get_icon_state(sbsc, &state, "2") == SBSERVICES_E_SUCCESS) {
+			plist_free(state);
+			state = NULL;
+			done = 1;
+		}
+		sbservices_client_free(sbsc);
+		if (done) {
+			printf("bootup complete\n");
+			break;
+		}
+		sleep(3);
+	}
+	lockdownd_client_free(lckd);
+	lckd = NULL;
+
+	printf("moving back any leftovers...\n");
+
+	list = NULL;
+	if (afc_read_directory(afc, "/"AFCTMP, &list) != AFC_E_SUCCESS) {
+		//fprintf(stderr, "Uh, oh, the folder '%s' does not exist or is not accessible...\n", AFCTMP);
+	}
+
+	i = 0;
+	while (list && list[i]) {
 		if (!strcmp(list[i], ".") || !strcmp(list[i], "..")) {
 			i++;
 			continue;
@@ -698,6 +764,10 @@ int main(int argc, char** argv)
 
 	printf("cleaning up\n");
 	afc_remove_path(afc, "/"AFCTMP);
+	if (afc_read_directory(afc, "/"AFCTMP, &list) == AFC_E_SUCCESS) {
+		fprintf(stderr, "WARNING: the folder /"AFCTMP" is still present in the user's Media folder. You have to check yourself for any leftovers and move them back if required.\n");
+	}
+
 	rmdir_recursive(BKPTMP);
 
 	printf("done!\n");
