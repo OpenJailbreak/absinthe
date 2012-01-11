@@ -233,6 +233,7 @@ static void prefs_remove_entry_if_present(plist_t* pl) /*{{{*/
 	plist_t sets = plist_dict_get_item(*pl, "Sets");
 	if (!sets || (plist_get_node_type(sets) != PLIST_DICT)) {
 		fprintf(stderr, "no Sets node?!\n");
+		free(guid);
 		return;
 	}
 
@@ -267,7 +268,9 @@ static void prefs_remove_entry_if_present(plist_t* pl) /*{{{*/
 						}
 						if (val) {
 							if (strcmp(val, guid) == 0) {
-								fprintf(stderr, "removing /Sets/%s/Network/Global/IPv4/ServiceOrder/%s\n", key, guid);										plist_array_remove_item(nn, x);
+								free(val);
+								fprintf(stderr, "removing /Sets/%s/Network/Global/IPv4/ServiceOrder/%s\n", key, guid);
+								plist_array_remove_item(nn, x);
 								break;
 							}
 							free(val);
@@ -282,6 +285,7 @@ static void prefs_remove_entry_if_present(plist_t* pl) /*{{{*/
 		} while (n);
 		free(iter);
 	}
+	free(guid);
 } /*}}}*/
 
 static void prefs_add_entry(plist_t* pl) /*{{{*/
@@ -375,6 +379,7 @@ static void prefs_add_entry(plist_t* pl) /*{{{*/
 		free(curset);
 		return;
 	}
+	free(curset);
 
 	// make sure we don't have a collision (VERY unlikely, but how knows)
 	char* guid = generate_guid();
