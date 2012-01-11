@@ -523,7 +523,7 @@ int main(int argc, char** argv)
 	}
 
 	backup_file_t* bf;
-	/*bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.plist");
+	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.plist");
 	if (bf) {
 		fprintf(stderr, "com.apple.ipsec.plist already present, replacing\n");
 		backup_file_assign_file_data(bf, ipsec_plist, strlen(ipsec_plist), 0);
@@ -558,7 +558,7 @@ int main(int argc, char** argv)
 			backup_write_mbdb(backup);
 		}
 	}
-	backup_file_free(bf);*/
+	backup_file_free(bf);
 
 	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/preferences.plist");
 	if (bf) {
