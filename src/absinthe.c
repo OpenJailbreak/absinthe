@@ -23,6 +23,9 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#include <sys/signal.h>
+#include <plist/plist.h>
+
 #include "mb1.h"
 #include "debug.h"
 #include "device.h"
@@ -37,6 +40,27 @@
 #ifdef WIN32
 #define sleep(x) Sleep(x*1000)
 #endif
+
+struct dev_vmaddr {
+	const char* product;
+	const char* build;
+	uint32_t vmaddr;
+};
+
+static struct dev_vmaddr devices_vmaddr_libcopyfile[] = {
+	// iOS 5.0.1
+	{ "iPad1,1", "9A405", 0x3012f000 },
+	{ "iPad2,1", "9A405", 0 },
+	{ "iPad2,2", "9A405", 0 },
+	{ "iPad2,3", "9A405", 0 },
+	{ "iPhone2,1", "9A405", 0x34a52000 },
+	{ "iPhone3,1", "9A405", 0x30654000 },
+	{ "iPhone3,3", "9A405", 0 },
+	{ "iPhone4,1", "9A406", 0x31f54000 }, // verify
+	{ "iPod3,1", "9A405", 0x35202000 },
+	{ "iPod4,1", "9A405", 0x30c29000 },
+	{ NULL, NULL, 0 }
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /// TODO: We need to add an event handler for when devices are connected. This handler //
@@ -201,6 +225,13 @@ int main(int argc, char* argv[]) {
 	char* uuid = NULL;
 	unsigned long loop = 0;
 
+	char* buildver = NULL;
+	char* product = NULL;
+
+#ifndef WIN32
+	signal(SIGPIPE, SIG_IGN);
+#endif
+
 	while ((opt = getopt_long(argc, argv, "hvd:c:a:p:t:e:s:u:l:", longopts, &optindex)) > 0) {
 		switch (opt) {
 		case 'h':
@@ -263,23 +294,97 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Open a connection to our device
-	debug("Openning connection to device\n");
+	debug("Opening connection to device\n");
 	device_t* device = device_create(uuid);
 	if(device == NULL) {
 		error("Unable to open device\n");
 		return -1;
 	}
 
-	// Crash MobileBackup2 once so we can grab a fresh crashreport
+	lockdown_t* lockdown = lockdown_open(device);
+	if (lockdown == NULL) {
+		error("Lockdown connection failed\n");
+		device_free(device);
+		return -1;
+	}
+
+	plist_t pl = NULL;
+	if ((lockdown_get_value(lockdown, NULL, "ProductType", &pl) != 0) || !pl || (plist_get_node_type(pl) != PLIST_STRING)) {
+		error("Could not get ProductType\n");
+		lockdown_free(lockdown);
+		device_free(device);
+		if (pl) {
+			plist_free(pl);
+		}
+		return -1;
+	}
+	plist_get_string_val(pl, &product);
+	if (!product) {
+		error("ProductType is NULL?!\n");
+		device_free(device);
+		return -1;
+	}
+
+	pl = NULL;
+	if ((lockdown_get_value(lockdown, NULL, "BuildVersion", &pl) != 0) || !pl || (plist_get_node_type(pl) != PLIST_STRING)) {
+		error("Could not get BuildVersion\n");
+		lockdown_free(lockdown);
+		device_free(device);
+		if (pl) {
+			plist_free(pl);
+		}
+		return -1;
+	}
+	plist_get_string_val(pl, &buildver);
+	if (!buildver) {
+		error("BuildVersion is NULL?!\n");
+		device_free(device);
+		return -1;
+	}
+
+	lockdown_free(lockdown);
+
+	// find product type and build version
+	int i = 0;
+	uint32_t libcopyfile_vmaddr = 0;
+	while (devices_vmaddr_libcopyfile[i].product) {
+		if (!strcmp(product, devices_vmaddr_libcopyfile[i].product)
+		    && !strcmp(buildver, devices_vmaddr_libcopyfile[i].build)) {
+			libcopyfile_vmaddr = devices_vmaddr_libcopyfile[i].vmaddr;
+			break;
+		}
+		i++;
+	}
+
+	if (libcopyfile_vmaddr == 0) {
+		error("Error: device %s is not supported.\n", product);
+		free(product);
+		device_free(device);
+		return -1;
+	}
+
+	// Crash MobileBackup so we can grab a fresh crashreport
 	debug("Grabbing a fresh crashreport for this device\n");
 	crashreport_t* crash = crash_mobilebackup(device);
 	if(crash == NULL) {
 		error("Unable to get fresh crash from mobilebackup\n");
+		device_free(device);
 		return -1;
 	}
 
+	i = 0;
+	uint32_t dscs = 0;
+	while (crash->dylibs && crash->dylibs[i]) {
+		if (!strcmp(crash->dylibs[i]->name, "libcopyfile.dylib")) {
+			dscs = crash->dylibs[i]->offset - libcopyfile_vmaddr;
+		}
+		i++;
+	}
+
+	printf("dscs for %s is 0x%08x\n", product, dscs);
+
 	// If aslr slide wasn't specified on the command line go ahead and figure it out ourself
-	if(aslr_slide == 0) {
+	/*if(aslr_slide == 0) {
 		// In order for us to calculate this offset ourself, we must have access
 		//  to a dyldcache for this device and firmware version
 		if(cache == NULL) {
@@ -293,7 +398,7 @@ int main(int argc, char* argv[]) {
 		if(aslr_slide == 0) {
 			error("Unable to calculate ASLR offset\n");
 		}
-	}
+	}*/
 
 	/*
 	// TODO: Guess heap address

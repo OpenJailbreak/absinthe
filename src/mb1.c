@@ -142,5 +142,12 @@ int mb1_crash(mb1_t* mb1) {
 	if (pl) {
 		plist_free(pl);
 	}
-	return (res == DEVICE_LINK_SERVICE_E_MUX_ERROR);
+	if (res == DEVICE_LINK_SERVICE_E_MUX_ERROR) {
+		// yep. this leaks. but who cares :P
+		free(mb1->client);
+		mb1->client = NULL;
+		return 1;
+	} else {
+		return 0;
+	}
 }

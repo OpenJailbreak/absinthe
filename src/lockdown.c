@@ -48,6 +48,20 @@ lockdown_t* lockdown_open(device_t* device) {
 	return lockdown;
 }
 
+int lockdown_get_value(lockdown_t* lockdown, const char *domain, const char *key, plist_t *value)
+{
+	if (!lockdown || !lockdown->client) {
+		return -1;
+	}
+
+	lockdownd_error_t err = lockdownd_get_value(lockdown->client, domain, key, value);
+	if (err == LOCKDOWN_E_SUCCESS) {
+		return 0;
+	} else {
+		return -1;
+	}
+}
+
 int lockdown_start_service(lockdown_t* lockdown, const char* service, uint16_t* port) {
 	uint16_t p = 0;
 	lockdownd_start_service(lockdown->client, service, &p);
