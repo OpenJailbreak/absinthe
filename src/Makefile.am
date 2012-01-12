@@ -10,6 +10,7 @@ absinthe_SOURCES = \
 	file.c \
 	device.c \
 	lockdown.c \
+	mb1.c \
 	mb2.c \
 	afc.c \
 	plist_extras.c \

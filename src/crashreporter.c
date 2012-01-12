@@ -133,7 +133,7 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 	time_t latest = 0;
 
 	for(i = 0; list[i] != NULL; i++) {
-		if (!(strstr(list[i], "BackupAgent2") && strstr(list[i], ".plist"))) continue;
+		if (!(strstr(list[i], "BackupAgent_") && strstr(list[i], ".plist"))) continue;
 
 		char **info = NULL;
 		if (afc_get_file_info(crashreporter->copier->client, list[i], &info) != AFC_E_SUCCESS) continue;

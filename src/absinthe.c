@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <getopt.h>
 
-#include "mb2.h"
+#include "mb1.h"
 #include "debug.h"
 #include "device.h"
 #include "boolean.h"
@@ -135,12 +135,17 @@ int bruteforce_string() {
 
 crashreport_t* crash_mobilebackup(device_t* device) {
 	crashreport_t* crash = NULL;
-	mb2_t* mb2 = mb2_connect(device);
-	if(mb2) {
-		mb2_set_attack_plist_cb_func(&attack_plist_cb, mb2);
-		mb2_crash(mb2);
-		crash = fetch_crashreport(device);
+	mb1_t* mb1 = mb1_connect(device);
+	if(mb1) {
+		if (mb1_crash(mb1)) {
+			fprintf(stderr, "successfully crashed mb1. waiting some time for the device to write the crash report...\n");
+			sleep(5);
+			crash = fetch_crashreport(device);
+		} else {
+			fprintf(stderr, "could not crash mb1...\n");
+		}
 	}
+	mb1_free(mb1);
 	return crash;
 }
 
