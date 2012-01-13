@@ -40,13 +40,14 @@ backup_t* backup_open(const char* backupdir, const char* uuid)
 	strcat(mbdb_path, "Manifest.mbdb");
 
 	mbdb_t* mbdb = mbdb_open(mbdb_path);
-	free(mbdb_path);
 	if (mbdb) {
 		printf("Manifest.mbdb opened, %d records\n", mbdb->num_records);
 	} else {
 		fprintf(stderr, "ERROR: could not open %s\n", mbdb_path);
+		free(mbdb_path);
 		return NULL;
 	}
+	free(mbdb_path);
 
 	backup_t* backup = (backup_t*)malloc(sizeof(backup_t));
         if (backup == NULL) {
