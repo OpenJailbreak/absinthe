@@ -51,7 +51,7 @@ mb2insert_SOURCES = mb2insert.c \
 				../src/backup.c \
 				../src/backup_file.c \
 				../src/mbdb.c \
-				../src/mbdb_record.c
+				../src/mbdb_record.c \
 mb2insert_CFLAGS = $(AM_CFLAGS) -I. -I../src
 mb2insert_LDFLAGS = $(AM_LDFLAGS)
 mb2insert_LDADD = $(AM_LDADD)

