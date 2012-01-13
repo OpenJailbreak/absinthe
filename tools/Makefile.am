@@ -2,7 +2,7 @@ AM_CFLAGS = $(GLOBAL_CFLAGS)
 AM_LDFLAGS = $(GLOBAL_LDFLAGS)
 AM_LDADD = $(GLOBAL_LIBS)
 
-bin_PROGRAMS = gizmo dyldrop pointingdb machoman mb2insert
+bin_PROGRAMS = gizmo dyldrop pointingdb machoman mb2insert fsgen
 
 gizmo_SOURCES = gizmo.c
 gizmo_CFLAGS = $(AM_CFLAGS) -I../src
@@ -56,3 +56,7 @@ mb2insert_CFLAGS = $(AM_CFLAGS) -I. -I../src
 mb2insert_LDFLAGS = $(AM_LDFLAGS)
 mb2insert_LDADD = $(AM_LDADD)
 
+fsgen_SOURCES = fsgen.c rop.c
+fsgen_CFLAGS = $(AM_CFLAGS) -I. -I../src
+fsgen_LDFLAGS = $(AM_LDFLAGS)
+fsgen_LDADD = $(AM_LDADD)
