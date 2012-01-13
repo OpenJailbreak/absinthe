@@ -429,7 +429,7 @@ int main(int argc, char** argv)
 	char* uuid = NULL;
 	int dscs = 0;
 
-	ropMain(dscs); // this writes racoon-exploit.conf to disk
+	//ropMain(dscs); // this writes racoon-exploit.conf to disk
 
 	if (IDEVICE_E_SUCCESS != idevice_new(&device, NULL)) {
 		printf("No device found, is it plugged in?\n");
