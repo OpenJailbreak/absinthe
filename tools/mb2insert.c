@@ -511,7 +511,7 @@ int main(int argc, char** argv)
 		"    <key>DebugLevel</key>\n"
 		"    <integer>2</integer>\n"
 		"    <key>DebugLogfile</key>\n"
-		"    <string>/var/root/racoon.log</string>\n"
+		"    <string>/private/var/log/racoon.log</string>\n"
 		"  </dict>\n"
 		"</dict>\n"
 		"</plist>\n";
