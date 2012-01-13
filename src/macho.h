@@ -58,6 +58,7 @@ macho_t* macho_create();
 macho_t* macho_open(const char* path);
 macho_t* macho_load(unsigned char* data, unsigned int size, dyldcache_t* cache);
 uint32_t macho_lookup(macho_t* macho, const char* sym);
+void macho_list_symbols(macho_t* macho, void (*print_func)(const char*, uint32_t, void*), void* userdata);
 void macho_debug(macho_t* macho);
 void macho_free(macho_t* macho);
 

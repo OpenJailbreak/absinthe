@@ -26,13 +26,55 @@
 #include "common.h"
 #include "dyldcache.h"
 
+enum {
+	MODE_NONE,
+	MODE_DYLIB_SYM,
+	MODE_DYLIB_LIST,
+	MODE_SYM_SEARCH,
+	MODE_SYM_HEADER
+};
+
+static void print_sym(const char* name, uint32_t addr, void* userdata)
+{
+	printf("#define %s (void*)0x%08x\n", name, addr);
+}
+
+static void print_sym_struct_elem(const char* name, uint32_t address, void* userdata)
+{
+	if (userdata) {
+		fprintf(userdata, "\t{ \"%s\", 0x%08x },\n", name, address);
+	} else {
+		printf("\t{ \"%s\", 0x%08x },\n", name, address);
+	}
+}
+
+static char* c_safe_name(const char* name)
+{
+	char* outname = (char*)malloc(strlen(name)+1);
+	int i;
+	for (i = 0; i < strlen(name)+1; i++) {
+		switch (name[i]) {
+		case ' ':
+		case '.':
+		case '-':
+			outname[i] = '_';
+			break;
+		default:
+			outname[i] = name[i];
+			break;
+		}
+	}
+	return outname;
+}
+
 int main(int argc, char* argv[]) {
 	int i = 0;
 	int ret = 0;
 	char* path = NULL;
 	char* dylib = NULL;
 	char* symbol = NULL;
-	uint32_t address = 0;
+	char* outpath = NULL;
+	uint32_t address = 0xFFFFFFFF;
 	macho_t* macho = NULL;
 	dyldimage_t* image = NULL;
 	dyldcache_t* cache = NULL;
@@ -41,14 +83,34 @@ int main(int argc, char* argv[]) {
 		char *name = strrchr(argv[0], '/');
 		name = name ? name + 1 : argv[0];
 		info("Usage: %s <dyldcache> <dylib> <symbol>\n"
-		     "       %s <mach-o> <symbol>\n", name, name);
+		     "       %s <dyldcache> -l <dylib>\n"
+		     "       %s <dyldcache> -s <symbol>\n"
+		     "       %s <dyldcache> -h PATH\n"
+		     "       %s <mach-o> <symbol>\n", name, name, name, name, name);
 		return 0;
 	}
 
 	if (argc == 4) {
+	int mode = MODE_NONE;
 	path = strdup(argv[1]);
-	dylib = strdup(argv[2]);
-	symbol = strdup(argv[3]);
+	if (!strcmp(argv[2], "-s")) {
+		dylib = NULL;
+		symbol = strdup(argv[3]);
+		mode = MODE_SYM_SEARCH;
+	} else if (!strcmp(argv[2], "-l")) {
+		dylib = strdup(argv[3]);
+		symbol = NULL;
+		mode = MODE_DYLIB_LIST;
+	} else if (!strcmp(argv[2], "-h")) {
+		dylib = NULL;
+		symbol = NULL;
+		outpath = strdup(argv[3]);
+		mode = MODE_SYM_HEADER;
+	} else {
+		dylib = strdup(argv[2]);
+		symbol = strdup(argv[3]);
+		mode = MODE_DYLIB_SYM;
+	}
 
 	debug("Creating dyldcache from %s\n", path);
 	cache = dyldcache_open(path);
@@ -57,26 +119,59 @@ int main(int argc, char* argv[]) {
 		goto panic;
 	}
 
+	mkdir_with_parents(outpath, 0755);
+
 	for (i = 0; i < cache->header->images_count; i++) {
 		image = cache->images[i];
-		debug("Found %s\n", image->name);
-		if (strcmp(dylib, image->name) == 0) {
+		//debug("Found %s\n", image->name);
+		if ((dylib == NULL) || (strcmp(dylib, image->name) == 0)) {
 			macho = macho_load(image->data, image->size, cache);
 			if (macho == NULL) {
 				debug("Unable to parse Mach-O file in cache\n");
 				continue;
 			}
-			//macho_debug(dylib);
+			//macho_debug(macho);
 
-			address = macho_lookup(macho, symbol);
-			if (address != 0) {
-				printf("#define %s (void*)0x%08x\n", symbol, address);
+			if (symbol) {
+				address = macho_lookup(macho, symbol);
+				if (address != 0) {
+					if (!dylib) {
+						printf("// %s:\n", image->name);
+					}
+					print_sym(symbol, address, NULL);
+				}
+			} else {
+				if (dylib) {
+					printf("// %s:\n", image->name);
+					macho_list_symbols(macho, print_sym, NULL);
+				} else {
+					char *cn = c_safe_name(image->name);
+					char *cf = (char*)malloc(strlen(outpath)+1+strlen(image->name)+2+1);
+					strcpy(cf, outpath);
+					strcat(cf, "/");
+					strcat(cf, image->name);
+					strcat(cf, ".h");
+
+					FILE* f = fopen(cf, "wb");
+					if (f) {
+						fprintf(f, "// %s\n", image->name);
+						fprintf(f, "static struct symaddr %s_syms[] {\n", cn);
+						macho_list_symbols(macho, print_sym_struct_elem, f);
+						fprintf(f, "\t{ NULL, 0 }\n");
+						fprintf(f, "};\n");
+						fclose(f);
+					}
+					free(cf);
+					free(cn);
+				}
 			}
 
-			//macho_free(dylib);
-			//macho = NULL;
+			macho_free(macho);
+			macho = NULL;
 		}
 	}
+	dyldcache_free(cache);
+	cache = NULL;
 	} else if (argc == 3) {
 		path = strdup(argv[1]);
 		symbol = strdup(argv[2]);
@@ -93,12 +188,10 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	if(address == 0) {
+	if(address == 0xFFFFFFFF) {
 		goto panic;
 	}
 
-	dyldcache_free(cache);
-	cache = NULL;
 	goto finish;
 
 	panic:
@@ -111,5 +204,11 @@ int main(int argc, char* argv[]) {
 		macho_free(macho);
 	if (path)
 		free(path);
+	if (symbol)
+		free(symbol);
+	if (dylib)
+		free(dylib);
+	if (outpath)
+		free(outpath);
 	return ret;
 }

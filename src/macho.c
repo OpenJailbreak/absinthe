@@ -85,7 +85,9 @@ macho_t* macho_load(unsigned char* data, unsigned int size, dyldcache_t* cache) 
 		}
 
 		macho->segments = macho_segments_create(seg_count);
+		macho->segment_count = 0;
 		macho->symtabs = macho_symtabs_create(symtab_count);
+		macho->symtab_count = 0;
 
 		macho->cache = cache;
 
@@ -146,7 +148,22 @@ uint32_t macho_lookup(macho_t* macho, const char* sym) {
 	}
 	return 0;
 }
-;
+
+void macho_list_symbols(macho_t* macho, void (*print_func)(const char*, uint32_t, void*), void* userdata) {
+	int i = 0;
+	int j = 0;
+	nlist* nl = NULL;
+	macho_symtab_t* symtab = NULL;
+	for (i = 0; i < macho->symtab_count; i++) {
+		symtab = macho->symtabs[i];
+		for (j = 0; j < symtab->nsyms; j++) {
+			nl = &symtab->symbols[j];
+			if ((nl->n_un.n_name != NULL) && (nl->n_value != 0)) {
+				print_func(nl->n_un.n_name, nl->n_value, userdata);
+			}
+		}
+	}
+}
 
 void macho_debug(macho_t* macho) {
 	if (macho) {
@@ -175,6 +192,10 @@ void macho_free(macho_t* macho) {
 		if (macho->segments) {
 			macho_segments_free(macho->segments);
 			macho->segments = NULL;
+		}
+		if (macho->symtabs) {
+			macho_symtabs_free(macho->symtabs);
+			macho->symtabs = NULL;
 		}
 
 		if (macho->data) {
@@ -283,7 +304,7 @@ macho_command_t** macho_commands_create(uint32_t count) {
 	uint32_t size = (count + 1) * sizeof(macho_command_t*);
 	macho_command_t** commands = (macho_command_t**) malloc(size);
 	if (commands) {
-		memset(commands, '\0', size + 1);
+		memset(commands, '\0', size);
 	}
 	return commands;
 }
@@ -369,9 +390,13 @@ void macho_segments_debug(macho_segment_t** segments) {
 }
 
 void macho_segments_free(macho_segment_t** segments) {
-	// TODO: Loop through and free each item
 	if (segments) {
-		//free(segments);
+		int i = 0;
+		while (segments[i]) {
+			macho_segment_free(segments[i]);
+			i++;
+		}
+		free(segments);
 	}
 }
 
@@ -400,8 +425,12 @@ void macho_symtabs_debug(macho_symtab_t** symtabs) {
 }
 
 void macho_symtabs_free(macho_symtab_t** symtabs) {
-	// TODO: Loop through and free each item
 	if (symtabs) {
+		int i = 0;
+		while (symtabs[i]) {
+			macho_symtab_free(symtabs[i]);
+			i++;
+		}
 		free(symtabs);
 	}
 }

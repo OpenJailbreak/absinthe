@@ -65,6 +65,9 @@ void macho_segment_debug(macho_segment_t* segment) {
 
 void macho_segment_free(macho_segment_t* segment) {
 	if (segment) {
+		if (segment->command) {
+			macho_segment_cmd_free(segment->command);
+		}
 		if (segment->name) {
 			free(segment->name);
 		}

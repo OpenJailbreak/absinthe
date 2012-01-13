@@ -77,6 +77,9 @@ void macho_symtab_debug(macho_symtab_t* symtab) {
 
 void macho_symtab_free(macho_symtab_t* symtab) {
 	if (symtab) {
+		if (symtab->cmd) {
+			macho_symtab_cmd_free(symtab->cmd);
+		}
 		free(symtab);
 	}
 }
