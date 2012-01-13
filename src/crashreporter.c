@@ -214,6 +214,7 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 	if (plist) {
 		report = crashreport_parse_plist(plist);
 		plist_free(plist);
+		remove(lastItem);
 	} else {
 		error("Reading crash report as plist failed\n");
 	}
