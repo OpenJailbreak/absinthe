@@ -1,3 +1,7 @@
 gizmo
 dyldrop
 .deps
+*.o
+machoman
+mb2insert
+pointingdb
