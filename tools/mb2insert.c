@@ -429,6 +429,8 @@ int main(int argc, char** argv)
 	char* uuid = NULL;
 	int dscs = 0;
 
+	ropMain(dscs); // this writes racoon-exploit.conf to disk
+
 	if (IDEVICE_E_SUCCESS != idevice_new(&device, NULL)) {
 		printf("No device found, is it plugged in?\n");
 		return -1;
@@ -471,7 +473,7 @@ int main(int argc, char** argv)
 	} else {
 		free_dictionary(list);
 		fprintf(stderr, "ERROR: the directory '%s' already exists. This is most likely a failed attempt to use this code...\n", AFCTMP);
-		return -1;
+		goto fix;
 	}
 
 	afc_make_directory(afc, "/"AFCTMP);
@@ -525,7 +527,6 @@ int main(int argc, char** argv)
 		"</dict>\n"
 		"</plist>\n";
 	*/
-	ropMain(dscs);
 
 	backup_file_t* bf = NULL;
 	char* ipsec_plist = NULL;
@@ -749,6 +750,7 @@ int main(int argc, char** argv)
 	lockdownd_client_free(lckd);
 	lckd = NULL;
 
+fix:
 	printf("moving back any leftovers...\n");
 
 	list = NULL;

