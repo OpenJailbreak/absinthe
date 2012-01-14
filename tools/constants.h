@@ -1,18 +1,16 @@
-/*
- * constants.h
- *
- *  Created on: Jan 12, 2012
- *      Author: posixninja
- */
-
-#ifndef CONSTANTS_H_
-#define CONSTANTS_H_
-
 #include "config/iOS/5.0.1/iPhone4,1/constants.h"
 
 #define STRLEN_PID		4
 #define STRLEN_FILENAME		66
 #define LOG_SHIFT		(16 + STRLEN_PID + STRLEN_FILENAME)
+
+#define DEBUG
+#define P1				402
+#define P2				619
+#define P3				625
+//   p2 address: 0xXXXXXX[2c]
+#define P3_ADDR_LO			0x2c + (P3 - P2) * 4;
+#define LR_ADDR_LO			0x30
 
 // offsets
 #define ROP2_ABS_ADDR		0x3eb00000
@@ -26,6 +24,3 @@
 // constants
 #define	USELESS			0xdeadbeef
 #define	PLACE_HOLDER		0xdeadbeef
-
-
-#endif /* CONSTANTS_H_ */

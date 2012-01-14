@@ -18,3 +18,4 @@ stamp-h1
 src/absinthe
 src/*.o
 src/.deps
+*.plist

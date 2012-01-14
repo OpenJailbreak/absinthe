@@ -56,6 +56,7 @@ static struct dev_vmaddr devices_vmaddr_libcopyfile[] = {
 	{ "iPhone2,1", "9A405", 0x34a52000 },
 	{ "iPhone3,1", "9A405", 0x30654000 },
 	{ "iPhone3,3", "9A405", 0 },
+	{ "iPhone4,1", "9A405", 0x31f57000 },
 	{ "iPhone4,1", "9A406", 0x31f54000 }, // verify
 	{ "iPod3,1", "9A405", 0x35202000 },
 	{ "iPod4,1", "9A405", 0x30c29000 },
@@ -381,7 +382,7 @@ int main(int argc, char* argv[]) {
 		i++;
 	}
 
-	printf("dscs for %s is 0x%08x\n", product, dscs);
+	printf("0x%x\n", dscs);
 
 	// If aslr slide wasn't specified on the command line go ahead and figure it out ourself
 	/*if(aslr_slide == 0) {

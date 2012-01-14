@@ -1,5 +1,4 @@
 // libsystem_kernel.dylib
-
 #define _dsc_open			0x332cfdc4
 #define _dsc_mkdir			0x332c2c34
 #define _dsc_ioctl			(0x332c1bf8 + 1)
@@ -47,20 +46,20 @@
 #define GADGET_ADD_R0_R0_R1__POP457     (0x376ebae8 + 1)
 
 // libsystem_c.dylib
-#define _dsc_proc_pidinfo               (0x35e5e4e0 + 1)
-#define _dsc_system                     (0x35e6d814 + 1)
-#define _dsc_strcpy                     0x35e5bd30
+#define _dsc_proc_pidinfo               (0x32afe4e0 + 1)
+#define _dsc_system                     (0x32b0d814 + 1)
+#define _dsc_strcpy                     0x32afbd30
 
 // libsystem_kernel.dylib
-#define _dsc_shm_open                   0x332c24a8
-#define _dsc_mmap                       (0x332c0658 + 1)
-#define _dsc_mach_task_self             (0x332ced88 + 1)
-#define _dsc_mach_port_allocate         (0x332c0e44 + 1)
-#define _dsc_mach_port_insert_right     (0x332c0e70 + 1)
-#define _dsc_mach_msg		        (0x332c01d4 + 1)
+#define _dsc_shm_open                   0x35c654a8
+#define _dsc_mmap                       (0x35c63658 + 1)
+#define _dsc_mach_task_self             (0x35c71d88 + 1)
+#define _dsc_mach_port_allocate         (0x35c63e44 + 1)
+#define _dsc_mach_port_insert_right     (0x35c63e70 + 1)
+#define _dsc_mach_msg		        (0x35c631d4 + 1)
 
 // libdyld.dylib
-#define _dsc_dlsym                      (0x358116ec + 1)
+#define _dsc_dlsym                      (0x333fd6ec + 1)
 
 // notifyd stuff
 
