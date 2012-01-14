@@ -32,6 +32,7 @@
 #include "boolean.h"
 #include "dictionary.h"
 #include "crashreporter.h"
+#include "idevicepair.h"
 
 #include "dyldcache.h"
 
@@ -294,6 +295,9 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	idevicepair();
+	idevicevalidate();
+
 	// Open a connection to our device
 	debug("Opening connection to device\n");
 	device_t* device = device_create(uuid);
@@ -352,6 +356,7 @@ int main(int argc, char* argv[]) {
 		if (!strcmp(product, devices_vmaddr_libcopyfile[i].product)
 		    && !strcmp(buildver, devices_vmaddr_libcopyfile[i].build)) {
 			libcopyfile_vmaddr = devices_vmaddr_libcopyfile[i].vmaddr;
+			debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
 			break;
 		}
 		i++;
@@ -377,6 +382,7 @@ int main(int argc, char* argv[]) {
 	uint32_t dscs = 0;
 	while (crash->dylibs && crash->dylibs[i]) {
 		if (!strcmp(crash->dylibs[i]->name, "libcopyfile.dylib")) {
+			debug("Found libcopyfile.dylib address in crashreport of 0x%x\n", crash->dylibs[i]->offset);
 			dscs = crash->dylibs[i]->offset - libcopyfile_vmaddr;
 		}
 		i++;

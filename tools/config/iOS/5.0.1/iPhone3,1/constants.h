@@ -2,12 +2,12 @@
 #define STRLEN_FILENAME		66
 #define LOG_SHIFT		(16 + STRLEN_PID + STRLEN_FILENAME)
 
-#define P1				404
+#define P1				402
 #define P2				619
 #define P3				625
 
-#define P3_ADDR_LO			0xe4 + (P3 - P2) * 4;
-#define LR_ADDR_LO			0xe8
+#define P3_ADDR_LO			0x44 + (P3 - P2) * 4;
+#define LR_ADDR_LO			0x48
 
 // libsystem_kernel.dylib
 #define _dsc_open			0x35c72dc4

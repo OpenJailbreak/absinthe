@@ -1,7 +1,7 @@
 #include "config/iOS/5.0.1/iPhone3,1/constants.h"
 
 #ifndef CONSTANTS_SET
-#define STRLEN_PID		4
+#define STRLEN_PID		3
 #define STRLEN_FILENAME		66
 #define LOG_SHIFT		(16 + STRLEN_PID + STRLEN_FILENAME)
 
