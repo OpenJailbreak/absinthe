@@ -1,5 +1,16 @@
+<<<<<<< HEAD
+=======
+/*
+ * rop.c
+ *
+ *  Created on: Jan 12, 2012
+ *      Author: posixninja
+ */
+
+>>>>>>> 4bceb95661329a5c0ad2aca39280bca49f6d6caf
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef __APPLE__
 #include <unistd.h>
 #include <string.h>
 #include <syslog.h>
@@ -646,3 +657,9 @@ int ropMain(int slide) {
 
 	ropClose();
 }
+#else
+int ropMain(int slide) {
+	fprintf(stderr, "ERROR: ROP stuff not supported on this system.\n");
+	return 0;
+}
+#endif

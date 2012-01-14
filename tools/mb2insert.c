@@ -151,7 +151,7 @@ static void idevice_event_cb(const idevice_event_t *event, void *user_data)
 {
 	char* uuid = (char*)user_data;
 	printf("device event %d: %s\n", event->event, event->uuid);
-	if (strcmp(uuid, event->uuid)) return;
+	if (uuid && strcmp(uuid, event->uuid)) return;
 	if (event->event == IDEVICE_DEVICE_ADD) {
 		connected = 1;
 	} else if (event->event == IDEVICE_DEVICE_REMOVE) {
@@ -440,7 +440,26 @@ int main(int argc, char** argv)
 		printf("DeviceUniqueID : %s\n", uuid);
 	}
 
+	idevice_free(device);
+	device = NULL;
+
 	idevice_event_subscribe(idevice_event_cb, uuid);
+
+	int retries = 20;
+	int i = 0;
+	while (!connected && (i++ < retries)) {
+		sleep(1);
+	}
+
+	if (!connected) {
+		fprintf(stderr, "ERROR: Device connection failed\n");
+		return -1;
+	}
+
+	if (IDEVICE_E_SUCCESS != idevice_new(&device, uuid)) {
+		printf("No device found, is it plugged in?\n");
+		return -1;
+	}
 
 	if (LOCKDOWN_E_SUCCESS != lockdownd_client_new_with_handshake(device, &lckd, "mb2hackup")) {
 		idevice_free(device);
@@ -690,7 +709,7 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Uh, oh, the folder '%s' does not exist or is not accessible...\n", AFCTMP);
 	}
 
-	int i = 0;
+	i = 0;
 	while (list && list[i]) {
 		if (!strcmp(list[i], ".") || !strcmp(list[i], "..")) {
 			i++;
@@ -719,7 +738,7 @@ int main(int argc, char** argv)
 
 	printf("waiting for device to finish booting...\n");
 
-	int retries = 100;
+	retries = 100;
 	int done = 0;
 	sbservices_client_t sbsc = NULL;
 	plist_t state = NULL;
