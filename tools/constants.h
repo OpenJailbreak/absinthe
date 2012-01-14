@@ -1,5 +1,6 @@
-#include "config/iOS/5.0.1/iPhone4,1/constants.h"
+#include "config/iOS/5.0.1/iPhone3,1/constants.h"
 
+#ifndef CONSTANTS_SET
 #define STRLEN_PID		4
 #define STRLEN_FILENAME		66
 #define LOG_SHIFT		(16 + STRLEN_PID + STRLEN_FILENAME)
@@ -11,6 +12,7 @@
 //   p2 address: 0xXXXXXX[2c]
 #define P3_ADDR_LO			0x2c + (P3 - P2) * 4;
 #define LR_ADDR_LO			0x30
+#endif
 
 // offsets
 #define ROP2_ABS_ADDR		0x3eb00000
