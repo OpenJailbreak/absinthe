@@ -5,7 +5,7 @@
  *      Author: posixninja
  */
 
-
+#ifdef __APPLE__
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -434,3 +434,9 @@ int ropMain(int slide) {
 
 	ropClose();
 }
+#else
+int ropMain(int slide) {
+	fprintf(stderr, "ERROR: ROP stuff not supported on this system.\n");
+	return 0;
+}
+#endif
