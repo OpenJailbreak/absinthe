@@ -5,9 +5,9 @@
  *      Author: posixninja
  */
 
-#ifdef __APPLE__
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef __APPLE__
 #include <unistd.h>
 #include <string.h>
 #include <syslog.h>
