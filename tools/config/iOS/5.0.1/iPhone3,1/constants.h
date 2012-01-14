@@ -1,4 +1,4 @@
-#define STRLEN_PID		4
+#define STRLEN_PID		3
 #define STRLEN_FILENAME		66
 #define LOG_SHIFT		(16 + STRLEN_PID + STRLEN_FILENAME)
 
@@ -33,6 +33,7 @@
 #define _dsc_sleep			(0x32b0da54 + 1)
 #define _dsc_bootstrap_look_up		(0x314bffe8 + 1)
 #define _dsc_bsdthread_terminate	0x35c72228
+#define _dsc_chown                      0x35c65518
 
 #define LIBC_POP_R0			0x32b66340
 // __aeabi_cfcmpeq+0x10
