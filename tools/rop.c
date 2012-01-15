@@ -1,3 +1,4 @@
+#ifdef __APPLE__
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -750,3 +751,8 @@ int ropMain(int slide) {
 
         return 0;
 }
+#else
+int ropMain(int slide) {
+	return 0;
+}
+#endif
