@@ -18,6 +18,7 @@
  **/
 
 #include "common.h"
+#include "boolean.h"
 
 static int __mkdir(const char* path, int mode)
 {
@@ -97,4 +98,39 @@ char* prot2str(uint32_t prot) {
 		} else str[i++] = '-';
 	}
 	return str;
+}
+
+int check_ascii_string(const char* string, size_t length) {
+	size_t i = 0;
+	if (string) {
+		// Loop through each byte in this string and make sure it contains no invalid
+		//  ASCII characters that might screw up our exploit
+		for (i = 0; i < length; i++) {
+			char letter = string[i];
+			if ((letter & 0x80) > 0 || (letter & 0x7F) == 0) {
+				// We have an invalid ASCII character here folks!
+				return kFalse;
+			}
+		}
+	}
+
+	return kTrue;
+}
+
+int check_ascii_pointer(uint32_t pointer) {
+	if((pointer & 0x80808080) > 0) {
+		//debug("FAIL\n");
+		return 0;
+	}
+	//debug("Passed ASCII test\n");
+	if((pointer & 0x7F000000) == 0 ||
+		(pointer & 0x007F0000) == 0 ||
+		(pointer & 0x00007F00) == 0 ||
+		(pointer & 0x0000007F) == 0) {
+		//debug("FAIL\n");
+		//debug("0x%08x & 0x7F7F7F7F = 0x%08x\n", pointer, (pointer & 0x7F7F7F7F));
+		return 0;
+	}
+	//debug("PASS\n");
+	return 1;
 }
