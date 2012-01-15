@@ -46,7 +46,7 @@ machoman_LDFLAGS = $(AM_LDFLAGS)
 machoman_LDADD = $(AM_LDADD)
 
 mb2insert_SOURCES = mb2insert.c \
-				idevicebackup2.c \
+				../src/idevicebackup2.c \
 				rop.c \
 				../src/file.c \
 				../src/backup.c \
