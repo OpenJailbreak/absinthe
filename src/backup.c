@@ -248,6 +248,8 @@ int backup_update_file(backup_t* backup, backup_file_t* bfile)
 			fprintf(stderr, "%s: ERROR: could not write to '%s'\n", __func__, backupfname);
 			res = -1;
 		}
+	} else if ((bfile->mbdb_record->mode) & 040000) {
+		// directory!
 	} else {
 		fprintf(stderr, "%s: WARNING: file data not updated, no filename or data given\n", __func__);
 	}
