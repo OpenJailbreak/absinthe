@@ -20,7 +20,10 @@
 #ifndef ABSINTHE_H_
 #define ABSINTHE_H_
 
-
-
+int get_product_type();
+int get_build_Version();
+crashreport_t* crash_mobilebackup(device_t* device);
+crashreport_t* fetch_crashreport(device_t* device);
+unsigned long find_aslr_slide(crashreport_t* crash, char* cache);
 
 #endif /* ABSINTHE_H_ */

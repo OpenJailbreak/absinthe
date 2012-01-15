@@ -27,6 +27,7 @@
 #include <plist/plist.h>
 
 #include "mb1.h"
+#include "rop.h"
 #include "debug.h"
 #include "device.h"
 #include "boolean.h"
@@ -112,14 +113,6 @@ crashreport_t* fetch_crashreport(device_t* device) {
 	return crash;
 }
 
-int prepare_attack() {
-	return 0;
-}
-
-int bruteforce_string() {
-	return 0;
-}
-
 crashreport_t* crash_mobilebackup(device_t* device) {
 	crashreport_t* crash = NULL;
 	mb1_t* mb1 = mb1_connect(device);
@@ -153,9 +146,9 @@ unsigned long find_aslr_slide(crashreport_t* crash, char* cache) {
 void usage(int argc, char* argv[]) {
 	char* name = strrchr(argv[0], '/');
 	printf("Usage: %s [OPTIONS]\n", (name ? name + 1 : argv[0]));
-	printf("Copyright 2011, Chronic-Dev LLC\n");
+	printf("(c) 2011-2012, Chronic-Dev LLC\n");
 	printf("Jailbreak iOS5.0 using ub3rl33t MobileBackup2 exploit.\n");
-	printf("Discovered by Nikias Bassen, Exploited by Joshua Hill\n");
+	//printf("Discovered by Nikias Bassen, Exploited by Joshua Hill\n");
 	printf("  General\n");
 	printf("    -h, --help\t\t\tprints usage information\n");
 	printf("    -v, --verbose\t\tprints debuging info while running\n");
@@ -172,17 +165,12 @@ int main(int argc, char* argv[]) {
 	int optindex = 0;
 
 	int verbose = 0;
-	char* dylib = NULL;
-	char* cache = NULL;
 	unsigned long aslr_slide = 0;
 	unsigned long pointer = 0;
 	unsigned long target = 0;
-	unsigned long entropy = 0;
-	unsigned long salt = 0;
 	char* uuid = NULL;
-	unsigned long loop = 0;
 
-	char* buildver = NULL;
+	char* build = NULL;
 	char* product = NULL;
 
 #ifndef WIN32
@@ -248,48 +236,20 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	plist_t pl = NULL;
-	if ((lockdown_get_value(lockdown, NULL, "ProductType", &pl) != 0) || !pl || (plist_get_node_type(pl) != PLIST_STRING)) {
-		error("Could not get ProductType\n");
+	if ((lockdown_get_string(lockdown, "ProductType", &product) != LOCKDOWN_E_SUCCESS)
+			|| (lockdown_get_string(lockdown, "BuildVersion", &build) != LOCKDOWN_E_SUCCESS)) {
+		error("Could not get device information\n");
 		lockdown_free(lockdown);
 		device_free(device);
-		if (pl) {
-			plist_free(pl);
-		}
 		return -1;
 	}
-	plist_get_string_val(pl, &product);
-	if (!product) {
-		error("ProductType is NULL?!\n");
-		device_free(device);
-		return -1;
-	}
-
-	pl = NULL;
-	if ((lockdown_get_value(lockdown, NULL, "BuildVersion", &pl) != 0) || !pl || (plist_get_node_type(pl) != PLIST_STRING)) {
-		error("Could not get BuildVersion\n");
-		lockdown_free(lockdown);
-		device_free(device);
-		if (pl) {
-			plist_free(pl);
-		}
-		return -1;
-	}
-	plist_get_string_val(pl, &buildver);
-	if (!buildver) {
-		error("BuildVersion is NULL?!\n");
-		device_free(device);
-		return -1;
-	}
-
-	lockdown_free(lockdown);
 
 	// find product type and build version
 	int i = 0;
 	uint32_t libcopyfile_vmaddr = 0;
 	while (devices_vmaddr_libcopyfile[i].product) {
 		if (!strcmp(product, devices_vmaddr_libcopyfile[i].product)
-		    && !strcmp(buildver, devices_vmaddr_libcopyfile[i].build)) {
+		    && !strcmp(build, devices_vmaddr_libcopyfile[i].build)) {
 			libcopyfile_vmaddr = devices_vmaddr_libcopyfile[i].vmaddr;
 			debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
 			break;
@@ -324,6 +284,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	printf("0x%x\n", dscs);
+
+	ropMain(dscs);
 
 	if(device) device_free(device);
 	return 0;
