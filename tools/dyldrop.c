@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 	dyldimage_t* image = NULL;
 	dyldcache_t* cache = NULL;
 
-	if ((argc <= 4) && (argc != 3)) {
+	if ((argc < 4) && (argc != 3)) {
 		char *name = strrchr(argv[0], '/');
 		name = name ? name + 1 : argv[0];
 		info("Usage: %s <dyldcache> <dylib> <symbol>\n"
