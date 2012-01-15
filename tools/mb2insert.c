@@ -12,6 +12,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
+#include <signal.h>
 
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
@@ -23,6 +24,8 @@
 #include "rop.h"
 
 #define CONNECTION_NAME "jailbreak"
+
+static int quit_flag = 0;
 
 /* mkdir helper */
 int __mkdir(const char* path, int mode) /*{{{*/
@@ -420,6 +423,12 @@ static void process_preferences_plist(plist_t* pl)
 #define BKPTMP "nirvana"
 #define AFCTMP "HackStore"
 
+static void clean_exit(int sig)
+{
+	quit_flag++;
+	idevicebackup2_set_clean_exit(quit_flag);
+}
+
 int main(int argc, char** argv)
 {
 	idevice_t device = NULL;
@@ -428,6 +437,14 @@ int main(int argc, char** argv)
 	uint16_t port = 0;
 	char* uuid = NULL;
 	int dscs = 0;
+
+	/* we need to exit cleanly on running backups and restores or we cause havok */
+	signal(SIGINT, clean_exit);
+	signal(SIGTERM, clean_exit);
+#ifndef WIN32	
+	signal(SIGQUIT, clean_exit);
+	signal(SIGPIPE, SIG_IGN);
+#endif
 
 	//ropMain(dscs); // this writes racoon-exploit.conf to disk
 

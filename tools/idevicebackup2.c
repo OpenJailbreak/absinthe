@@ -1143,11 +1143,10 @@ static void mb2_copy_directory_by_path(const char *src, const char *dst)
 }
 
 /**
- * signal handler function for cleaning up properly
+ * replaced (previously signal handler) function for cleaning up properly
  */
-static void clean_exit(int sig)
+void idevicebackup2_set_clean_exit(int sig)
 {
-	fprintf(stderr, "Exiting...\n");
 	quit_flag++;
 }
 
@@ -1190,14 +1189,6 @@ int idevicebackup2(int argc, char *argv[])
 	plist_t info_plist = NULL;
 	plist_t opts = NULL;
 	mobilebackup2_error_t err;
-
-	/* we need to exit cleanly on running backups and restores or we cause havok */
-	signal(SIGINT, clean_exit);
-	signal(SIGTERM, clean_exit);
-#ifndef WIN32	
-	signal(SIGQUIT, clean_exit);
-	signal(SIGPIPE, SIG_IGN);
-#endif
 
 	/* parse cmdline args */
 	for (i = 1; i < argc; i++) {
