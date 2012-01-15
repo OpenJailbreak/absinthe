@@ -31,7 +31,8 @@ enum {
 	MODE_DYLIB_SYM,
 	MODE_DYLIB_LIST,
 	MODE_SYM_SEARCH,
-	MODE_SYM_HEADER
+	MODE_SYM_HEADER,
+	MODE_SYMDB
 };
 
 static void print_sym(const char* name, uint32_t addr, void* userdata)
@@ -70,6 +71,7 @@ static char* c_safe_name(const char* name)
 int main(int argc, char* argv[]) {
 	int i = 0;
 	int ret = 0;
+	int lastidx = 0;
 	char* path = NULL;
 	char* dylib = NULL;
 	char* symbol = NULL;
@@ -79,18 +81,19 @@ int main(int argc, char* argv[]) {
 	dyldimage_t* image = NULL;
 	dyldcache_t* cache = NULL;
 
-	if ((argc != 4) && (argc != 3)) {
+	if ((argc <= 4) && (argc != 3)) {
 		char *name = strrchr(argv[0], '/');
 		name = name ? name + 1 : argv[0];
 		info("Usage: %s <dyldcache> <dylib> <symbol>\n"
 		     "       %s <dyldcache> -l <dylib>\n"
 		     "       %s <dyldcache> -s <symbol>\n"
 		     "       %s <dyldcache> -h PATH\n"
-		     "       %s <mach-o> <symbol>\n", name, name, name, name, name);
+		     "       %s <dyldcache> -S <symbol1> [<symbol2> ...]\n"
+		     "       %s <mach-o> <symbol>\n", name, name, name, name, name, name);
 		return 0;
 	}
 
-	if (argc == 4) {
+	if (argc >= 4) {
 	int mode = MODE_NONE;
 	path = strdup(argv[1]);
 	if (!strcmp(argv[2], "-s")) {
@@ -106,6 +109,10 @@ int main(int argc, char* argv[]) {
 		symbol = NULL;
 		outpath = strdup(argv[3]);
 		mode = MODE_SYM_HEADER;
+	} else if (!strcmp(argv[2], "-S")) {
+		dylib = NULL;
+		symbol = NULL;
+		mode = MODE_SYMDB;
 	} else {
 		dylib = strdup(argv[2]);
 		symbol = strdup(argv[3]);
@@ -119,7 +126,9 @@ int main(int argc, char* argv[]) {
 		goto panic;
 	}
 
-	mkdir_with_parents(outpath, 0755);
+	if (outpath) {
+		mkdir_with_parents(outpath, 0755);
+	}
 
 	for (i = 0; i < cache->header->images_count; i++) {
 		image = cache->images[i];
@@ -140,6 +149,44 @@ int main(int argc, char* argv[]) {
 					}
 					print_sym(symbol, address, NULL);
 				}
+			} else if (!symbol && (mode == MODE_SYMDB)) {
+				int j;
+				int symno = 0;
+				char** symnames = (char**)malloc(sizeof(char*) * argc-3);
+				uint32_t* symaddrs = (uint32_t*)malloc(sizeof(uint32_t) * argc-3);
+				for (j = 3; j < argc; j++) {
+					address = macho_lookup(macho, argv[j]);
+					if (address != 0) {
+						symnames[symno] = argv[j];
+						symaddrs[symno] = address;
+						symno++;
+					}
+				}
+				if (symno > 0) {
+					char *cn = c_safe_name(image->name);
+					printf("// %s\n", image->name);
+					printf("struct %s_syms {\n", cn);
+					for (j = 0; j < symno; j++) {
+						char* csn = c_safe_name(symnames[j]);
+						printf("\tvoid* %s;\n", csn);
+						free(csn);
+					}
+					printf("};\n");
+					printf("struct %s_syms %s = {\n", cn, cn);
+					for (j = 0; j < symno; j++) {
+						printf("\t(void*)0x%x", symaddrs[j]);
+						if (j == symno-1) {
+							printf("\n");
+						} else {
+							printf(",\n");
+						}
+					}
+					printf("};\n");
+					printf("\n");	
+					free(cn);
+				}
+				free(symnames);
+				free(symaddrs);
 			} else {
 				if (dylib) {
 					printf("// %s:\n", image->name);
@@ -170,6 +217,7 @@ int main(int argc, char* argv[]) {
 			macho = NULL;
 		}
 	}
+
 	dyldcache_free(cache);
 	cache = NULL;
 	} else if (argc == 3) {
