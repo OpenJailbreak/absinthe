@@ -132,6 +132,9 @@ int main(int argc, char* argv[]) {
 	unsigned long pointer = 0;
 	unsigned long target = 0;
 	char* uuid = NULL;
+	int i = 0;
+	char* product = NULL;
+	char* build = NULL;
 
 	while ((opt = getopt_long(argc, argv, "hva:p:t:u:", longopts, &optindex)) > 0) {
 		switch (opt) {
@@ -182,6 +185,9 @@ int main(int argc, char* argv[]) {
 	signal(SIGPIPE, SIG_IGN);
 #endif
 
+	/********************************************************/
+	/* device detection */
+	/********************************************************/
 	if (!uuid) {
 		device = device_create(NULL);
 		if (!device) {
@@ -189,14 +195,61 @@ int main(int argc, char* argv[]) {
 			return -1;
 		}
 		uuid = strdup(device->uuid);
-		device_free(device);
-		device = NULL;
+	} else {
+		// Open a connection to our device
+		debug("Detecting device...\n");
+		device = device_create(uuid);
+		if (device == NULL) {
+			error("Unable to connect to device\n");
+			return -1;
+		}
 	}
 
+	lockdown_t* lockdown = lockdown_open(device);
+	if (lockdown == NULL) {
+		error("Lockdown connection failed\n");
+		device_free(device);
+		return -1;
+	}
+
+	if ((lockdown_get_string(lockdown, "ProductType", &product) != LOCKDOWN_E_SUCCESS) || (lockdown_get_string(lockdown, "BuildVersion", &build) != LOCKDOWN_E_SUCCESS)) {
+		error("Could not get device information\n");
+		lockdown_free(lockdown);
+		device_free(device);
+		return -1;
+	}
+
+	if (!jb_device_is_supported(product, build)) {
+		error("Error: device %s build %s is not supported.\n", product, build);
+		free(product);
+		free(build);
+		lockdown_free(lockdown);
+		device_free(device);
+		return -1;
+	}
+
+	plist_t pl = NULL;
+	lockdown_get_value(lockdown, "com.apple.mobile.backup", "WillEncrypt", &pl);
+	if (pl && plist_get_node_type(pl) == PLIST_BOOLEAN) {
+		char c = 0;
+		plist_get_bool_val(pl, &c);
+		plist_free(pl);
+		if (c) {
+			error("Error: You have a device backup password set. You need to disable the backup password in iTunes.\n");
+			lockdown_free(lockdown);
+			device_free(device);
+			return -1;
+		}
+	}
+	lockdown_free(lockdown);
+	device_free(device);
+	device = NULL;
+
+	/********************************************************/
+	/* begin the process */
+	/********************************************************/
 	idevice_event_subscribe(idevice_event_cb, uuid);
-
 	jailbreak(uuid, status_cb);
-
 	idevice_event_unsubscribe();
 
 	free(uuid);

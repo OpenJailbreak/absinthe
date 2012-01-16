@@ -1,5 +1,5 @@
 /**
- * GreenPois0n Absinthe - absinthe.c
+ * GreenPois0n Absinthe - jailbreak.c
  * Copyright (C) 2010 Chronic-Dev Team
  * Copyright (C) 2010 Joshua Hill
  *
@@ -49,34 +49,28 @@
 #define sleep(x) Sleep(x*1000)
 #endif
 
-#define CONNECTION_NAME "jailbreak"
-#define VPN_TRIGGER_ADDRESS "greenpois0n.com"
-#define BKPTMP "nirvana"
-#define AFCTMP "HackStore"
-
 static int quit_flag = 0;
 
-struct dev_vmaddr {
-	const char* product;
-	const char* build;
-	uint32_t vmaddr;
-};
+static uint32_t get_libcopyfile_vmaddr(const char* product, const char* build)
+{
+	// find product type and build version
+	int i = 0;
+	uint32_t vmaddr = 0;
+	while (devices_vmaddr_libcopyfile[i].product) {
+		if (!strcmp(product, devices_vmaddr_libcopyfile[i].product) && !strcmp(build, devices_vmaddr_libcopyfile[i].build)) {
+			vmaddr = devices_vmaddr_libcopyfile[i].vmaddr;
+			break;
+		}
+		i++;
+	}
+	return vmaddr;
+}
 
-static struct dev_vmaddr devices_vmaddr_libcopyfile[] = {
-	// iOS 5.0.1
-	{ "iPad1,1", "9A405", 0x3012f000 },
-	{ "iPad2,1", "9A405", 0 },
-	{ "iPad2,2", "9A405", 0 },
-	{ "iPad2,3", "9A405", 0 },
-	{ "iPhone2,1", "9A405", 0x34a52000 },
-	{ "iPhone3,1", "9A405", 0x30654000 },
-	{ "iPhone3,3", "9A405", 0 },
-	{ "iPhone4,1", "9A405", 0x31f54000 },
-	{ "iPhone4,1", "9A406", 0x31f57000 },
-	{ "iPod3,1", "9A405", 0x35202000 },
-	{ "iPod4,1", "9A405", 0x30c29000 },
-	{ NULL, NULL, 0 }
-};
+int jb_device_is_supported(const char* product, const char* build)
+{
+	uint32_t vmaddr = get_libcopyfile_vmaddr(product, build);
+	return (vmaddr != 0);
+}
 
 crashreport_t* fetch_crashreport(device_t* device) {
 	// We open crashreporter so we can download the mobilebackup2 crashreport
@@ -574,26 +568,18 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
-	// find product type and build version
-	i = 0;
-	uint32_t libcopyfile_vmaddr = 0;
-	while (devices_vmaddr_libcopyfile[i].product) {
-		if (!strcmp(product, devices_vmaddr_libcopyfile[i].product)
-		    && !strcmp(build, devices_vmaddr_libcopyfile[i].build)) {
-			libcopyfile_vmaddr = devices_vmaddr_libcopyfile[i].vmaddr;
-			debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
-			break;
-		}
-		i++;
-	}
-
+	// get libcopyfile_vmaddr
+	uint32_t libcopyfile_vmaddr = get_libcopyfile_vmaddr(product, build);
 	if (libcopyfile_vmaddr == 0) {
-		debug("Error: device %s is not supported.\n", product);
+		debug("Error: device %s build %s is not supported.\n", product, build);
 		status_cb("Sorry, your device is not supported.", 0);
 		free(product);
+		free(build);
 		device_free(device);
 		return -1;
 	}
+
+	debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
 
 	status_cb("Preparing device", 1);
 
