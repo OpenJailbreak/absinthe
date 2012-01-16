@@ -31,7 +31,8 @@
 
 lockdown_t* lockdown_open(device_t* device) {
 	lockdownd_client_t lockdownd = NULL;
-	if (lockdownd_client_new_with_handshake(device->client, &lockdownd, "absinthe") != LOCKDOWN_E_SUCCESS) {
+	if (lockdownd_client_new_with_handshake(device->client, &lockdownd,
+			"absinthe") != LOCKDOWN_E_SUCCESS) {
 		error("Unable to pair with lockdownd\n");
 		return NULL;
 	}
@@ -48,13 +49,14 @@ lockdown_t* lockdown_open(device_t* device) {
 	return lockdown;
 }
 
-int lockdown_get_value(lockdown_t* lockdown, const char *domain, const char *key, plist_t *value)
-{
+int lockdown_get_value(lockdown_t* lockdown, const char *domain,
+		const char *key, plist_t *value) {
 	if (!lockdown || !lockdown->client) {
 		return -1;
 	}
 
-	lockdownd_error_t err = lockdownd_get_value(lockdown->client, domain, key, value);
+	lockdownd_error_t err = lockdownd_get_value(lockdown->client, domain, key,
+			value);
 	if (err == LOCKDOWN_E_SUCCESS) {
 		return 0;
 	} else {
@@ -62,7 +64,28 @@ int lockdown_get_value(lockdown_t* lockdown, const char *domain, const char *key
 	}
 }
 
-int lockdown_start_service(lockdown_t* lockdown, const char* service, uint16_t* port) {
+int lockdown_get_string(lockdown_t* lockdown, const char *key, char** value) {
+	if (!lockdown || !lockdown->client) {
+		return -1;
+	}
+
+	char* str = NULL;
+	plist_t pl = NULL;
+	lockdownd_error_t err = lockdownd_get_value(lockdown->client, NULL, key, &pl);
+	if (err == LOCKDOWN_E_SUCCESS) {
+		if (pl != NULL && plist_get_node_type(pl) == PLIST_STRING) {
+			plist_get_string_val(pl, &str);
+			if (str != NULL) {
+				*value = str;
+				return 0;
+			}
+		}
+	}
+	return -1;
+}
+
+int lockdown_start_service(lockdown_t* lockdown, const char* service,
+		uint16_t* port) {
 	uint16_t p = 0;
 	lockdownd_start_service(lockdown->client, service, &p);
 

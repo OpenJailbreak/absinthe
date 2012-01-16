@@ -27,24 +27,6 @@
  * Small program I wrote to help me find usable addresses in iPhone memory
  */
 
-int check_ascii_pointer(uint32_t pointer) {
-	if((pointer & 0x80808080) > 0) {
-		//debug("FAIL\n");
-		return 0;
-	}
-	//debug("Passed ASCII test\n");
-	if((pointer & 0x7F000000) == 0 ||
-		(pointer & 0x007F0000) == 0 ||
-		(pointer & 0x00007F00) == 0 ||
-		(pointer & 0x0000007F) == 0) {
-		//debug("FAIL\n");
-		//debug("0x%08x & 0x7F7F7F7F = 0x%08x\n", pointer, (pointer & 0x7F7F7F7F));
-		return 0;
-	}
-	//debug("PASS\n");
-	return 1;
-}
-
 int main(int argc, char* argv) {
 	int i = 0;
 	unsigned int size = 0;

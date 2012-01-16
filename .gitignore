@@ -19,3 +19,4 @@ src/absinthe
 src/*.o
 src/.deps
 *.plist
+dyld_shared_cache_armv7

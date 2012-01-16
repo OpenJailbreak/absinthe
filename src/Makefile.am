@@ -32,8 +32,9 @@ absinthe_SOURCES = \
 	macho_section.c \
 	macho_command.c \
 	architecture.c \
+	idevicepair.c \
 	idevicebackup2.c \
-	idevicepair.c
+	rop.c 
 
 absinthe_CFLAGS = $(AM_CFLAGS)
 absinthe_LDFLAGS = $(AM_LDFLAGS)

