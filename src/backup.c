@@ -259,6 +259,105 @@ int backup_update_file(backup_t* backup, backup_file_t* bfile)
 	return res;
 }
 
+int backup_remove_file(backup_t* backup, backup_file_t* bfile)
+{
+	int res = 0;
+
+	if (!backup || !bfile) {
+		return -1;
+	}
+	if (!backup->mbdb) {
+		fprintf(stderr, "%s: ERROR: no mbdb in given backup_t\n", __func__);
+		return -1;
+	}
+
+	unsigned int newsize = 0;
+	unsigned char* newdata = NULL;
+
+	// find record
+	int idx = backup_get_file_index(backup, bfile->mbdb_record->domain, bfile->mbdb_record->path);
+	if (idx < 0) {
+		fprintf(stderr, "file %s-%s not found in backup so not removed.\n", bfile->mbdb_record->domain, bfile->mbdb_record->path);
+		return -1;
+	} else {
+		// remove record from mbdb
+		backup_file_t* oldfile = backup_file_create_from_record(backup->mbdb->records[idx]);
+		unsigned int oldsize = oldfile->mbdb_record->this_size;
+		backup_file_free(oldfile);
+
+		newsize = backup->mbdb->size - oldsize;
+		newdata = (unsigned char*)malloc(newsize);
+
+		char* p = newdata;
+		memcpy(p, backup->mbdb->data, sizeof(mbdb_header_t));
+		p+=sizeof(mbdb_header_t);
+
+		mbdb_record_t* r;
+		unsigned char* rd;
+		unsigned int rs;
+		int i;
+
+		for (i = 0; i < idx; i++) {
+			r = backup->mbdb->records[i];
+			rd = NULL;
+			rs = 0;
+			mbdb_record_build(r, &rd, &rs);
+			memcpy(p, rd, rs);
+			free(rd);
+			p+=rs;
+		}
+		for (i = idx+1; i < backup->mbdb->num_records; i++) {
+			r = backup->mbdb->records[i];
+			rd = NULL;
+			rs = 0;
+			mbdb_record_build(r, &rd, &rs);
+			memcpy(p, rd, rs);
+			free(rd);
+			p+=rs;
+		}
+	}
+
+	if (!newdata) {
+		fprintf(stderr, "Uh, could not re-create mbdb data?!\n");
+		return -1;
+	}
+
+	mbdb_free(backup->mbdb);
+
+	// parse the new data
+	backup->mbdb = mbdb_parse(newdata, newsize);
+	free(newdata);
+
+	// write out the file data
+	char* bfntmp = (char*)malloc(bfile->mbdb_record->domain_size + 1 + bfile->mbdb_record->path_size + 1);
+	strcpy(bfntmp, bfile->mbdb_record->domain);
+	strcat(bfntmp, "-");
+	strcat(bfntmp, bfile->mbdb_record->path);
+
+	char* backupfname = (char*)malloc(strlen(backup->path)+1+40+1);
+	unsigned char sha1[20] = {0, };
+	SHA1(bfntmp, strlen(bfntmp), sha1);
+	free(bfntmp);
+
+	strcpy(backupfname, backup->path);
+	strcat(backupfname, "/");
+
+	int i;
+	char* p = backupfname + strlen(backup->path) + 1;
+	for (i = 0; i < 20; i++) {
+		sprintf(p + i*2, "%02x", sha1[i]);
+	}
+
+	if (!(bfile->mbdb_record->mode & 040000)) {
+		fprintf(stderr, "deleting file %s\n", backupfname);
+		remove(backupfname);
+	}
+
+	free(backupfname);
+
+	return res;
+}
+
 int backup_write_mbdb(backup_t* backup)
 {
 	if (!backup || !backup->path || !backup->mbdb) {
