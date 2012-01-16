@@ -6,6 +6,7 @@ bin_PROGRAMS = absinthe
 
 absinthe_SOURCES = \
 	absinthe.c \
+	jailbreak.c \
 	common.c \
 	file.c \
 	backup.c \
