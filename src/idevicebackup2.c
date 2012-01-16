@@ -612,7 +612,7 @@ static int mb2_handle_send_file(const char *backup_dir, const char *path, plist_
 	total = fst.st_size;
 
 	char *format_size = format_size_for_display(total);
-	PRINT_VERBOSE(1, "Sending '%s' (%s)\n", path, format_size);
+	PRINT_VERBOSE(2, "Sending '%s' (%s)\n", path, format_size);
 	free(format_size);
 
 	if (total == 0) {
@@ -773,7 +773,7 @@ static int mb2_handle_receive_files(plist_t message, const char *backup_dir)
 		plist_get_uint_val(node, &backup_total_size);
 	}
 	if (backup_total_size > 0) {
-		PRINT_VERBOSE(1, "Receiving files\n");
+		PRINT_VERBOSE(2, "Receiving files\n");
 	}
 
 	do {
@@ -864,7 +864,7 @@ static int mb2_handle_receive_files(plist_t message, const char *backup_dir)
 				backup_real_size += blocksize;
 			}
 			if (backup_total_size > 0) {
-				print_progress(backup_real_size, backup_total_size);
+				//print_progress(backup_real_size, backup_total_size);
 			}
 			if (quit_flag)
 				break;
@@ -1572,7 +1572,7 @@ checkpoint:
 								char *newpath = build_path(backup_directory, str, NULL);
 								free(str);
 								if (remove(newpath) < 0) {
-									printf("Could not remove '%s': %s (%d)\n", newpath, strerror(errno), errno);
+									PRINT_VERBOSE(2, "Could not remove '%s': %s (%d)\n", newpath, strerror(errno), errno);
 									errcode = errno_to_device_error(errno);
 									errdesc = strerror(errno);
 								}
@@ -1671,8 +1671,8 @@ checkpoint:
 						double progress = 0.0;
 						plist_get_real_val(pnode, &progress);
 						if (progress > 0) {
-							print_progress_real(progress, 0);
-							PRINT_VERBOSE(1, " Finished\n");
+							//print_progress_real(progress, 0);
+							PRINT_VERBOSE(2, " Finished\n");
 						}
 					}
 				}
