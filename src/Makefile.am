@@ -8,6 +8,10 @@ absinthe_SOURCES = \
 	absinthe.c \
 	common.c \
 	file.c \
+	backup.c \
+	backup_file.c \
+	mbdb.c \
+	mbdb_record.c \
 	device.c \
 	lockdown.c \
 	mb1.c \
@@ -28,6 +32,7 @@ absinthe_SOURCES = \
 	macho_section.c \
 	macho_command.c \
 	architecture.c \
+	idevicebackup2.c \
 	idevicepair.c
 
 absinthe_CFLAGS = $(AM_CFLAGS)

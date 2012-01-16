@@ -37,6 +37,8 @@
 
 #include <endianness.h>
 
+#include "common.h"
+
 #define MOBILEBACKUP2_SERVICE_NAME "com.apple.mobilebackup2"
 #define NP_SERVICE_NAME "com.apple.mobile.notification_proxy"
 
@@ -166,65 +168,6 @@ static char *str_toupper(char* str)
 		res[i] = toupper(res[i]);
 	}
 	return res;
-}
-
-static int __mkdir(const char* path, int mode)
-{
-#ifdef WIN32
-	return mkdir(path);
-#else
-	return mkdir(path, mode);
-#endif
-}
-
-int mkdir_with_parents(const char *dir, int mode)
-{
-	if (!dir) return -1;
-	if (__mkdir(dir, mode) == 0) {
-		return 0;
-	} else {
-		if (errno == EEXIST) return 0;	
-	}
-	int res;
-	char *parent = strdup(dir);
-	parent = dirname(parent);
-	if (parent) {
-		res = mkdir_with_parents(parent, mode);
-	} else {
-		res = -1;	
-	}
-	free(parent);
-	if (res == 0) {
-		mkdir_with_parents(dir, mode);
-	}
-	return res;
-}
-
-char* build_path(const char* elem, ...)
-{
-	if (!elem) return NULL;
-	va_list args;
-	int len = strlen(elem)+1;
-	va_start(args, elem);
-	char *arg = va_arg(args, char*);
-	while (arg) {
-		len += strlen(arg)+1;
-		arg = va_arg(args, char*);
-	}
-	va_end(args);
-
-	char* out = (char*)malloc(len);
-	strcpy(out, elem);
-
-	va_start(args, elem);
-	arg = va_arg(args, char*);
-	while (arg) {
-		strcat(out, "/");
-		strcat(out, arg);
-		arg = va_arg(args, char*);
-	}
-	va_end(args);
-	return out;
 }
 
 static char* format_size_for_display(uint64_t size)
@@ -1421,7 +1364,7 @@ checkpoint:
 
 			/* make sure backup device sub-directory exists */
 			char *devbackupdir = build_path(backup_directory, uuid, NULL);
-			__mkdir(devbackupdir, 0755);
+			mkdir_with_parents(devbackupdir, 0755);
 			free(devbackupdir);
 
 			/* TODO: check domain com.apple.mobile.backup key RequiresEncrypt and WillEncrypt with lockdown */
