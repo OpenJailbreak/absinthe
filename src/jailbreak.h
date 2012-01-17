@@ -28,11 +28,19 @@ static struct dev_vmaddr devices_vmaddr_libcopyfile[] = {
 	{ NULL, NULL, 0 }
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void (*status_cb_t)(const char* message, int progress);
 
 int jb_device_is_supported(const char* product, const char* build);
 void jb_device_event_cb(const idevice_event_t *event, void *user_data);
 void jb_signal_handler(int sig);
 int jailbreak(const char* uuid, status_cb_t status_cb);
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif
