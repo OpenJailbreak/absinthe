@@ -206,7 +206,6 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 		return NULL;
 	}
 
-	free(lastItem);
 	plist_from_xml(datas, size, &plist);
 	free(datas);
 
@@ -218,5 +217,6 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 	} else {
 		error("Reading crash report as plist failed\n");
 	}
+	free(lastItem);
 	return report;
 }
