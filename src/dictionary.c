@@ -45,7 +45,7 @@ int randomize_string(unsigned char* buffer, unsigned int size, int times) {
 	memset(buffer, '\1', size);
 	for(i = 0; i < times; i++) {
 			// Here we're going to flip some bits and record the type of crash we get
-			int bit = random() % bits; // returns a number 0x0 to size * 8
+			int bit = rand() % bits; // returns a number 0x0 to size * 8
 			//debug("Bit = %d\n", bit);
 			int index = bit/8; // returns the byte index of the bit we're going to change
 			//debug("Index = 0x%02x\n", index);
