@@ -25,6 +25,10 @@
 
 #define CONNECTION_NAME "jailbreak"
 
+#ifdef WIN32
+#define sleep(x) Sleep(x*1000)
+#endif
+
 static int quit_flag = 0;
 
 /* mkdir helper */
