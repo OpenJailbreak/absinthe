@@ -199,16 +199,32 @@ void AbsintheWorker::checkDevice()
 		str.Printf(wxT("%s with iOS %s (%s) detected. Click the button to begin."), wxString(getDeviceName(productType), wxConvUTF8).c_str(), wxString(productVersion, wxConvUTF8).c_str(), wxString(buildVersion, wxConvUTF8).c_str());
 		mainwnd->setStatusText(str);
 
+		int ready_to_go = 1;
+
+		plist_t pl = NULL;
+		lockdownd_get_value(client, "com.apple.mobile.backup", "WillEncrypt", &pl);
 		lockdownd_client_free(client);
 		idevice_free(dev);
 
-		char* uuid = NULL;
-		idevice_get_uuid(dev, &uuid);
-		if (uuid) {
-			this->setUUID(uuid);
-			free(uuid);
+		if (pl && plist_get_node_type(pl) == PLIST_BOOLEAN) {
+			uint8_t c = 0;
+			plist_get_bool_val(pl, &c);
+			plist_free(pl);
+			if (c) {
+				ready_to_go = 0;
+				mainwnd->msgBox(wxT("The attached device has a backup password set. You need to disable the backup password in iTunes before you can continue.\nStart iTunes, remove the backup password and start this Program again."), wxT("Error"), wxOK | wxICON_ERROR);
+			}
 		}
-		mainwnd->setButtonEnabled(1);
+
+		if (ready_to_go) {
+			char* uuid = NULL;
+			idevice_get_uuid(dev, &uuid);
+			if (uuid) {
+				this->setUUID(uuid);
+				free(uuid);
+			}
+			mainwnd->setButtonEnabled(1);
+		}
 
 		free(productType);
 		free(productVersion);
