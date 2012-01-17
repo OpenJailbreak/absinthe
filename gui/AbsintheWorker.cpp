@@ -62,6 +62,7 @@ void AbsintheWorker::setUUID(const char* uuid)
 {
 	if (this->current_uuid) {
 		free(this->current_uuid);
+		this->current_uuid = NULL;
 	}
 	if (uuid) {
 		this->current_uuid = strdup(uuid);
