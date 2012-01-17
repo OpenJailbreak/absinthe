@@ -5,7 +5,7 @@
 	<key>ClassicMode</key>
 	<false/>
 	<key>FullScreen</key>
-	<false/>
+	<true/>
 	<key>IconIsPrecomposed</key>
 	<false/>
 	<key>IconIsScreenShotBased</key>
