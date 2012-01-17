@@ -21,7 +21,7 @@ public:
 	void DeviceEventCB(const idevice_event_t *event, void *user_data);
 	void checkDevice();
 	void processStart(void);
-	void processStatus(const char* msg);
+	void processStatus(const char* msg, int progress);
 	void processFinished(const char* error);
 };
 

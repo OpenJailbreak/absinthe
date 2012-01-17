@@ -8,6 +8,7 @@ absinthe_SOURCES = \
 	main.cpp \
 	AbsintheMainWnd.cpp \
 	AbsintheWorker.cpp \
+	AbsintheJailbreaker.cpp \
 	../src/jailbreak.c \
 	../src/common.c \
 	../src/file.c \

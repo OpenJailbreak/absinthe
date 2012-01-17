@@ -1,5 +1,6 @@
 #include <cstdio>
 #include "AbsintheWorker.h"
+#include "AbsintheJailbreaker.h"
 #include "device_types.h"
 #include "jailbreak.h"
 
@@ -28,6 +29,7 @@ static void device_event_cb(const idevice_event_t* event, void* userdata)
 	if (!detection_blocked) {
 		self->DeviceEventCB(event, userdata);
 	}
+	jb_device_event_cb(event, (void*)event->uuid);
 }
 
 AbsintheWorker::AbsintheWorker(void* main)
@@ -204,7 +206,6 @@ void AbsintheWorker::checkDevice()
 		plist_t pl = NULL;
 		lockdownd_get_value(client, "com.apple.mobile.backup", "WillEncrypt", &pl);
 		lockdownd_client_free(client);
-		idevice_free(dev);
 
 		if (pl && plist_get_node_type(pl) == PLIST_BOOLEAN) {
 			uint8_t c = 0;
@@ -225,6 +226,7 @@ void AbsintheWorker::checkDevice()
 			}
 			mainwnd->setButtonEnabled(1);
 		}
+		idevice_free(dev);
 
 		free(productType);
 		free(productVersion);
@@ -240,16 +242,20 @@ void AbsintheWorker::processStart(void)
 	AbsintheMainWnd* mainwnd = (AbsintheMainWnd*)this->mainWnd;
 
 	detection_blocked = 1;
-	//mainwnd->setStatusText(wxT("Hold on..."));
 
-	// TODO
+	AbsintheJailbreaker* jb = new AbsintheJailbreaker(this);
+	jb->Create();
+	jb->Run();	
 }
 
-void AbsintheWorker::processStatus(const char* msg)
+void AbsintheWorker::processStatus(const char* msg, int progress)
 {
 	AbsintheMainWnd* mainwnd = (AbsintheMainWnd*)this->mainWnd;
-	wxString str = wxString(msg, wxConvUTF8);
-	mainwnd->setStatusText(str);
+	if (msg) {
+		wxString str = wxString(msg, wxConvUTF8);
+		mainwnd->setStatusText(str);
+	}
+	mainwnd->setProgress(progress);
 }
 
 void AbsintheWorker::processFinished(const char* error)
