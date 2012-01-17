@@ -21,7 +21,9 @@ void AbsintheJailbreaker::statusCallback(const char* message, int progress)
 
 wxThread::ExitCode AbsintheJailbreaker::Entry(void)
 {
-	jailbreak(worker->getUUID(), status_cb);
+	char* uuid = strdup(worker->getUUID());
+	jailbreak(uuid, status_cb);
+	free(uuid);
 
 	const char* error = "Done!";
 
