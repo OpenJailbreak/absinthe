@@ -237,6 +237,12 @@ void mbdb_record_free(mbdb_record_t* record) {
 		if (record->property_count > 0) {
 			int i;
 			for (i = 0; i < record->property_count; i++) {
+				if (record->properties[i]->name) {
+					free(record->properties[i]->name);
+				}
+				if (record->properties[i]->value) {
+					free(record->properties[i]->value);
+				}
 				free(record->properties[i]);
 			}
 			free(record->properties);
