@@ -75,11 +75,15 @@ int lockdown_get_string(lockdown_t* lockdown, const char *key, char** value) {
 	if (err == LOCKDOWN_E_SUCCESS) {
 		if (pl != NULL && plist_get_node_type(pl) == PLIST_STRING) {
 			plist_get_string_val(pl, &str);
+			plist_free(pl);
 			if (str != NULL) {
 				*value = str;
 				return 0;
 			}
 		}
+	}
+	if (pl) {
+		plist_free(pl);
 	}
 	return -1;
 }
