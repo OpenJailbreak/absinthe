@@ -577,6 +577,10 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		device_free(device);
 		return -1;
 	}
+	free(product);
+	product = NULL;
+	free(build);
+	build = NULL;
 
 	debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
 
@@ -700,6 +704,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		} else {
 			fprintf(stderr, "Could not open '%s'\n", fn);
 		}
+		free(fn);
 	} else {
 		fprintf(stderr, "ERROR: could not locate preferences.plist in backup.\n");
 	}
@@ -774,6 +779,9 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 			fprintf(stderr, "ERROR: could not add file to backup\n");
 		}
 		backup_file_free(bf);
+		if (info_plist) {
+			free(info_plist);
+		}
 	}
 
 	char *icon_data = NULL;
@@ -799,6 +807,9 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 			fprintf(stderr, "ERROR: could not add file to backup\n");
 		}
 		backup_file_free(bf);
+	}
+	if (icon_data) {
+		free(icon_data);
 	}
 	backup_write_mbdb(backup);
 	backup_free(backup);
@@ -913,6 +924,8 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		}
 		i++;
 	}
+	crashreport_free(crash);
+	crash = NULL;
 
 	printf("0x%x\n", dscs);
 
@@ -982,6 +995,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 			NULL
 		};
 		idevicebackup2(5, nrargv);
+		free(ipsec_plist);
 	} else {
 		error("WARNING: no racoon-exploit.conf found\n");
 	}
@@ -1044,6 +1058,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		} else {
 			error("Could not open '%s'\n", fn);
 		}
+		free(fn);
 	} else {
 		error("ERROR: could not locate preferences.plist in backup.\n");
 	}
@@ -1068,7 +1083,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	}
 	backup_write_mbdb(backup);
 	backup_free(backup);
-
+	device_free(device);
 	
 	/********************************************************/
 	/* restore backup */
