@@ -29,12 +29,12 @@ backup_t* backup_open(const char* backupdir, const char* uuid)
 		return NULL;
 	}
 
-	char *backup_path = (char*)malloc(strlen(backupdir)+1+strlen(uuid)+1);
+	char *backup_path = (char*)malloc(strlen(backupdir)+1+strlen(uuid)+1+4);
 	strcpy(backup_path, backupdir);
 	strcat(backup_path, "/");
 	strcat(backup_path, uuid);
 
-	char *mbdb_path = (char*)malloc(strlen(backup_path)+1+strlen("Manifest.mbdb")+1);
+	char *mbdb_path = (char*)malloc(strlen(backup_path)+1+strlen("Manifest.mbdb")+1+4);
 	strcpy(mbdb_path, backup_path);
 	strcat(mbdb_path, "/");
 	strcat(mbdb_path, "Manifest.mbdb");
@@ -106,7 +106,7 @@ char* backup_get_file_path(backup_t* backup, backup_file_t* bfile)
 		return NULL;
 	}
 
-	char* bfntmp = (char*)malloc(bfile->mbdb_record->domain_size + 1 + bfile->mbdb_record->path_size + 1);
+	char* bfntmp = (char*)malloc(bfile->mbdb_record->domain_size + 1 + bfile->mbdb_record->path_size+1+4);
 	strcpy(bfntmp, bfile->mbdb_record->domain);
 	strcat(bfntmp, "-");
 	strcat(bfntmp, bfile->mbdb_record->path);
@@ -215,7 +215,7 @@ int backup_update_file(backup_t* backup, backup_file_t* bfile)
 	free(newdata);
 
 	// write out the file data
-	char* bfntmp = (char*)malloc(bfile->mbdb_record->domain_size + 1 + bfile->mbdb_record->path_size + 1);
+	char* bfntmp = (char*)malloc(bfile->mbdb_record->domain_size + 1 + bfile->mbdb_record->path_size+1+4);
 	strcpy(bfntmp, bfile->mbdb_record->domain);
 	strcat(bfntmp, "-");
 	strcat(bfntmp, bfile->mbdb_record->path);
@@ -329,7 +329,7 @@ int backup_remove_file(backup_t* backup, backup_file_t* bfile)
 	free(newdata);
 
 	// write out the file data
-	char* bfntmp = (char*)malloc(bfile->mbdb_record->domain_size + 1 + bfile->mbdb_record->path_size + 1);
+	char* bfntmp = (char*)malloc(bfile->mbdb_record->domain_size + 1 + bfile->mbdb_record->path_size+1+4);
 	strcpy(bfntmp, bfile->mbdb_record->domain);
 	strcat(bfntmp, "-");
 	strcat(bfntmp, bfile->mbdb_record->path);
