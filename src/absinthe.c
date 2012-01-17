@@ -24,7 +24,7 @@
 #include <getopt.h>
 #include <dirent.h>
 
-#include <sys/signal.h>
+#include <signal.h>
 #include <plist/plist.h>
 
 #include <libimobiledevice/sbservices.h>
