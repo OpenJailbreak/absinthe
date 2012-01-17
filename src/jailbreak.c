@@ -934,8 +934,8 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.plist");
 		if (bf) {
 			debug("com.apple.ipsec.plist already present, replacing\n");
-			backup_file_assign_file_data(bf, ipsec_plist, strlen(ipsec_plist), 0);
-			backup_file_set_length(bf, strlen(ipsec_plist));
+			backup_file_assign_file_data(bf, ipsec_plist, ipsec_plist_size);
+			backup_file_set_length(bf, ipsec_plist_size);
 			backup_file_update_hash(bf);
 
 			if (backup_update_file(backup, bf) < 0) {
