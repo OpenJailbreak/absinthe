@@ -1406,6 +1406,14 @@ checkpoint:
 			break;
 			case CMD_RESTORE:
 			/* TODO: verify battery on AC enough battery remaining */
+			if (info_path) {
+				free(info_path);
+				info_path = NULL;
+			}
+			if (info_plist) {
+				plist_free(info_plist);
+				info_plist = NULL;
+			}
 
 			/* verify if Status.plist says we read from an successful backup */
 			if (!mb2_status_check_snapshot_state(backup_directory, uuid, "finished")) {
