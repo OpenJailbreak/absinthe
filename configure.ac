@@ -31,7 +31,7 @@ case "$host_os" in
 			-DCURL_PULL_SYS_SOCKET_H \
 			-D__WXOSX_COCOA__ -DwxDEBUG_LEVEL=0 \
 			-I$LIBWXDIR/include -I$LIBWXDIR/lib/wx/include/osx_cocoa-unicode-static-2.9"
-		ACGUI_LDFLAGS+="pthread"
+		ACGUI_LDFLAGS+="-pthread"
 		ACGUI_LIBS+="$LIBSDIR/libwxpng-2.9.a \
 			$LIBSDIR/libwx_baseu-2.9.a \
 			$LIBSDIR/libwx_osx_cocoau_core-2.9.a \
