@@ -37,6 +37,10 @@
 
 #include <endianness.h>
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "common.h"
 
 #define MOBILEBACKUP2_SERVICE_NAME "com.apple.mobilebackup2"
@@ -59,7 +63,11 @@ static lockdownd_client_t client = NULL;
 static afc_client_t afc = NULL;
 static idevice_t phone = NULL;
 
+#ifdef _DEBUG
 static int verbose = 1;
+#else
+static int verbose = 0;
+#endif
 static int quit_flag = 0;
 
 #define PRINT_VERBOSE(min_level, ...) if (verbose >= min_level) { printf(__VA_ARGS__); };
