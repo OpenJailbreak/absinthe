@@ -45,6 +45,7 @@
 #include "offsets.h"
 
 #ifdef WIN32
+#include <windows.h>
 #define sleep(x) Sleep(x*1000)
 #endif
 
