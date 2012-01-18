@@ -46,20 +46,20 @@ mbdb_t* mbdb_parse(unsigned char* data, unsigned int size) {
 
 	mbdb = mbdb_create();
 	if(mbdb == NULL) {
-		fprintf(stderr, "Unable to create mbdb\n");
+		error("Unable to create mbdb\n");
 		return NULL;
 	}
 
 	header = (mbdb_header_t*) data;
 	if(strncmp(header->magic, MBDB_MAGIC, 6) != 0) {
-		fprintf(stderr, "Unable to identify this filetype\n");
+		error("Unable to identify this filetype\n");
 		return NULL;
 	}
 
 	// Copy in our header data
 	mbdb->header = (mbdb_header_t*)malloc(sizeof(mbdb_header_t));
 	if(mbdb->header == NULL) {
-		fprintf(stderr, "Allocation error\n");
+		error("Allocation error\n");
 		return NULL;
 	}
 	memset(mbdb->header, '\0', sizeof(mbdb_header_t));
@@ -68,7 +68,7 @@ mbdb_t* mbdb_parse(unsigned char* data, unsigned int size) {
 
 	mbdb->data = (unsigned char*)malloc(size);
 	if (mbdb->data == NULL) {
-		fprintf(stderr, "Allocation Error!!\n");
+		error("Allocation Error!!\n");
 		return NULL;
 	}
 	memcpy(mbdb->data, data, size);
@@ -80,7 +80,7 @@ mbdb_t* mbdb_parse(unsigned char* data, unsigned int size) {
 	while (offset < mbdb->size) {
 		mbdb_record_t* rec = mbdb_record_parse(&(mbdb->data)[offset]);
 		if (!rec) {
-			printf("Unable to parse record at offset 0x%x!\n", offset);
+			error("Unable to parse record at offset 0x%x!\n", offset);
 			break;
 		}
 		mbdb->records[mbdb->num_records++] = rec;
@@ -99,13 +99,13 @@ mbdb_t* mbdb_open(unsigned char* file) {
 
 	err = file_read(file, &data, &size);
 	if(err < 0) {
-		fprintf(stderr, "Unable to read mbdb file\n");
+		error("Unable to read mbdb file\n");
 		return NULL;
 	}
 
 	mbdb = mbdb_parse(data, size);
 	if(mbdb == NULL) {
-		fprintf(stderr, "Unable to parse mbdb file\n");
+		error("Unable to parse mbdb file\n");
 		return NULL;
 	}
 

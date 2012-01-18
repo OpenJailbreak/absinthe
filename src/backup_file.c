@@ -27,12 +27,13 @@
 #include "backup_file.h"
 //#include "mbdx_record.h"
 #include "mbdb_record.h"
+#include "debug.h"
 
 static backup_file_t* backup_file_new()
 {
 	backup_file_t* file = (backup_file_t*) malloc(sizeof(backup_file_t));
 	if(file == NULL) {
-		fprintf(stderr, "Allocation Error\n");
+		error("Allocation Error\n");
 		return NULL;
 	}
 	memset(file, '\0', sizeof(backup_file_t));
@@ -72,7 +73,7 @@ backup_file_t* backup_file_create_from_record(mbdb_record_t* record)
 	
 	file->mbdb_record = (mbdb_record_t*)malloc(sizeof(mbdb_record_t));
 	if(file->mbdb_record == NULL) {
-		fprintf(stderr, "Allocation Error\n");
+		error("Allocation Error\n");
 		return NULL;
 	}
 
@@ -176,13 +177,13 @@ void backup_file_set_target(backup_file_t* bfile, const char* target)
 	mbdb_record_set_target(bfile->mbdb_record, target);
 }
 
-static void print_hash(const unsigned char *hash, int len)
+static void debug_hash(const unsigned char *hash, int len)
 {
 	int i;
 	for (i = 0; i < len; i++) {
-		fprintf(stderr, "%02x", hash[i]);
+		debug("%02x", hash[i]);
 	}
-	printf("\n");
+	debug("\n");
 }
 
 void backup_file_update_hash(backup_file_t* bfile)
@@ -191,7 +192,7 @@ void backup_file_update_hash(backup_file_t* bfile)
 	if (bfile->filepath) {
 		FILE* f = fopen(bfile->filepath, "rb");
 		if (!f) {
-			fprintf(stderr, "%s: ERROR: Could not open file '%s'\n", __func__, bfile->filepath);
+			error("%s: ERROR: Could not open file '%s'\n", __func__, bfile->filepath);
 		}
 		unsigned char buf[8192];
 		size_t bytes;
@@ -206,17 +207,17 @@ void backup_file_update_hash(backup_file_t* bfile)
 		}
 		SHA1_Final(sha1, &shactx);
 		fclose(f);
-		fprintf(stderr, "setting datahash to ");
-		print_hash(sha1, 20);
+		debug("setting datahash to ");
+		debug_hash(sha1, 20);
 		mbdb_record_set_datahash(bfile->mbdb_record, sha1, 20);
 	} else if (bfile->data) {
 		unsigned char sha1[20] = {0, };
 		SHA1(bfile->data, bfile->size, sha1);
-		fprintf(stderr, "setting datahash to ");
-		print_hash(sha1, 20);
+		debug("setting datahash to ");
+		debug_hash(sha1, 20);
 		mbdb_record_set_datahash(bfile->mbdb_record, sha1, 20);
 	} else {
-		fprintf(stderr, "%s: ERROR: neither filename nor data given, setting hash to N/A\n", __func__);
+		error("%s: ERROR: neither filename nor data given, setting hash to N/A\n", __func__);
 		mbdb_record_set_datahash(bfile->mbdb_record, NULL, 0);
 	}
 }
@@ -285,12 +286,12 @@ int backup_file_get_record_data(backup_file_t* bfile, unsigned char** data, unsi
 {
 	if (!bfile) return;
 	if (!bfile->mbdb_record) {
-		fprintf(stderr, "%s: ERROR: no mbdb_record present\n", __func__);
+		error("%s: ERROR: no mbdb_record present\n", __func__);
 		return -1;
 	}
 
 	if (mbdb_record_build(bfile->mbdb_record, data, size) < 0) {
-		fprintf(stderr, "%s: ERROR: could not build mbdb_record data\n", __func__);
+		error("%s: ERROR: could not build mbdb_record data\n", __func__);
 		return -1;
 	}
 

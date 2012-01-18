@@ -25,11 +25,12 @@
 #include "mbdb.h"
 #include "endianness.h"
 #include "mbdb_record.h"
+#include "debug.h"
 
 mbdb_record_t* mbdb_record_create() {
 	mbdb_record_t* record = (mbdb_record_t*) malloc(sizeof(mbdb_record_t));
 	if (record == NULL) {
-		fprintf(stderr, "Allocation Error!\n");
+		error("Allocation Error!\n");
 		return NULL;
 	}
 	memset(record, '\0', sizeof(mbdb_record_t));
@@ -41,7 +42,7 @@ mbdb_record_t* mbdb_record_parse(unsigned char* data) {
 	unsigned int offset = 0;
 	mbdb_record_t* record = mbdb_record_create();
 	if (record == NULL) {
-		fprintf(stderr, "Unable to parse mbdb record\n");
+		error("Unable to parse mbdb record\n");
 		return NULL;
 	}
 
@@ -50,7 +51,7 @@ mbdb_record_t* mbdb_record_parse(unsigned char* data) {
 	if (strsize > 0 && strsize < 0xFFFF) {
 		record->domain = (char*) malloc(strsize+1);
 		if (record->domain == NULL) {
-			fprintf(stderr, "Allocation Error!\n");
+			error("Allocation Error!\n");
 			return NULL;
 		}
 		offset += 2;
@@ -68,7 +69,7 @@ mbdb_record_t* mbdb_record_parse(unsigned char* data) {
 	if (strsize > 0 && strsize < 0xFFFF) {
 		record->path = (char*) malloc(strsize+1);
 		if (record->path == NULL) {
-			fprintf(stderr, "Allocation Error!\n");
+			error("Allocation Error!\n");
 			return NULL;
 		}
 		offset+=2;
@@ -86,7 +87,7 @@ mbdb_record_t* mbdb_record_parse(unsigned char* data) {
 	if (strsize > 0 && strsize < 0xFFFF) {
 		record->target = (char*) malloc(strsize+1);
 		if (record->target == NULL) {
-			fprintf(stderr, "Allocation Error!\n");
+			error("Allocation Error!\n");
 			return NULL;
 		}
 		offset+=2;
@@ -104,7 +105,7 @@ mbdb_record_t* mbdb_record_parse(unsigned char* data) {
 	if (strsize > 0 && strsize < 0xFFFF) {
 		record->datahash = (char*) malloc(strsize);
 		if (record->datahash == NULL) {
-			fprintf(stderr, "Allocation Error!\n");
+			error("Allocation Error!\n");
 			return NULL;
 		}
 		offset+=2;
@@ -121,7 +122,7 @@ mbdb_record_t* mbdb_record_parse(unsigned char* data) {
 	if (strsize > 0 && strsize < 0xFFFF) {
 		record->unknown1 = (char*) malloc(strsize+1);
 		if (record->unknown1 == NULL) {
-			fprintf(stderr, "Allocation Error!\n");
+			error("Allocation Error!\n");
 			return NULL;
 		}
 		offset+=2;
@@ -252,23 +253,23 @@ void mbdb_record_free(mbdb_record_t* record) {
 }
 
 void mbdb_record_debug(mbdb_record_t* record) {
-	fprintf(stderr, "mbdb record\n");
-	fprintf(stderr, "\tdomain = %s\n", record->domain);
-	fprintf(stderr, "\tpath = %s\n", record->path);
-	fprintf(stderr, "\ttarget = %s\n", record->target);
-	fprintf(stderr, "\tdatahash = %p\n", record->datahash);
-	fprintf(stderr, "\tunknown1 = %s\n", record->unknown1);
-	fprintf(stderr, "\tmode = 0%o (0x%x)\n", record->mode, record->mode);
-	fprintf(stderr, "\tunknown2 = 0x%x\n", record->unknown2);
-	fprintf(stderr, "\tinode = 0x%x\n", record->inode);
-	fprintf(stderr, "\tuid = %d\n", record->uid);
-	fprintf(stderr, "\tgid = %d\n", record->gid);
-	fprintf(stderr, "\ttime1 = 0x%x\n", record->time1);
-	fprintf(stderr, "\ttime2 = 0x%x\n", record->time2);
-	fprintf(stderr, "\ttime3 = 0x%x\n", record->time3);
-	fprintf(stderr, "\tlength = %llu\n", record->length);
-	fprintf(stderr, "\tflag = 0x%x\n", record->flag);
-	fprintf(stderr, "\tproperty_count = %d\n", record->property_count);
+	debug("mbdb record\n");
+	debug("\tdomain = %s\n", record->domain);
+	debug("\tpath = %s\n", record->path);
+	debug("\ttarget = %s\n", record->target);
+	debug("\tdatahash = %p\n", record->datahash);
+	debug("\tunknown1 = %s\n", record->unknown1);
+	debug("\tmode = 0%o (0x%x)\n", record->mode, record->mode);
+	debug("\tunknown2 = 0x%x\n", record->unknown2);
+	debug("\tinode = 0x%x\n", record->inode);
+	debug("\tuid = %d\n", record->uid);
+	debug("\tgid = %d\n", record->gid);
+	debug("\ttime1 = 0x%x\n", record->time1);
+	debug("\ttime2 = 0x%x\n", record->time2);
+	debug("\ttime3 = 0x%x\n", record->time3);
+	debug("\tlength = %llu\n", record->length);
+	debug("\tflag = 0x%x\n", record->flag);
+	debug("\tproperty_count = %d\n", record->property_count);
 }
 
 void mbdb_record_init(mbdb_record_t* record)
@@ -455,7 +456,7 @@ int mbdb_record_build(mbdb_record_t* record, unsigned char** data, unsigned int*
 
 	data_buf = (unsigned char*)malloc(record->this_size);
 	if (!data_buf) {
-		fprintf(stderr, "Allocation Error!\n");
+		error("Allocation Error!\n");
 		return -1;
 	}
 
@@ -571,7 +572,7 @@ int mbdb_record_build(mbdb_record_t* record, unsigned char** data, unsigned int*
 	if (record->this_size != offset) {
 		*data = NULL;
 		*size = 0;
-		fprintf(stderr, "%s: ERROR: inconsistent record size (present %d != created %d)\n", __func__, record->this_size, offset);
+		error("%s: ERROR: inconsistent record size (present %d != created %d)\n", __func__, record->this_size, offset);
 		return -1;
 	}
 

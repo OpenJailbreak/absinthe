@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "backup.h"
+#include "debug.h"
 
 backup_t* backup_open(const char* backupdir, const char* uuid)
 {
@@ -41,9 +42,9 @@ backup_t* backup_open(const char* backupdir, const char* uuid)
 
 	mbdb_t* mbdb = mbdb_open(mbdb_path);
 	if (mbdb) {
-		printf("Manifest.mbdb opened, %d records\n", mbdb->num_records);
+		debug("Manifest.mbdb opened, %d records\n", mbdb->num_records);
 	} else {
-		fprintf(stderr, "ERROR: could not open %s\n", mbdb_path);
+		error("ERROR: could not open %s\n", mbdb_path);
 		free(mbdb_path);
 		return NULL;
 	}
@@ -102,7 +103,7 @@ char* backup_get_file_path(backup_t* backup, backup_file_t* bfile)
 		return NULL;
 	}
 	if (!backup->mbdb) {
-		fprintf(stderr, "%s: ERROR: no mbdb in given backup_t\n", __func__);
+		error("%s: ERROR: no mbdb in given backup_t\n", __func__);
 		return NULL;
 	}
 
@@ -125,7 +126,7 @@ char* backup_get_file_path(backup_t* backup, backup_file_t* bfile)
 		sprintf(p + i*2, "%02x", sha1[i]);
 	}
 
-	fprintf(stderr, "backup filename is %s\n", backupfname);
+	debug("backup filename is %s\n", backupfname);
 
 	return backupfname;
 }
@@ -138,7 +139,7 @@ int backup_update_file(backup_t* backup, backup_file_t* bfile)
 		return -1;
 	}
 	if (!backup->mbdb) {
-		fprintf(stderr, "%s: ERROR: no mbdb in given backup_t\n", __func__);
+		error("%s: ERROR: no mbdb in given backup_t\n", __func__);
 		return -1;
 	}
 
@@ -146,7 +147,7 @@ int backup_update_file(backup_t* backup, backup_file_t* bfile)
 	unsigned int rec_size = 0;
 
 	if (backup_file_get_record_data(bfile, &rec, &rec_size) < 0) {
-		fprintf(stderr, "%s: ERROR: could not build mbdb_record data\n", __func__);
+		error("%s: ERROR: could not build mbdb_record data\n", __func__);
 		return -1;
 	}
 
@@ -203,7 +204,7 @@ int backup_update_file(backup_t* backup, backup_file_t* bfile)
 	}
 
 	if (!newdata) {
-		fprintf(stderr, "Uh, could not re-create mbdb data?!\n");
+		error("Uh, could not re-create mbdb data?!\n");
 		return -1;
 	}
 
@@ -234,24 +235,24 @@ int backup_update_file(backup_t* backup, backup_file_t* bfile)
 		sprintf(p + i*2, "%02x", sha1[i]);
 	}
 
-	fprintf(stderr, "backup filename is %s\n", backupfname);
+	debug("backup filename is %s\n", backupfname);
 
 	if (bfile->filepath) {
 		// copy file to backup dir
 		if (file_copy(bfile->filepath, backupfname) < 0) {
-			fprintf(stderr, "%s: ERROR: could not copy file '%s' to '%s'\n", __func__, bfile->filepath, backupfname);
+			error("%s: ERROR: could not copy file '%s' to '%s'\n", __func__, bfile->filepath, backupfname);
 			res = -1;
 		}
 	} else if (bfile->data) {
 		// write data buffer to file
 		if (file_write(backupfname, bfile->data, bfile->size) < 0) {
-			fprintf(stderr, "%s: ERROR: could not write to '%s'\n", __func__, backupfname);
+			error("%s: ERROR: could not write to '%s'\n", __func__, backupfname);
 			res = -1;
 		}
 	} else if ((bfile->mbdb_record->mode) & 040000) {
 		// directory!
 	} else {
-		fprintf(stderr, "%s: WARNING: file data not updated, no filename or data given\n", __func__);
+		debug("%s: WARNING: file data not updated, no filename or data given\n", __func__);
 	}
 
 	free(backupfname);
@@ -267,7 +268,7 @@ int backup_remove_file(backup_t* backup, backup_file_t* bfile)
 		return -1;
 	}
 	if (!backup->mbdb) {
-		fprintf(stderr, "%s: ERROR: no mbdb in given backup_t\n", __func__);
+		error("%s: ERROR: no mbdb in given backup_t\n", __func__);
 		return -1;
 	}
 
@@ -277,7 +278,7 @@ int backup_remove_file(backup_t* backup, backup_file_t* bfile)
 	// find record
 	int idx = backup_get_file_index(backup, bfile->mbdb_record->domain, bfile->mbdb_record->path);
 	if (idx < 0) {
-		fprintf(stderr, "file %s-%s not found in backup so not removed.\n", bfile->mbdb_record->domain, bfile->mbdb_record->path);
+		debug("file %s-%s not found in backup so not removed.\n", bfile->mbdb_record->domain, bfile->mbdb_record->path);
 		return -1;
 	} else {
 		// remove record from mbdb
@@ -318,7 +319,7 @@ int backup_remove_file(backup_t* backup, backup_file_t* bfile)
 	}
 
 	if (!newdata) {
-		fprintf(stderr, "Uh, could not re-create mbdb data?!\n");
+		error("Uh, could not re-create mbdb data?!\n");
 		return -1;
 	}
 
@@ -349,7 +350,7 @@ int backup_remove_file(backup_t* backup, backup_file_t* bfile)
 	}
 
 	if (!(bfile->mbdb_record->mode & 040000)) {
-		fprintf(stderr, "deleting file %s\n", backupfname);
+		debug("deleting file %s\n", backupfname);
 		remove(backupfname);
 	}
 
