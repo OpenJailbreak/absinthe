@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "mbdb.h"
+#include "debug.h"
 
 mbdb_t* mbdb_create() {
 	mbdb_t* mbdb = NULL;
