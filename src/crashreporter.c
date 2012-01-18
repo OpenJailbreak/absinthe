@@ -176,7 +176,7 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 		return NULL;
 	}
 
-	FILE* output = fopen(lastItem, "w");
+	FILE* output = fopen(lastItem, "wb");
 	if(output == NULL) {
 		printf("Unable to open local file %s\n", lastItem);
 		free(lastItem);
