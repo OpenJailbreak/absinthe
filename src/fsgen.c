@@ -9,27 +9,29 @@
 #include "fsgen-mac-defines.h"
 #include "fsgen-global-constants.h"
 
+typedef unsigned int Addr;
+
 int STRLEN_PID;
 
 struct constants* constants;
 struct offsets* offsets;
 
-unsigned int p2DataLo = 0, p3Data = 0;
-int firstP2Write = 1, firstP3Write = 1;
-int lines = 0;
+// Do not initialize globals here! Initialize them in generate_rop.
+unsigned int p2DataLo, p3Data;
+int firstP2Write, firstP3Write;
+int lines;
 
-typedef unsigned int Addr;
 #define ROP_MODE_MEM 1
 #define ROP_MODE_FILE 2
-FILE* ropFile = NULL;
-FILE* ropVarsFile = NULL;
-unsigned int ropWriteMode = ROP_MODE_MEM;
-unsigned int ropWriteVarsMode = ROP_MODE_MEM;
-unsigned int ropWriteAddr = ROP2_ABS_ADDR;
+FILE* ropFile;
+FILE* ropVarsFile;
+unsigned int ropWriteMode;
+unsigned int ropWriteVarsMode;
+unsigned int ropWriteAddr;
 unsigned int ropFileAddr;
 unsigned char vars[VARS_MAX_SIZE];
-Addr varsBaseAddr = VARS_ABS_ADDR_1;
-unsigned int varsWritten = 0;
+Addr varsBaseAddr;
+unsigned int varsWritten;
 
 FILE* outFile;
 
@@ -190,6 +192,19 @@ Addr newArray(unsigned int values[], unsigned int count) {
 }
 
 void ropOpen() {
+	p2DataLo = 0;
+	p3Data = 0;
+	firstP2Write = 1;
+	firstP3Write = 1;
+	lines = 0;
+	ropFile = NULL;
+	ropVarsFile = NULL;
+	ropWriteMode = ROP_MODE_MEM;
+	ropWriteVarsMode = ROP_MODE_MEM;
+	ropWriteAddr = ROP2_ABS_ADDR;
+	ropFileAddr = 0;
+	varsBaseAddr = VARS_ABS_ADDR_1;
+	varsWritten = 0;
 	lines++;
 	fprintf(outFile, "sainfo address ::1 icmp6 address ::1 icmp6 {\n");
 	memset(vars, 0, VARS_MAX_SIZE);
@@ -971,6 +986,22 @@ int generate_rop(FILE* out, int is_bootstrap, const char* firmwareName, const ch
 
         STRLEN_PID = pid_len;
         dscs = slide;
+
+        p2DataLo = 0;
+        p3Data = 0;
+        firstP2Write = 1;
+        firstP3Write = 1;
+        lines = 0;
+
+        ropFile = NULL;
+        ropVarsFile = NULL;
+        ropWriteMode = ROP_MODE_MEM;
+        ropWriteVarsMode = ROP_MODE_MEM;
+        ropWriteAddr = ROP2_ABS_ADDR;
+        ropFileAddr = 0;
+        memset(vars, 0, sizeof(vars));
+        varsBaseAddr = VARS_ABS_ADDR_1;
+        varsWritten = 0;
 
         int device = -1;
         int firmware = -1;
