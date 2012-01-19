@@ -14,13 +14,26 @@ if ! make; then
   exit 1
 fi
 
-mkdir -p build/absinthe/cli/data/common/corona
-mkdir -p build/absinthe/gui/data/common/corona
+CLIDEST=build/absinthe/cli
+GUIDEST=build/absinthe/gui
+
+mkdir -p $CLIDEST
+mkdir -p $GUIDEST
 
 case `uname` in
 	Darwin)
+	OSX_BUNDLE_NAME=Absinthe
 	cp src/absinthe build/absinthe/cli/
-	cp gui/absinthe build/absinthe/gui/
+	mkdir -p $GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/MacOS
+	mkdir -p $GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/Resources
+	echo "APPL????" > $GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/PkgInfo
+	cp resources/osx/Info.plist $GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/
+	cp resources/osx/Icon.icns $GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/Resources/
+	GUIDEST=$GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/MacOS
+	cp gui/absinthe $GUIDEST/${OSX_BUNDLE_NAME}
+	# if running as root required:
+	#cp gui/absinthe $GUIDEST/${OSX_BUNDLE_NAME}_
+	#cp resources/osx/launcher $GUIDEST/${OSX_BUNDLE_NAME}
 	;;
 	Linux)
 	cp src/absinthe build/absinthe/cli/
@@ -32,21 +45,24 @@ case `uname` in
 	;;
 esac
 
+mkdir -p $CLIDEST/data/common/corona
+mkdir -p $GUIDEST/data/common/corona
+
 # common files
-cp data/common/webclip_icon*.png build/absinthe/cli/data/common/
-cp data/common/webclip_Info.plist build/absinthe/cli/data/common/
-cp data/common/webclip_icon*.png build/absinthe/gui/data/common/
-cp data/common/webclip_Info.plist build/absinthe/gui/data/common/
+cp data/common/webclip_icon*.png $CLIDEST/data/common/
+cp data/common/webclip_Info.plist $CLIDEST/data/common/
+cp data/common/webclip_icon*.png $GUIDEST/data/common/
+cp data/common/webclip_Info.plist $GUIDEST/data/common/
 
-cp -r data/common/corona build/absinthe/cli/data/common/
-cp -r data/common/corona build/absinthe/gui/data/common/
+cp -r data/common/corona $CLIDEST/data/common/
+cp -r data/common/corona $GUIDEST/data/common/
 
-cp iOS/cleanup/cleanup build/absinthe/cli/data/common/corona/
-cp iOS/filemover/filemover build/absinthe/cli/data/common/corona/
-cp iOS/filemover/filemover.plist build/absinthe/cli/data/common/corona/
-cp iOS/cleanup/cleanup build/absinthe/gui/data/common/corona/
-cp iOS/filemover/filemover build/absinthe/gui/data/common/corona/
-cp iOS/filemover/filemover.plist build/absinthe/gui/data/common/corona/
+cp iOS/cleanup/cleanup $CLIDEST/data/common/corona/
+cp iOS/filemover/filemover $CLIDEST/data/common/corona/
+cp iOS/filemover/filemover.plist $CLIDEST/data/common/corona/
+cp iOS/cleanup/cleanup $GUIDEST/data/common/corona/
+cp iOS/filemover/filemover $GUIDEST/data/common/corona/
+cp iOS/filemover/filemover.plist $GUIDEST/data/common/corona/
 
 
 # device specific files
@@ -54,12 +70,12 @@ cp iOS/filemover/filemover.plist build/absinthe/gui/data/common/corona/
 function devfiles()
 {
   for I in data/$1/*; do
-    mkdir -p build/absinthe/cli/$I
-    mkdir -p build/absinthe/gui/$I
-    cp -r $I/corona build/absinthe/cli/$I/
-    cp -r $I/corona build/absinthe/gui/$I/
-    cp -r $I/fsgen build/absinthe/cli/$I/
-    cp -r $I/fsgen build/absinthe/gui/$I/
+    mkdir -p $CLIDEST/$I
+    mkdir -p $GUIDEST/$I
+    cp -r $I/corona $CLIDEST/$I/
+    cp -r $I/corona $GUIDEST/$I/
+    cp -r $I/fsgen $CLIDEST/$I/
+    cp -r $I/fsgen $GUIDEST/$I/
   done
 }
 
