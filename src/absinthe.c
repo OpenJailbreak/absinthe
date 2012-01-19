@@ -136,6 +136,16 @@ int main(int argc, char* argv[]) {
 	char* product = NULL;
 	char* build = NULL;
 
+	char* name = strrchr(argv[0], '/');
+	if (name) {
+		int nlen = strlen(argv[0])-strlen(name);
+		char path[512];
+		memcpy(path, argv[0], nlen);
+		path[nlen] = 0;
+		debug("setting working directory to %s\n", path);
+		chdir(path);
+	}
+
 	while ((opt = getopt_long(argc, argv, "hva:p:t:u:", longopts, &optindex)) > 0) {
 		switch (opt) {
 		case 'h':

@@ -26,7 +26,7 @@ absinthe_SOURCES = \
 	../src/crashreportcopy.c \
 	../src/crashreport.c \
 	../src/idevicebackup2.c \
-	../src/rop.c 
+	../src/fsgen.c 
 
 absinthe_CFLAGS = $(AM_CFLAGS) -I../src
 absinthe_CXXFLAGS = $(AM_CFLAGS) -I../src

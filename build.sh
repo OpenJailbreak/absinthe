@@ -41,6 +41,14 @@ cp webclip_Info.plist build/absinthe/gui/data/
 cp -r data/common/corona build/absinthe/cli/data/common/
 cp -r data/common/corona build/absinthe/gui/data/common/
 
+cp iOS/cleanup/cleanup build/absinthe/cli/data/common/corona/
+cp iOS/filemover/filemover build/absinthe/cli/data/common/corona/
+cp iOS/filemover/filemover.plist build/absinthe/cli/data/common/corona/
+cp iOS/cleanup/cleanup build/absinthe/gui/data/common/corona/
+cp iOS/filemover/filemover build/absinthe/gui/data/common/corona/
+cp iOS/filemover/filemover.plist build/absinthe/gui/data/common/corona/
+
+
 # device specific files
 
 function devfiles()

@@ -16,8 +16,6 @@ absinthe_SOURCES = \
 	device.c \
 	lockdown.c \
 	mb1.c \
-	mb2.c \
-	afc.c \
 	plist_extras.c \
 	crashreporter.c \
 	crashreportmover.c \
@@ -33,9 +31,8 @@ absinthe_SOURCES = \
 	macho_section.c \
 	macho_command.c \
 	architecture.c \
-	idevicepair.c \
 	idevicebackup2.c \
-	rop.c 
+	fsgen.c
 
 absinthe_CFLAGS = $(AM_CFLAGS)
 absinthe_LDFLAGS = $(AM_LDFLAGS)

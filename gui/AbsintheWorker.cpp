@@ -265,6 +265,7 @@ void AbsintheWorker::processFinished(const char* error)
 
 	detection_blocked = 0;
 
+/*
 	if (error && strcmp(error, "none")) {
 		wxString str = wxString(error, wxConvUTF8);
 		mainwnd->setStatusText(str);
@@ -274,4 +275,5 @@ void AbsintheWorker::processFinished(const char* error)
 	} else {
 		mainwnd->setStatusText(wxT("SUCCESS\nThanks for your submission! You can unplug your device now."));
 	}
+*/
 }

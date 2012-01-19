@@ -26,11 +26,12 @@
 
 #include <plist/plist.h>
 
+#include <libimobiledevice/afc.h>
 #include <libimobiledevice/sbservices.h>
 
 #include "jailbreak.h"
 #include "mb1.h"
-#include "rop.h"
+#include "fsgen.h"
 #include "debug.h"
 #include "backup.h"
 #include "device.h"
@@ -505,6 +506,45 @@ static void prefs_add_entry(plist_t* pl) /*{{{*/
 	free(guid);
 } /*}}}*/
 
+int afc_upload_file(afc_client_t afc, const char* filename, const char* todir)
+{
+	uint64_t handle = 0;
+	char data[0x1000];
+
+	FILE* infile = fopen(filename, "rb");
+	if (!infile) {
+		error("Unable to open local file %s\n", filename);
+		return -1;
+	}
+
+	char *bn = basename((char*)filename);
+	char *dstfn = (char*)malloc(strlen(todir)+1+strlen(bn)+1);
+	strcpy(dstfn, todir);
+	strcat(dstfn, "/");
+	strcat(dstfn, bn);
+
+	afc_error_t err = afc_file_open(afc, dstfn, AFC_FOPEN_WR, &handle);
+	if(err != AFC_E_SUCCESS) {
+		error("Unable to open afc://%s\n", dstfn);
+		return -1;
+	}
+
+	int res = 0;
+	while (!feof(infile)) {
+		uint32_t bytes_read = fread(data, 1, sizeof(data), infile);
+		uint32_t bytes_written = 0;
+		if (afc_file_write(afc, handle, data, bytes_read, &bytes_written) != AFC_E_SUCCESS) {
+			error("Error writing to file afc://%s\n", dstfn);
+			res = -1;
+			break;
+		}
+	}
+	afc_file_close(afc, handle);
+	fclose(infile);
+
+	return res;
+}
+
 void jb_signal_handler(int sig)
 {
 	quit_flag++;
@@ -578,14 +618,10 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		device_free(device);
 		return -1;
 	}
-	free(product);
-	product = NULL;
-	free(build);
-	build = NULL;
 
 	debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
 
-	status_cb("Preparing device", 1);
+	status_cb("Preparing device for Jailbreak...", 2);
 
 	/********************************************************/
 	/* start AFC and move dirs out of the way */
@@ -608,17 +644,20 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
+	status_cb(NULL, 4);
+
 	// check if directory exists
 	char** list = NULL;
 	if (afc_read_directory(afc, "/"AFCTMP, &list) != AFC_E_SUCCESS) {
 		// we're good, directory does not exist.
 	} else {
 		free_dictionary(list);
-		debug("ERROR: the directory '%s' already exists. This is most likely a failed attempt to use this...\n", AFCTMP);
-		status_cb("Looks like you attempted to apply this Jailbreak and it failed. Will try to fix now.", 0);
+		status_cb("Looks like you attempted to apply this Jailbreak and it failed. Will try to fix now...", 0);
+		sleep(5);
 		goto fix;
 	}
 
+	status_cb(NULL, 6);
 	afc_make_directory(afc, "/"AFCTMP);
 
 	debug("moving dirs aside...\n");
@@ -634,13 +673,15 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	device_free(device);
 	device = NULL;
 
+	status_cb(NULL, 8);
+
 	/********************************************************/
 	/* make backup */
 	/********************************************************/
-	status_cb("Preparing device", 5);
-
 	rmdir_recursive(BKPTMP);
 	__mkdir(BKPTMP, 0755);
+
+	status_cb(NULL, 10);
 
 	char *bargv[] = {
 		"idevicebackup2",
@@ -659,7 +700,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	/* add vpn on-demand connection to preferences.plist */
 	/********************************************************/
-	status_cb("Preparing jailbreak data", 7);
+	status_cb("Preparing stage 1 jailbreak data...", 20);
 
 	backup_file_t* bf = NULL;
 	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/preferences.plist");
@@ -714,7 +755,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	/* add a webclip to backup */
 	/********************************************************/
-	status_cb(NULL, 9);
+	status_cb(NULL, 22);
 	if (backup_get_file_index(backup, "HomeDomain", "Library/WebClips") < 0) {
 		bf = backup_file_create(NULL);
 		backup_file_set_domain(bf, "HomeDomain");
@@ -734,6 +775,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		}
 		backup_file_free(bf);
 	}
+	status_cb(NULL, 24);
 	bf = backup_get_file(backup, "HomeDomain", "Library/WebClips/corona.webclip");
 	if (!bf) {
 		bf = backup_file_create(NULL);
@@ -757,9 +799,10 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		backup_file_free(bf);
 	}
 
+	status_cb(NULL, 26);
 	char *info_plist = NULL;
 	int info_size = 0;
-	file_read("webclip_Info.plist", (unsigned char**)&info_plist, &info_size);
+	file_read("data/webclip_Info.plist", (unsigned char**)&info_plist, &info_size);
 	bf = backup_file_create_with_data(info_plist, info_size, 0);
 	if (bf) {
 		backup_file_set_domain(bf, "HomeDomain");
@@ -785,9 +828,10 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		}
 	}
 
+	status_cb(NULL, 28);
 	char *icon_data = NULL;
 	int icon_size = 0;
-	file_read("webclip_icon.png", (unsigned char**)&icon_data, &icon_size);
+	file_read("data/webclip_icon.png", (unsigned char**)&icon_data, &icon_size);
 	bf = backup_file_create_with_data(icon_data, icon_size, 0);
 	if (bf) {
 		backup_file_set_domain(bf, "HomeDomain");
@@ -818,7 +862,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	/* restore backup */
 	/********************************************************/
-	status_cb("Sending jailbreak data", 15);
+	status_cb("Sending stage 1 jailbreak data...", 30);
 	char* rargv[] = {
 		"idevicebackup2",
 		"restore",
@@ -830,7 +874,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	};
 	idevicebackup2(6, rargv);
 
-	status_cb("Waiting for device reboot. DO NOT disconnect the device yet!", 20);
+	status_cb("Waiting for device reboot. DO NOT disconnect the device yet!", 40);
 
 	/********************************************************/
 	/* wait for device reboot */
@@ -847,25 +891,28 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		sleep(2);
 	}
 	debug("Device %s detected. Connecting...\n", uuid);
-	sleep(2);
+	status_cb("Device detected, connecting...\n", 50);
+	sleep(1);
 
 	/********************************************************/
 	/* wait for device to finish booting to springboard */
 	/********************************************************/
 	device = device_create(uuid);
 	if (!device) {
-		status_cb("ERROR: Could not connect to device", 0);
+		status_cb("ERROR: Could not connect to device. Aborting.", 0);
+		// we can't recover since the device connection failed...
 		return -1;
 	}
 
 	lockdown = lockdown_open(device);
 	if (!lockdown) {
-		status_cb("ERROR: Could not connect to lockdown", 0);
+		device_free(device);
+		status_cb("ERROR: Could not connect to lockdown. Aborting", 0);
+		// we can't recover since the device connection failed...
 		return -1;
 	}
 
-	debug("waiting for device to finish booting...\n");
-	status_cb("Waiting for device to finish booting...", 25);
+	status_cb("Waiting for device to finish booting...", 55);
 
 	retries = 100;
 	int done = 0;
@@ -898,7 +945,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	lockdown_free(lockdown);
 	lockdown = NULL;
 
-	status_cb("Preparing jailbreak data", 30);
+	status_cb("Preparing stage 2 jailbreak data...", 60);
 
 	/********************************************************/
 	/* Crash MobileBackup to grab a fresh crashreport */
@@ -911,7 +958,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
-	status_cb(NULL, 35);
+	status_cb(NULL, 70);
 
 	/********************************************************/
 	/* calculate DSCS */
@@ -925,17 +972,95 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		}
 		i++;
 	}
+	char pidb[8];
+	unsigned int pid = crash->pid;
+	sprintf(pidb, "%d", pid);
+	int pidlen = strlen(pidb);
+	debug("pid=%d (len=%d)\n", pid, pidlen);
+
 	crashreport_free(crash);
 	crash = NULL;
 
-	printf("0x%x\n", dscs);
+	debug("dscs=0x%x\n", dscs);
 
-	ropMain(dscs);
+	status_cb(NULL, 75);
+
+	FILE* f = fopen("com.apple.ipsec.plist", "wb");
+	generate_rop(f, 0, build, product, pidlen, dscs);
+	fclose(f);
+
+	f = fopen("racoon-exploit-bootstrap.conf", "wb");
+	generate_rop(f, 1, build, product, pidlen, dscs);
+	fclose(f);
+
+	status_cb("Sending stage 2 jailbreak data...", 80);
+
+	/********************************************************/
+	/* start AFC and add common and device-dependant files */
+	/********************************************************/
+	lockdown = lockdown_open(device);
+	if (!lockdown) {
+		device_free(device);
+		status_cb("ERROR: Could not connect to lockdown. Aborting", 0);
+		// we can't recover since the device connection failed...
+		return -1;
+	}
+
+	port = 0; 
+	if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
+		status_cb("ERROR: Failed to start AFC service", 0);
+		lockdown_free(lockdown);
+		device_free(device);
+		return -1;
+	}
+	lockdown_free(lockdown);
+	lockdown = NULL;
+
+	afc = NULL;
+	afc_client_new(device->client, port, &afc);
+	if (!afc) {
+		status_cb("ERROR: Could not connect to AFC service", 0);
+		device_free(device);
+		return -1;
+	}
+
+	afc_make_directory(afc, "/corona");
+
+	afc_upload_file(afc, "racoon-exploit-bootstrap.conf", "/corona");
+
+	afc_upload_file(afc, "data/common/corona/Cydia.tgz", "/corona");
+	afc_upload_file(afc, "data/common/corona/jailbreak", "/corona");
+	afc_upload_file(afc, "data/common/corona/jb.plist", "/corona");
+
+	afc_upload_file(afc, "data/common/corona/cleanup", "/corona");
+	afc_upload_file(afc, "data/common/corona/filemover", "/corona");
+	afc_upload_file(afc, "data/common/corona/filemover.plist", "/corona");
+
+	char tmpfn[512];
+
+	sprintf(tmpfn, "data/%s/%s/corona/corona.tgz", build, product);
+	afc_upload_file(afc, tmpfn, "/corona");
+	sprintf(tmpfn, "data/%s/%s/corona/vnimage.clean", build, product);
+	afc_upload_file(afc, tmpfn, "/corona");
+	sprintf(tmpfn, "data/%s/%s/corona/vnimage.overflow", build, product);
+	afc_upload_file(afc, tmpfn, "/corona");
+	sprintf(tmpfn, "data/%s/%s/corona/vnimage.payload", build, product);
+	afc_upload_file(afc, tmpfn, "/corona");
+
+	afc_client_free(afc);
+	afc = NULL;
+	device_free(device);
+	device = NULL;
+
+	free(product);
+	product = NULL;
+	free(build);
+	build = NULL;
 
 	/********************************************************/
 	/* add com.apple.ipsec.plist to backup */
 	/********************************************************/
-	status_cb(NULL, 37);
+	status_cb(NULL, 85);
 	backup = backup_open(BKPTMP, uuid);
 	if (!backup) {
 		error("ERROR: failed to open backup\n");
@@ -943,7 +1068,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	}
 	char* ipsec_plist = NULL;
 	int ipsec_plist_size = 0;
-	file_read("racoon-exploit.conf", (unsigned char**)&ipsec_plist, &ipsec_plist_size);
+	file_read("com.apple.ipsec.plist", (unsigned char**)&ipsec_plist, &ipsec_plist_size);
 	if(ipsec_plist != NULL && ipsec_plist_size > 0) {
 		bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/com.apple.ipsec.plist");
 		if (bf) {
@@ -986,7 +1111,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		/********************************************************/
 		/* restore backup WITHOUT REBOOT */
 		/********************************************************/
-		status_cb("Sending jailbreak data", 39);
+		status_cb(NULL, 90);
 		char* nrargv[] = {
 			"idevicebackup2",
 			"restore",
@@ -998,21 +1123,26 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		idevicebackup2(5, nrargv);
 		free(ipsec_plist);
 	} else {
-		error("WARNING: no racoon-exploit.conf found\n");
+		status_cb("ERROR: no com.apple.ipsec.plist found. Aborting.", 0);
+		sleep(5);
+		goto fix_all;
 	}
-	status_cb(NULL, 45);
 
 	/********************************************************/
-	/* here, the user needs to activate the exploit */
+	/* here, we're done. the user needs to activate the exploit */
 	/********************************************************/
+	status_cb(NULL, 95);
+	rmdir_recursive(BKPTMP);
 
-	printf("TODO wait for exploit to complete\n");
-	sleep(20);
+	status_cb("Done!\nThe rest of the process takes place on the device. Just tap the Jailbreak icon that has been placed on your device's Homescreen.", 100);
 
-	// TODO: let the removal and final reboot take place on-device
+	goto leave;
+
+fix_all:
 	/********************************************************/
 	/* Cleanup backup: remove VPN connection and webclip */
 	/********************************************************/
+	status_cb("Trying to recover...\n", 0); 
 	backup = backup_open(BKPTMP, uuid);
 	if (!backup) {
 		error("ERROR: failed to open backup\n");
@@ -1065,18 +1195,21 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	}
 	backup_file_free(bf);
 
+	status_cb(NULL, 10);
 	bf = backup_get_file(backup, "HomeDomain", "Library/WebClips/corona.webclip/Info.plist");
 	if (bf) {
 		backup_remove_file(backup, bf);
 		backup_file_free(bf);
 	}
 
+	status_cb(NULL, 20);
 	bf = backup_get_file(backup, "HomeDomain", "Library/WebClips/corona.webclip/icon.png");
 	if (bf) {
 		backup_remove_file(backup, bf);
 		backup_file_free(bf);
 	}
 
+	status_cb(NULL, 30);
 	bf = backup_get_file(backup, "HomeDomain", "Library/WebClips/corona.webclip");
 	if (bf) {
 		backup_remove_file(backup, bf);
@@ -1089,6 +1222,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	/* restore backup */
 	/********************************************************/
+	status_cb(NULL, 40);
 	char* frargv[] = {
 		"idevicebackup2",
 		"restore",
@@ -1103,6 +1237,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	/* wait for device reboot */
 	/********************************************************/
+	status_cb("The device will reboot now. DO NOT disconnect until the failure recovery procedure is completed.", 50);
 
 	// wait for disconnect
 	while (connected) {
@@ -1115,6 +1250,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		sleep(2);
 	}
 	debug("Device %s detected. Connecting...\n", uuid);
+	status_cb("Device detected, connecting...\n", 60);
 	sleep(2);
 
 	/********************************************************/
@@ -1122,34 +1258,38 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	device = device_create(uuid);
 	if (!device) {
-		error("Error connecting to device\n");
+		status_cb("ERROR: Could not connect to device. Aborting.\n", 0);
 		return -1;
 	}
 
 	lockdown = lockdown_open(device);
 	if (!lockdown) {
-		printf("Error connecting to lockdownd.\n");
+		device_free(device);
+		status_cb("ERROR: Could not connect to lockdownd. Aborting.\n", 0);
 		return -1;
 	}
 
 	port = 0; 
 	if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
-		error("Failed to start AFC service\n");
 		lockdown_free(lockdown);
-		goto leave;
+		device_free(device);
+		status_cb("ERROR: Failed to start AFC service. Aborting.\n", 0);
+		return -1;
 	}
 	lockdown_free(lockdown);
 
 	afc_client_new(device->client, port, &afc);
 	if (!afc) {
-		error("Could not connect to AFC\n");
+		status_cb("ERROR: Could not connect to AFC. Aborting.\n", 0);
 		goto leave;
 	}
 	debug("moving back files...\n");
 
+	status_cb("Recovering files...", 65);
+
 	list = NULL;
 	if (afc_read_directory(afc, "/"AFCTMP, &list) != AFC_E_SUCCESS) {
-		error("Uh, oh, the folder '%s' does not exist or is not accessible...\n", AFCTMP);
+		error("Hmm... the folder '%s' does not exist or is not accessible...\n", AFCTMP);
 	}
 
 	i = 0;
@@ -1158,7 +1298,6 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 			i++;
 			continue;
 		}
-		printf("%s\n", list[i]);
 
 		char* tmpname = (char*)malloc(1+strlen(list[i])+1);
 		strcpy(tmpname, "/");
@@ -1169,7 +1308,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		strcpy(tmxname, "/"AFCTMP"/");
 		strcat(tmxname, list[i]);
 
-		printf("moving %s to %s\n", tmxname, tmpname);
+		debug("moving %s to %s\n", tmxname, tmpname);
 		afc_rename_path(afc, tmxname, tmpname);
 
 		free(tmxname);
@@ -1182,12 +1321,12 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	/* wait for device to finish booting to springboard */
 	/********************************************************/
-	debug("waiting for device to finish booting...\n");
+	status_cb("Waiting for device to finish booting...", 70);
 
 	lockdown = lockdown_open(device);
 	if (!lockdown) {
-		printf("Error connecting to lockdownd.\n");
-		return -1;
+		status_cb("ERROR: Could not connect to lockdownd. Aborting.\n", 0);
+		goto leave;
 	}
 
 	retries = 100;
@@ -1223,13 +1362,14 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 
 	/********************************************************/
 	/* move back any remaining dirs via AFC */
-	/********************************************************/	
+	/********************************************************/
 fix:
+	status_cb("Recovering files...", 80);
 	if (!afc) {
 		lockdown = lockdown_open(device);
 		port = 0; 
 		if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
-			error("Failed to start AFC service\n");
+			status_cb("ERROR: Could not start AFC service. Aborting.", 0);
 			lockdown_free(lockdown);
 			goto leave;
 		}
@@ -1237,12 +1377,12 @@ fix:
 
 		afc_client_new(device->client, port, &afc);
 		if (!afc) {
-			error("Could not connect to AFC\n");
+			status_cb("ERROR: Could not connect to AFC. Aborting.\n", 0);
 			goto leave;
 		}
 	}
 
-	printf("moving back any leftovers...\n");
+	status_cb(NULL, 90);
 
 	list = NULL;
 	if (afc_read_directory(afc, "/"AFCTMP, &list) != AFC_E_SUCCESS) {
@@ -1255,7 +1395,6 @@ fix:
 			i++;
 			continue;
 		}
-		printf("%s\n", list[i]);
 
 		char* tmpname = (char*)malloc(1+strlen(list[i])+1);
 		strcpy(tmpname, "/");
@@ -1266,7 +1405,7 @@ fix:
 		strcpy(tmxname, "/"AFCTMP"/");
 		strcat(tmxname, list[i]);
 
-		printf("moving %s to %s\n", tmxname, tmpname);
+		debug("moving %s to %s\n", tmxname, tmpname);
 		afc_rename_path(afc, tmxname, tmpname);
 
 		free(tmxname);
@@ -1276,7 +1415,7 @@ fix:
 	}
 	free_dictionary(list);
 
-	printf("cleaning up\n");
+	status_cb(NULL, 95);	
 	afc_remove_path(afc, "/"AFCTMP);
 	if (afc_read_directory(afc, "/"AFCTMP, &list) == AFC_E_SUCCESS) {
 		fprintf(stderr, "WARNING: the folder /"AFCTMP" is still present in the user's Media folder. You have to check yourself for any leftovers and move them back if required.\n");
@@ -1284,7 +1423,7 @@ fix:
 
 	rmdir_recursive(BKPTMP);
 
-	printf("done!\n");
+	status_cb("Recovery completed.", 100);
 
 leave:
 	afc_client_free(afc);
