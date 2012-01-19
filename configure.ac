@@ -30,7 +30,7 @@ case "$host_os" in
 			-DCURL_PULL_SYS_SOCKET_H \
 			-D__WXOSX_COCOA__ -DwxDEBUG_LEVEL=0 \
 			-I\$(top_srcdir)/include/wxWidgets-2.9.2/include -I\$(top_srcdir)/include/os/osx/wxWidgets-2.9.2/lib/wx/include/osx_cocoa-unicode-static-2.9"
-		ACGUI_LDFLAGS+="-pthread"
+		ACGUI_LDFLAGS+="-pthread -static-libstdc++"
 		ACGUI_LDADD+="$LIBSDIR/libwxpng-2.9.a \
 			$LIBSDIR/libwx_baseu-2.9.a \
 			$LIBSDIR/libwx_osx_cocoau_core-2.9.a \
@@ -46,7 +46,7 @@ case "$host_os" in
 			-I\$(top_srcdir)/include/wxWidgets-2.9.2/include \
 			-I\$(top_srcdir)/include/os/linux/wxWidgets-2.9.2/lib/wx/include/i686-linux-gnu-gtk2-unicode-static-2.9 \
 			-D__WXGTK__ -pthread"
-		ACGUI_LDFLAGS+="-pthread -Wl,-Bsymbolic-functions -L/lib32 -L/usr/lib32"
+		ACGUI_LDFLAGS+="-pthread -Wl,-Bsymbolic-functions -L/lib32 -L/usr/lib32 -static-libstdc++"
 		ACGUI_LDADD+="$LIBSDIR/libwx_gtk2u_core-2.9.a \
 			$LIBSDIR/libwx_baseu-2.9.a \
 			-lpthread -lz -lm -lglib-2.0 -lgtk-x11-2.0"
@@ -61,8 +61,8 @@ case "$host_os" in
 			-I\$(top_srcdir)/include/wxWidgets-2.8.12/include \
 			-I\$(top_srcdir)/include/os/win32/wxWidgets-2.8.12/lib/wx/include/msw-unicode-release-static-2.8 \
 			-D__WXMSW__ -DwxDEBUG_LEVEL=0 -mthreads"
-		ACGUI_LDFLAGS+="-mthreads -Wl,--subsystem,windows -mwindows"
-		ACGUI_LDADD+="$LIBSDIR/libwx_mswu_core-2.8.a \
+		ACGUI_LDFLAGS+="-mthreads -Wl,--subsystem,windows -mwindows -static-libstdc++"
+		ACGUI_LDADD+="\$(top_srcdir)/gui/win32res.o $LIBSDIR/libwx_mswu_core-2.8.a \
 			$LIBSDIR/libwx_baseu-2.8.a \
 			-lz -lm -lws2_32 -lgdi32 -lole32 -loleaut32 -luuid -lcomctl32 -lsetupapi"
 	;;

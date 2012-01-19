@@ -1,0 +1,25 @@
+AppIcon ICON "icon.ico"
+
+1 24 "manifest.xml"
+
+1 VERSIONINFO
+FILEVERSION 1, 0, 0, 0
+PRODUCTVERSION 1, 0, 0, 0
+FILEFLAGSMASK 0
+FILEOS 0x40000
+FILETYPE 1
+{
+  BLOCK "StringFileInfo"
+  {
+    BLOCK "040904B0"
+    {
+      VALUE "CompanyName", "Chronic-Dev Team"
+      VALUE "FileDescription", "Absinthe iPhone 4S/iPad 2 untethered jailbreak"
+      VALUE "FileVersion", "1.0.0"
+      VALUE "InternalName", "absinthe"
+      VALUE "LegalCopyright", "© 2011-2012 Chronic-Dev Team. All rights reserved."
+      VALUE "ProductName", "Chronic-Dev Absinthe"
+      VALUE "ProductVersion", "1.0.0"
+    }
+  }
+}

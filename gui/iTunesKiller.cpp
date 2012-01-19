@@ -79,6 +79,12 @@ static int GetBSDProcessList(kinfo_proc **procList, size_t *procCount) /*{{{*/
 } /*}}}*/
 #endif
 
+#if defined(WIN32)
+#include <windows.h>
+#include <tlhelp32.h>
+#define sleep(x) Sleep(x*1000)
+#endif
+
 iTunesKiller::iTunesKiller(int* watchdog)
 	: wxThread(wxTHREAD_JOINABLE), watchit(watchdog)
 {
@@ -87,6 +93,9 @@ iTunesKiller::iTunesKiller(int* watchdog)
 
 wxThread::ExitCode iTunesKiller::Entry(void)
 {
+#if defined(WIN32)
+	PROCESSENTRY32 pe;
+#endif
 	while (*(this->watchit)) {
 #if defined(__APPLE__)
 		size_t proc_count = 0;
@@ -101,7 +110,27 @@ wxThread::ExitCode iTunesKiller::Entry(void)
 		free(proc_list);
 #endif
 #if defined(WIN32)
-		// TODO
+		memset(&pe, 0, sizeof(pe));
+		pe.dwSize = sizeof(PROCESSENTRY32);
+
+		HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+		if (hSnapshot == INVALID_HANDLE_VALUE) {
+			sleep(2);
+			continue;
+		}
+
+		BOOL i = Process32First(hSnapshot, &pe);
+		while (i) {
+			if (!_tcscmp(pe.szExeFile, _T("iTunesHelper.exe")) || !_tcscmp(pe.szExeFile, _T("iTunes.exe"))) {
+				HANDLE p = OpenProcess(PROCESS_ALL_ACCESS, 0, pe.th32ProcessID);
+				if (p != INVALID_HANDLE_VALUE) {
+					TerminateProcess(p, 0);
+					CloseHandle(p);
+				}
+			}
+			i = Process32Next(hSnapshot, &pe);
+		}
+		CloseHandle(hSnapshot);
 #endif
 		sleep(2);
 	}

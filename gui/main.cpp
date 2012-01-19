@@ -54,6 +54,7 @@ static bool hasAdminRights() /*{{{*/
 
 bool Absinthe::OnInit()
 {
+#ifndef WIN32
 	std::string argv_0 = ws2s(argv[0]);
 	const char* argv0 = argv_0.c_str();
 	char* name = strrchr((char*)argv0, '/');
@@ -67,6 +68,23 @@ bool Absinthe::OnInit()
 			debug("unable to set working directory\n");
 		}
 	}
+#else
+	TCHAR mfn[512];
+	mfn[0] = 0;
+	int mfl = GetModuleFileName(NULL, mfn, 512);
+	if (mfl > 0) {
+		int i;
+		for (i = mfl-1; i >= 0; i--) {
+			if ((mfn[i] == '/') || (mfn[i] == '\\')) {
+				mfn[i] = '\0';
+				break;
+			}
+		}
+		if (!SetCurrentDirectory(mfn)) {
+			debug("unable to set working directory\n");
+		}
+	}
+#endif
 
 #if defined(__APPLE__) || defined(WIN32)
 # if defined(WIN32)
