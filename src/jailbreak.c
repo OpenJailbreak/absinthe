@@ -802,7 +802,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	status_cb(NULL, 26);
 	char *info_plist = NULL;
 	int info_size = 0;
-	file_read("data/webclip_Info.plist", (unsigned char**)&info_plist, &info_size);
+	file_read("data/common/webclip_Info.plist", (unsigned char**)&info_plist, &info_size);
 	bf = backup_file_create_with_data(info_plist, info_size, 0);
 	if (bf) {
 		backup_file_set_domain(bf, "HomeDomain");
@@ -831,7 +831,15 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	status_cb(NULL, 28);
 	char *icon_data = NULL;
 	int icon_size = 0;
-	file_read("data/webclip_icon.png", (unsigned char**)&icon_data, &icon_size);
+	const char *icon_filename;
+	if (!strcmp(product, "iPhone4,1") || !strcmp(product, "iPhone3,1") || !strcmp(product, "iPod4,1")) {
+		icon_filename = "data/common/webclip_icon@2x.png";
+	} else if (strncmp(product, "iPad", 4) == 0) {
+		icon_filename = "data/common/webclip_icon-72.png";
+	} else {
+		icon_filename = "data/common/webclip_icon.png";
+	}
+	file_read(icon_filename, (unsigned char**)&icon_data, &icon_size);
 	bf = backup_file_create_with_data(icon_data, icon_size, 0);
 	if (bf) {
 		backup_file_set_domain(bf, "HomeDomain");

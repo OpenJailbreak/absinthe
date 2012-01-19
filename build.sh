@@ -33,10 +33,10 @@ case `uname` in
 esac
 
 # common files
-cp webclip_icon.png build/absinthe/cli/data/
-cp webclip_Info.plist build/absinthe/cli/data/
-cp webclip_icon.png build/absinthe/gui/data/
-cp webclip_Info.plist build/absinthe/gui/data/
+cp data/common/webclip_icon*.png build/absinthe/cli/data/common/
+cp data/common/webclip_Info.plist build/absinthe/cli/data/common/
+cp data/common/webclip_icon*.png build/absinthe/gui/data/common/
+cp data/common/webclip_Info.plist build/absinthe/gui/data/common/
 
 cp -r data/common/corona build/absinthe/cli/data/common/
 cp -r data/common/corona build/absinthe/gui/data/common/
