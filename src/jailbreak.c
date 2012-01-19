@@ -955,16 +955,30 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 
 	status_cb("Preparing stage 2 jailbreak data...", 60);
 
-	/********************************************************/
-	/* Crash MobileBackup to grab a fresh crashreport */
-	/********************************************************/
-	debug("Grabbing a fresh crashreport for this device\n");
-	crashreport_t* crash = crash_mobilebackup(device);
-	if(crash == NULL) {
-		error("Unable to get fresh crash from mobilebackup\n");
-		device_free(device);
-		return -1;
-	}
+        crashreport_t* crash = NULL;
+        while(1)
+        {
+            debug("Trying to clear crash reports.");
+
+            while(1)
+            {
+                crashreport_t* old_crash = fetch_crashreport(device);
+                if(old_crash == NULL)
+                    break;
+            }
+
+            /********************************************************/
+            /* Crash MobileBackup to grab a fresh crashreport */
+            /********************************************************/
+            debug("Grabbing a fresh crashreport for this device\n");
+            crash = crash_mobilebackup(device);
+            if(crash == NULL) {
+                    error("Unable to get fresh crash from mobilebackup\n");
+                    continue;
+            }
+
+            break;
+        }
 
 	status_cb(NULL, 70);
 
