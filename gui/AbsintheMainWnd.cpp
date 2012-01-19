@@ -72,6 +72,7 @@ void AbsintheMainWnd::setProgress(int percentage)
 void AbsintheMainWnd::handleStartClicked(wxCommandEvent& WXUNUSED(event))
 {
 	this->setButtonEnabled(0);
+	this->setProgress(0);
 	this->worker->processStart();
 }
 
