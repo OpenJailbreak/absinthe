@@ -58,6 +58,8 @@ function devfiles()
     mkdir -p build/absinthe/gui/$I
     cp -r $I/corona build/absinthe/cli/$I/
     cp -r $I/corona build/absinthe/gui/$I/
+    cp -r $I/fsgen build/absinthe/gui/$I/
+    cp -r $I/fsgen build/absinthe/gui/$I/
   done
 }
 
