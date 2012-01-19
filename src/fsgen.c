@@ -192,6 +192,19 @@ Addr newArray(unsigned int values[], unsigned int count) {
 }
 
 void ropOpen() {
+	p2DataLo = 0;
+	p3Data = 0;
+	firstP2Write = 1;
+	firstP3Write = 1;
+	lines = 0;
+	ropFile = NULL;
+	ropVarsFile = NULL;
+	ropWriteMode = ROP_MODE_MEM;
+	ropWriteVarsMode = ROP_MODE_MEM;
+	ropWriteAddr = ROP2_ABS_ADDR;
+	ropFileAddr = 0;
+	varsBaseAddr = VARS_ABS_ADDR_1;
+	varsWritten = 0;
 	lines++;
 	fprintf(outFile, "sainfo address ::1 icmp6 address ::1 icmp6 {\n");
 	memset(vars, 0, VARS_MAX_SIZE);
