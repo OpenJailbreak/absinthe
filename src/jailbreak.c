@@ -973,7 +973,8 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		i++;
 	}
 	char pidb[8];
-	unsigned int pid = crash->pid;
+	// Add 15 "processes" here to allow time for the user to click the icon
+	unsigned int pid = crash->pid+15;
 	sprintf(pidb, "%d", pid);
 	int pidlen = strlen(pidb);
 	debug("pid=%d (len=%d)\n", pid, pidlen);
