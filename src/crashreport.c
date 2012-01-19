@@ -80,6 +80,20 @@ char* crashreport_parse_name(const char* description) {
 	}
 }
 
+unsigned int crashreport_parse_pid(const char* description) {
+	unsigned int pid;
+	char* start = strstr(description, "Process:");
+	if (!start) {
+		return NULL;
+	}
+	start += 8;
+	if (sscanf(start, "%*[ ]%*s [%d]", &pid) == 1) {
+		return pid;
+	} else {
+		return 0;
+	}
+}
+
 arm_state_t* crashreport_parse_state(const char* description) {
 	int num = 0;
 	char line[256];
@@ -342,6 +356,8 @@ crashreport_t* crashreport_parse_plist(plist_t plist) {
 			free(description);
 			return NULL;
 		}
+
+		crashreport->pid = crashreport_parse_pid(description);
 
 		crashreport->name = crashreport_parse_name(description);
 		if (crashreport->name == NULL) {

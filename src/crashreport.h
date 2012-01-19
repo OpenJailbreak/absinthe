@@ -50,6 +50,7 @@ typedef struct arm_state_t {
 /* The actual crashreport object containing it's data */
 typedef struct crashreport_t {
 	char *name;
+	unsigned int pid;
 	arm_state_t* state;
 	dylib_info_t** dylibs;
 } crashreport_t;
@@ -60,6 +61,7 @@ void crashreport_debug(crashreport_t* report);
 
 crashreport_t* crashreport_parse_plist(plist_t crash);
 char* crashreport_parse_name(const char* description);
+unsigned int crashreport_parse_pid(const char* description);
 arm_state_t* crashreport_parse_state(const char* description);
 dylib_info_t** crashreport_parse_dylibs(const char* description);
 
