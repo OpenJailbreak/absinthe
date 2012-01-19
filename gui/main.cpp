@@ -68,6 +68,22 @@ bool Absinthe::OnInit()
 			debug("unable to set working directory\n");
 		}
 	}
+#else
+	TCHAR mfn[512];
+	mfn[0] = 0;
+	int mfl = GetModuleFileName(NULL, mfn, 512);
+	if (mfl > 0) {
+		int i;
+		for (i = mfl-1; i >= 0; i--) {
+			if ((mfn[i] == '/') || (mfn[i] == '\\')) {
+				mfn[i] = '\0';
+				break;
+			}
+		}
+		if (!SetCurrentDirectory(mfn)) {
+			debug("unable to set working directory\n");
+		}
+	}
 #endif
 
 #if defined(__APPLE__) || defined(WIN32)
