@@ -9,6 +9,12 @@ if ! test -f configure; then
     ./autogen.sh
 fi
 
+case `uname` in
+	MINGW*)
+	windres resources/win32/res.rc -O coff gui/win32res.o
+	;;
+esac
+
 rm -rf build
 if ! make; then
   exit 1
