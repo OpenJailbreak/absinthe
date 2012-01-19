@@ -54,6 +54,7 @@ static bool hasAdminRights() /*{{{*/
 
 bool Absinthe::OnInit()
 {
+#ifndef WIN32
 	std::string argv_0 = ws2s(argv[0]);
 	const char* argv0 = argv_0.c_str();
 	char* name = strrchr((char*)argv0, '/');
@@ -67,6 +68,7 @@ bool Absinthe::OnInit()
 			debug("unable to set working directory\n");
 		}
 	}
+#endif
 
 #if defined(__APPLE__) || defined(WIN32)
 # if defined(WIN32)
