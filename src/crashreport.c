@@ -84,7 +84,7 @@ unsigned int crashreport_parse_pid(const char* description) {
 	unsigned int pid;
 	char* start = strstr(description, "Process:");
 	if (!start) {
-		return NULL;
+		return 0;
 	}
 	start += 8;
 	if (sscanf(start, "%*[ ]%*s [%d]", &pid) == 1) {
