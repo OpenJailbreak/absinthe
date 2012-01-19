@@ -18,4 +18,8 @@ stamp-h1
 src/absinthe
 src/*.o
 src/.deps
+gui/absinthe
+gui/*.o
+gui/.deps
 dyld_shared_cache_armv7
+/build
