@@ -143,7 +143,9 @@ int main(int argc, char* argv[]) {
 		memcpy(path, argv[0], nlen);
 		path[nlen] = 0;
 		debug("setting working directory to %s\n", path);
-		chdir(path);
+		if (chdir(path) != 0) {
+			debug("unable to set working directory\n");
+		}
 	}
 
 	while ((opt = getopt_long(argc, argv, "hva:p:t:u:", longopts, &optindex)) > 0) {
