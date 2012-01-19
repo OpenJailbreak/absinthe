@@ -517,7 +517,19 @@ int afc_upload_file(afc_client_t afc, const char* filename, const char* todir)
 		return -1;
 	}
 
+#ifdef WIN32
+	int i = 0;
+	int mfl = strlen(filename);
+	char* bn = (char*)filename;
+	for (i = mfl-1; i >= 0; i--) {
+		if ((bn[i] == '/') || (bn[i] == '\\')) {
+			bn = &bn[i+1];
+			break;
+		}
+	}
+#else
 	char *bn = basename((char*)filename);
+#endif
 	char *dstfn = (char*)malloc(strlen(todir)+1+strlen(bn)+1);
 	strcpy(dstfn, todir);
 	strcat(dstfn, "/");
