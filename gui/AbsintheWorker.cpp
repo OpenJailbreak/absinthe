@@ -94,6 +94,7 @@ void AbsintheWorker::checkDevice()
 
 	if (this->device_count == 0) {
 		mainwnd->setButtonEnabled(0);
+		mainwnd->setProgress(0);
 		mainwnd->setStatusText(wxT("Plug in your iDevice to begin."));
 	} else if (this->device_count == 1) {
 		idevice_t dev = NULL;
