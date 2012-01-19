@@ -382,7 +382,7 @@ static void prefs_add_entry(plist_t* pl) /*{{{*/
 	plist_t dict = NULL;
 	plist_t arr = NULL;
 
-	// construct connection data 
+	// construct connection data
 	plist_t conn = plist_new_dict();
 
 	// DNS
@@ -436,8 +436,8 @@ static void prefs_add_entry(plist_t* pl) /*{{{*/
 	plist_dict_insert_item(dict, "SharedSecret", plist_new_string("pod2g"));
 	plist_dict_insert_item(conn, "IPSec", dict);
 
-	// IPv6	
-	plist_dict_insert_item(conn, "IPv6", plist_new_dict());	
+	// IPv6
+	plist_dict_insert_item(conn, "IPv6", plist_new_dict());
 
 	// get NetworkServices node
 	plist_t ns = plist_dict_get_item(*pl, "NetworkServices");
@@ -502,7 +502,7 @@ static void prefs_add_entry(plist_t* pl) /*{{{*/
 	free(linkstr);
 	plist_dict_insert_item(netsvc, guid, dict);
 
-	// done	
+	// done
 	free(guid);
 } /*}}}*/
 
@@ -626,7 +626,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	/* start AFC and move dirs out of the way */
 	/********************************************************/
-	uint16_t port = 0; 
+	uint16_t port = 0;
 	if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
 		status_cb("ERROR: Failed to start AFC service", 0);
 		lockdown_free(lockdown);
@@ -818,7 +818,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		backup_file_set_length(bf, info_size);
 		backup_file_set_flag(bf, 4);
 		backup_file_update_hash(bf);
-	
+
 		if (backup_update_file(backup, bf) < 0) {
 			fprintf(stderr, "ERROR: could not add file to backup\n");
 		}
@@ -1015,7 +1015,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
-	port = 0; 
+	port = 0;
 	if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
 		status_cb("ERROR: Failed to start AFC service", 0);
 		lockdown_free(lockdown);
@@ -1045,6 +1045,9 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	afc_upload_file(afc, "data/common/corona/Cydia.tgz", "/corona");
 	afc_upload_file(afc, "data/common/corona/jailbreak", "/corona");
 	afc_upload_file(afc, "data/common/corona/jb.plist", "/corona");
+
+	afc_upload_file(afc, "data/common/corona/tar", "/corona");
+	afc_upload_file(afc, "data/common/corona/gzip", "/corona");
 
 	afc_upload_file(afc, "data/common/corona/cleanup", "/corona");
 	afc_upload_file(afc, "data/common/corona/filemover", "/corona");
@@ -1156,7 +1159,7 @@ fix_all:
 	/********************************************************/
 	/* Cleanup backup: remove VPN connection and webclip */
 	/********************************************************/
-	status_cb("Trying to recover...\n", 0); 
+	status_cb("Trying to recover...\n", 0);
 	backup = backup_open(BKPTMP, uuid);
 	if (!backup) {
 		error("ERROR: failed to open backup\n");
@@ -1232,7 +1235,7 @@ fix_all:
 	backup_write_mbdb(backup);
 	backup_free(backup);
 	device_free(device);
-	
+
 	/********************************************************/
 	/* restore backup */
 	/********************************************************/
@@ -1283,7 +1286,7 @@ fix_all:
 		return -1;
 	}
 
-	port = 0; 
+	port = 0;
 	if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
 		lockdown_free(lockdown);
 		device_free(device);
@@ -1381,7 +1384,7 @@ fix:
 	status_cb("Recovering files...", 80);
 	if (!afc) {
 		lockdown = lockdown_open(device);
-		port = 0; 
+		port = 0;
 		if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
 			status_cb("ERROR: Could not start AFC service. Aborting.", 0);
 			lockdown_free(lockdown);
@@ -1429,7 +1432,7 @@ fix:
 	}
 	free_dictionary(list);
 
-	status_cb(NULL, 95);	
+	status_cb(NULL, 95);
 	afc_remove_path(afc, "/"AFCTMP);
 	if (afc_read_directory(afc, "/"AFCTMP, &list) == AFC_E_SUCCESS) {
 		fprintf(stderr, "WARNING: the folder /"AFCTMP" is still present in the user's Media folder. You have to check yourself for any leftovers and move them back if required.\n");
