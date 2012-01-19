@@ -7,12 +7,50 @@
 #include "AbsintheMainWnd.h"
 #include "debug.h"
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #define         ws2s(as)   (std::string((as).mb_str(wxConvUTF8)))
 
 class Absinthe : public wxApp
 {
 	virtual bool OnInit();
 };
+
+#if defined(WIN32)
+static bool hasAdminRights() /*{{{*/
+{
+	HANDLE hAccessToken = NULL;
+	TOKEN_GROUPS *ptg;
+	DWORD dwInfoBufferSize;
+	PSID psidAdmins = NULL;
+	bool res = false;
+	int bSuccess;
+
+	if ((bSuccess = OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hAccessToken))) {
+		ptg = (TOKEN_GROUPS *)malloc(1024);
+		bSuccess = GetTokenInformation(hAccessToken, TokenGroups, ptg, 1024, &dwInfoBufferSize) ;
+		CloseHandle(hAccessToken);
+		if (bSuccess) {
+			SID_IDENTIFIER_AUTHORITY sia = {SECURITY_NT_AUTHORITY};
+			AllocateAndInitializeSid(&sia, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &psidAdmins);
+			if (psidAdmins) {
+				unsigned int g;
+				for (g = 0; g < ptg->GroupCount; g++) {         
+					if (EqualSid(psidAdmins, ptg->Groups[g].Sid)) {
+						res = true;
+						break;
+					}
+				}
+			}
+			FreeSid(psidAdmins);
+		}
+		free(ptg);
+	}
+	return res;
+} /*}}}*/
+#endif
 
 bool Absinthe::OnInit()
 {
@@ -29,6 +67,18 @@ bool Absinthe::OnInit()
 			debug("unable to set working directory\n");
 		}
 	}
+
+#if defined(__APPLE__) || defined(WIN32)
+# if defined(WIN32)
+	if (!hasAdminRights()) {
+		wxMessageBox(wxT("You must run this app as Administrator."), wxT("Error"), wxOK | wxICON_ERROR);
+		return false;
+	}
+# endif
+# if defined(__APPLE__)
+
+# endif
+#endif
 
 	AbsintheMainWnd* mainWnd = new AbsintheMainWnd();
 	mainWnd->Show(true);

@@ -1,6 +1,7 @@
 #include <cstdio>
 #include "AbsintheWorker.h"
 #include "AbsintheJailbreaker.h"
+#include "iTunesKiller.h"
 #include "device_types.h"
 #include "jailbreak.h"
 
@@ -243,6 +244,12 @@ void AbsintheWorker::processStart(void)
 	AbsintheMainWnd* mainwnd = (AbsintheMainWnd*)this->mainWnd;
 
 	detection_blocked = 1;
+
+#if defined(__APPLE__) || defined(WIN32)
+	iTunesKiller* ik = new iTunesKiller(&detection_blocked);
+	ik->Create();
+	ik->Run();
+#endif
 
 	AbsintheJailbreaker* jb = new AbsintheJailbreaker(this);
 	jb->Create();

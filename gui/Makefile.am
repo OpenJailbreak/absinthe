@@ -9,6 +9,7 @@ absinthe_SOURCES = \
 	AbsintheMainWnd.cpp \
 	AbsintheWorker.cpp \
 	AbsintheJailbreaker.cpp \
+	iTunesKiller.cpp \
 	../src/jailbreak.c \
 	../src/common.c \
 	../src/file.c \
