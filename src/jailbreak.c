@@ -991,7 +991,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	fclose(f);
 
 	f = fopen("racoon-exploit-bootstrap.conf", "wb");
-	generate_rop(f, 1, build, product, pidlen, dscs);
+	generate_rop(f, 1, build, product, pidlen, 0);
 	fclose(f);
 
 	status_cb("Sending stage 2 jailbreak data...", 80);
