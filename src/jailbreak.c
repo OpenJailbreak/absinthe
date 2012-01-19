@@ -1025,8 +1025,13 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
+	// make sure directory exists
 	afc_make_directory(afc, "/corona");
 
+	// remove all files in it
+	rmdir_recursive_afc(afc, "/corona", 0);
+
+	// upload files
 	afc_upload_file(afc, "racoon-exploit-bootstrap.conf", "/corona");
 
 	afc_upload_file(afc, "data/common/corona/Cydia.tgz", "/corona");
