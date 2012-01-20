@@ -20,8 +20,8 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 #endif
 	wxFont fnt(FNTSIZE, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
 	wxStaticText* lbTop = new wxStaticText(panel, wxID_ANY, wxT("Welcome to Absinthe iOS 5.0/5.0.1 untethered A5 jailbreak!\n\nPlease make a backup of your device before using this tool. We don't expect any issues, but we aren't responsible if anything happens."), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE | wxALIGN_LEFT);
-	lbTop->Wrap(WND_WIDTH-20);
 	lbTop->SetFont(fnt);
+	lbTop->Wrap(WND_WIDTH-20);
 
 	lbStatus = new wxStaticText(panel, wxID_ANY, wxT(""), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE);
 	lbStatus->SetFont(fnt);
