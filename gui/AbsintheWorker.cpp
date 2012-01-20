@@ -245,6 +245,7 @@ void AbsintheWorker::processStart(void)
 	AbsintheMainWnd* mainwnd = (AbsintheMainWnd*)this->mainWnd;
 
 	detection_blocked = 1;
+	mainwnd->closeBlocked = 1;
 
 #if defined(__APPLE__) || defined(WIN32)
 	iTunesKiller* ik = new iTunesKiller(&detection_blocked);
@@ -254,7 +255,7 @@ void AbsintheWorker::processStart(void)
 
 	AbsintheJailbreaker* jb = new AbsintheJailbreaker(this);
 	jb->Create();
-	jb->Run();	
+	jb->Run();
 }
 
 void AbsintheWorker::processStatus(const char* msg, int progress)
@@ -272,6 +273,7 @@ void AbsintheWorker::processFinished(const char* error)
 	AbsintheMainWnd* mainwnd = (AbsintheMainWnd*)this->mainWnd;
 
 	detection_blocked = 0;
+	mainwnd->closeBlocked = 0;
 
 /*
 	if (error && strcmp(error, "none")) {

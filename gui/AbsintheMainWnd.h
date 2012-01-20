@@ -20,7 +20,11 @@ private:
 	AbsintheWorker* worker;
 
 public:
+	bool closeBlocked;
 	AbsintheMainWnd(void);
+
+	void PaypalClicked(wxCommandEvent& event);
+	void GPClicked(wxCommandEvent& event);
 
 	int msgBox(const wxString& message, const wxString& caption, int style);
 
@@ -29,6 +33,7 @@ public:
 	void setProgress(int percentage);
 
 	void handleStartClicked(wxCommandEvent& event);
+	void OnClose(wxCloseEvent& event);
 	void OnQuit(wxCommandEvent& event);
 };
 

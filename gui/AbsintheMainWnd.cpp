@@ -15,7 +15,7 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 
 	lbStatus = new wxStaticText(panel, wxID_ANY, wxT(""), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE);
 
-	progressBar = new wxGauge(panel, wxID_ANY, 100, wxDefaultPosition, wxSize(300,20), wxGA_HORIZONTAL | wxGA_SMOOTH);
+	progressBar = new wxGauge(panel, wxID_ANY, 100, wxDefaultPosition, wxSize(300,17), wxGA_HORIZONTAL | wxGA_SMOOTH);
 	btnStart = new wxButton(panel, 1111, wxT("Jailbreak"));
 	btnStart->Enable(0);
 	Connect(1111, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(AbsintheMainWnd::handleStartClicked));
@@ -24,18 +24,34 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 	hbox->Add(progressBar, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
 	hbox->Add(btnStart, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
 
-	wxStaticText* lbCredits = new wxStaticText(panel, wxID_ANY, wxT("Chronic-Dev Absinthe © 2011-2012 Chronic-Dev Team\n"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER | wxST_NO_AUTORESIZE);
+	wxStaticText* lbCredits = new wxStaticText(panel, wxID_ANY, wxT("Chronic-Dev Absinthe © 2011-2012 Chronic-Dev Team.\nExploits by: @pod2g, @planetbeing, @saurik, @pimskeks,\n@p0sixninja, @MuscleNerd, @xvolks"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER | wxST_NO_AUTORESIZE);
+
+	wxStaticText* lbPaypal = new wxStaticText(panel, wxID_ANY, wxT("Contribute to the A5 Jailbreak"), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT | wxST_NO_AUTORESIZE);
+	lbPaypal->SetForegroundColour(wxColour("BLUE"));
+	lbPaypal->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(AbsintheMainWnd::PaypalClicked));
+
+	wxStaticText* lbGP = new wxStaticText(panel, wxID_ANY, wxT("http://greenpois0n.com/"), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT | wxST_NO_AUTORESIZE);
+	lbGP->SetForegroundColour(wxColour("BLUE"));
+	lbGP->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(AbsintheMainWnd::GPClicked));
+
+	wxBoxSizer* hbox2 = new wxBoxSizer(wxHORIZONTAL);
+	hbox2->Add(lbPaypal, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
+	hbox2->Add(lbGP, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
 
 	vbox->Add(lbTop, 0, wxEXPAND | wxALL, 10);
 	vbox->Add(lbStatus, 1, wxEXPAND | wxALL, 10);
 	vbox->Add(hbox, 0, wxCENTER | wxALL, 10);
 	vbox->Add(lbCredits, 0, wxCENTER | wxALL, 10);
+	vbox->Add(hbox2, 0, wxCENTER | wxALL, 10);
 
 	panel->SetSizer(vbox);
 
 	Centre();
 
 	this->worker = new AbsintheWorker((AbsintheMainWnd*)this);
+
+	this->closeBlocked = 0;
+	this->Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(AbsintheMainWnd::OnClose));
 }
 
 #define THREAD_SAFE(X) \
@@ -46,6 +62,16 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 	} else { \
 		X; \
 	}
+
+void AbsintheMainWnd::PaypalClicked(wxCommandEvent& event)
+{
+	wxLaunchDefaultBrowser(wxT("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DPFUPCEAYUD4L"), 1);
+}
+
+void AbsintheMainWnd::GPClicked(wxCommandEvent& event)
+{
+	wxLaunchDefaultBrowser(wxT("http://greenpois0n.com/"), 1);
+}
 
 int AbsintheMainWnd::msgBox(const wxString& message, const wxString& caption, int style)
 {
@@ -76,7 +102,16 @@ void AbsintheMainWnd::handleStartClicked(wxCommandEvent& WXUNUSED(event))
 	this->worker->processStart();
 }
 
-void AbsintheMainWnd::OnQuit(wxCommandEvent& WXUNUSED(event))
+void AbsintheMainWnd::OnClose(wxCloseEvent& event)
+{
+	if (this->closeBlocked) {
+		event.Veto();
+	} else {
+		event.Skip();
+	}
+}
+
+void AbsintheMainWnd::OnQuit(wxCommandEvent& event)
 {
 	Close(true);
 }
