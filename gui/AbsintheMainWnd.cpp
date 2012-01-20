@@ -9,15 +9,22 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 	wxPanel* panel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(WND_WIDTH, WND_HEIGHT));
 
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
-
-	wxFont fnt9(9, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
-
-	wxStaticText* lbTop = new wxStaticText(panel, wxID_ANY, wxT("Welcome to Absinthe iOS 5.0/5.0.1 untethered A5 jailbreak!\nBefore you use this tool please MAKE A BACKUP of your device data. Chronic-Dev cannot be held responsible for any loss of data or device damage and/or functionality."), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE | wxALIGN_LEFT);
+#if defined(__WXGTK__)
+#define FNTSIZE 10
+#endif
+#if defined(__WXOSX_COCOA__)
+#define FNTSIZE 12
+#endif
+#if defined(__WXMSW__)
+#define FNTSIZE 9
+#endif
+	wxFont fnt(FNTSIZE, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+	wxStaticText* lbTop = new wxStaticText(panel, wxID_ANY, wxT("Welcome to Absinthe iOS 5.0/5.0.1 untethered A5 jailbreak!\nBefore you use this tool please MAKE A BACKUP of your device data. Chronic-Dev is not responsible for any damage or loss of data."), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE | wxALIGN_LEFT);
 	lbTop->Wrap(WND_WIDTH-20);
-	lbTop->SetFont(fnt9);
+	lbTop->SetFont(fnt);
 
 	lbStatus = new wxStaticText(panel, wxID_ANY, wxT(""), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE);
-	lbStatus->SetFont(fnt9);
+	lbStatus->SetFont(fnt);
 
 	progressBar = new wxGauge(panel, wxID_ANY, 100, wxDefaultPosition, wxSize(300,17), wxGA_HORIZONTAL | wxGA_SMOOTH);
 	btnStart = new wxButton(panel, 1111, wxT("Jailbreak"));
@@ -28,19 +35,19 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 	hbox->Add(progressBar, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
 	hbox->Add(btnStart, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
 
-	wxStaticText* lbCredits = new wxStaticText(panel, wxID_ANY, wxT("Chronic-Dev Absinthe © 2011-2012 Chronic-Dev Team.\n\nExploits by: @pod2g, @planetbeing, @saurik, @pimskeks,\n@p0sixninja, @MuscleNerd, and @xvolks.\nArtwork by @iOPK. GUI by Hanéne Samara && @pimskeks."), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER | wxST_NO_AUTORESIZE);
+	wxStaticText* lbCredits = new wxStaticText(panel, wxID_ANY, wxT("Chronic-Dev Absinthe © 2011-2012 Chronic-Dev Team.\nExploits by: @pod2g, @planetbeing, @saurik, @pimskeks,\n@p0sixninja, @MuscleNerd, and @xvolks.\nArtwork by @iOPK. GUI by Hanéne Samara && @pimskeks."), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER | wxST_NO_AUTORESIZE);
 
-	lbCredits->SetFont(fnt9);
+	lbCredits->SetFont(fnt);
 
 	wxStaticText* lbPaypal = new wxStaticText(panel, wxID_ANY, wxT("Contribute to the A5 Jailbreak"), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
-	lbPaypal->SetForegroundColour(wxColour("BLUE"));
+	lbPaypal->SetForegroundColour(wxColour(wxT("BLUE")));
 	lbPaypal->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(AbsintheMainWnd::PaypalClicked));
-	lbPaypal->SetFont(fnt9);
+	lbPaypal->SetFont(fnt);
 
 	wxStaticText* lbGP = new wxStaticText(panel, wxID_ANY, wxT("http://greenpois0n.com/"), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
-	lbGP->SetForegroundColour(wxColour("BLUE"));
+	lbGP->SetForegroundColour(wxColour(wxT("BLUE")));
 	lbGP->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(AbsintheMainWnd::GPClicked));
-	lbGP->SetFont(fnt9);
+	lbGP->SetFont(fnt);
 
 	wxBoxSizer* hbox2 = new wxBoxSizer(wxHORIZONTAL);
 	hbox2->Add(lbPaypal, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
