@@ -7,7 +7,7 @@
 
 #define WND_TITLE "Chronic-Dev Absinthe"
 #define WND_WIDTH 480
-#define WND_HEIGHT 320
+#define WND_HEIGHT 350
 
 class AbsintheWorker;
 

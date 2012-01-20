@@ -563,6 +563,19 @@ void jb_signal_handler(int sig)
 	idevicebackup2_set_clean_exit(quit_flag);
 }
 
+static void afc_free_dictionary(char **dictionary) //ghetto i know, not sure where/how to put a global function for this
+{
+	int i = 0;
+
+	if (!dictionary)
+		return;
+
+	for (i = 0; dictionary[i]; i++) {
+		free(dictionary[i]);
+	}
+	free(dictionary);
+}
+
 int jailbreak(const char* uuid, status_cb_t status_cb) {
 	device_t* device = NULL;
 
@@ -639,6 +652,51 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/* start AFC and move dirs out of the way */
 	/********************************************************/
 	uint16_t port = 0;
+	if (lockdown_start_service(lockdown, "com.apple.afc2", &port) == 0) {
+                char **fileinfo = NULL;
+                uint32_t ffmt = 0;
+
+                afc_client_t afc2 = NULL;
+                afc_client_new(device->client, port, &afc2);
+                if (afc2) {
+                        afc_get_file_info(afc2, "/Applications", &fileinfo);
+                        if (fileinfo) {
+                                int i;
+                                for (i = 0; fileinfo[i]; i += 2) {
+                                        if (!strcmp(fileinfo[i], "st_ifmt")) {
+                                                if(strcmp(fileinfo[i + 1], "S_IFLNK") == 0)
+                                                {
+                                                    ffmt == 1;
+                                                }
+                                                break;
+                                        }
+                                }
+                                afc_free_dictionary(fileinfo);
+                                fileinfo = NULL;
+
+                                if(ffmt)
+                                {
+                                    status_cb("ERROR: Device already jailbroken! Detected stash.", 0);
+                                    afc_client_free(afc2);
+                                    lockdown_free(lockdown);
+                                    device_free(device);
+                                    return -1;
+                                }
+                        }
+
+                        afc_get_file_info(afc2, "/private/etc/launchd.conf", &fileinfo);
+                        if (fileinfo) {
+                                status_cb("ERROR: Device already jailbroken! Detected untether.", 0);
+                                afc_client_free(afc2);
+                                lockdown_free(lockdown);
+                                device_free(device);
+                                return -1;
+                        }
+
+	                afc_client_free(afc2);
+                }
+	}
+
 	if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
 		status_cb("ERROR: Failed to start AFC service", 0);
 		lockdown_free(lockdown);
@@ -1028,7 +1086,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	generate_rop(f, 1, build, product, pidlen, dscs);
 	fclose(f);
 
-	status_cb("Sending payload data, this may take a while...", 80);
+	status_cb("Sending payload data, this may take a while... (Do not touch your device yet!)", 80);
 
 	/********************************************************/
 	/* start AFC and add common and device-dependant files */
@@ -1177,7 +1235,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	status_cb(NULL, 95);
 	rmdir_recursive(BKPTMP);
 
-	status_cb("Almost done – just unlock your device if necessary, then tap the \"Jailbreak\" icon to finish. (It might be on a different homescreen, so don't give up looking!)", 100);
+	status_cb("Almost done – just unlock the screen if necessary, then tap the \"Jailbreak\" icon to finish. (It might be on a different homescreen, so don't give up looking!)", 100);
 
 	goto leave;
 
