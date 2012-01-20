@@ -112,7 +112,7 @@ void AbsintheWorker::checkDevice()
 			lockdownd_client_free(client);
 			idevice_free(dev);
 			wxString str;
-			str.Printf(wxT("ERROR: Device has a passcode set! Unplug device, enter passcode, and plug it back in."));
+			str.Printf(wxT("ERROR: Device has a passcode set! If a passcode is set, the jailbreak procedure will most likely fail. Unplug device, go to Settings and DISABLE THE PASSCODE, then plug it back in."));
 			mainwnd->setStatusText(str);
 			return;
 		} else if (lerr == LOCKDOWN_E_INVALID_HOST_ID) {
@@ -198,6 +198,19 @@ void AbsintheWorker::checkDevice()
 			free(productVersion);
 			free(buildVersion);
 			return;
+		}
+
+		node = NULL;
+		lockdownd_get_value(client, NULL, "PasswordProtected", &node);
+		if (node) {
+			uint8_t pcenabled = 0;
+			plist_get_bool_val(node, &pcenabled);
+			plist_free(node);
+			if (pcenabled) {
+				str.Printf(wxT("ERROR: Device has a passcode set! If a passcode is set, the jailbreak procedure will most likely fail. Unplug device, go to Settings and DISABLE THE PASSCODE, then plug it back in."));
+				mainwnd->setStatusText(str);
+				return;
+			}
 		}
 
 		wxString str;
