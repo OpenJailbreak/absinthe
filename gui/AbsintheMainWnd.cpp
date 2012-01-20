@@ -10,10 +10,14 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
 
-	wxStaticText* lbTop = new wxStaticText(panel, wxID_ANY, wxT("Description"), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE | wxALIGN_LEFT);
+	wxFont fnt9(9, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+
+	wxStaticText* lbTop = new wxStaticText(panel, wxID_ANY, wxT("Welcome to Absinthe iOS 5.0/5.0.1 untethered A5 jailbreak!\nBefore you use this tool please MAKE A BACKUP of your device data. Chronic-Dev cannot be held responsible for any loss of data or device damage and/or functionality."), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE | wxALIGN_LEFT);
 	lbTop->Wrap(WND_WIDTH-20);
+	lbTop->SetFont(fnt9);
 
 	lbStatus = new wxStaticText(panel, wxID_ANY, wxT(""), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE);
+	lbStatus->SetFont(fnt9);
 
 	progressBar = new wxGauge(panel, wxID_ANY, 100, wxDefaultPosition, wxSize(300,17), wxGA_HORIZONTAL | wxGA_SMOOTH);
 	btnStart = new wxButton(panel, 1111, wxT("Jailbreak"));
@@ -24,25 +28,30 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 	hbox->Add(progressBar, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
 	hbox->Add(btnStart, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
 
-	wxStaticText* lbCredits = new wxStaticText(panel, wxID_ANY, wxT("Chronic-Dev Absinthe © 2011-2012 Chronic-Dev Team.\nExploits by: @pod2g, @planetbeing, @saurik, @pimskeks,\n@p0sixninja, @MuscleNerd, @xvolks"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER | wxST_NO_AUTORESIZE);
+	wxStaticText* lbCredits = new wxStaticText(panel, wxID_ANY, wxT("Chronic-Dev Absinthe © 2011-2012 Chronic-Dev Team.\n\nExploits by: @pod2g, @planetbeing, @saurik, @pimskeks,\n@p0sixninja, @MuscleNerd, and @xvolks.\nArtwork by @iOPK. GUI by Hanéne Samara && @pimskeks."), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER | wxST_NO_AUTORESIZE);
 
-	wxStaticText* lbPaypal = new wxStaticText(panel, wxID_ANY, wxT("Contribute to the A5 Jailbreak"), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT | wxST_NO_AUTORESIZE);
+	lbCredits->SetFont(fnt9);
+
+	wxStaticText* lbPaypal = new wxStaticText(panel, wxID_ANY, wxT("Contribute to the A5 Jailbreak"), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
 	lbPaypal->SetForegroundColour(wxColour("BLUE"));
 	lbPaypal->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(AbsintheMainWnd::PaypalClicked));
+	lbPaypal->SetFont(fnt9);
 
-	wxStaticText* lbGP = new wxStaticText(panel, wxID_ANY, wxT("http://greenpois0n.com/"), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT | wxST_NO_AUTORESIZE);
+	wxStaticText* lbGP = new wxStaticText(panel, wxID_ANY, wxT("http://greenpois0n.com/"), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
 	lbGP->SetForegroundColour(wxColour("BLUE"));
 	lbGP->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(AbsintheMainWnd::GPClicked));
+	lbGP->SetFont(fnt9);
 
 	wxBoxSizer* hbox2 = new wxBoxSizer(wxHORIZONTAL);
 	hbox2->Add(lbPaypal, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
+	hbox2->AddSpacer(50);
 	hbox2->Add(lbGP, 0, wxALIGN_CENTER_VERTICAL | wxALL, 10);
 
 	vbox->Add(lbTop, 0, wxEXPAND | wxALL, 10);
 	vbox->Add(lbStatus, 1, wxEXPAND | wxALL, 10);
-	vbox->Add(hbox, 0, wxCENTER | wxALL, 10);
-	vbox->Add(lbCredits, 0, wxCENTER | wxALL, 10);
-	vbox->Add(hbox2, 0, wxCENTER | wxALL, 10);
+	vbox->Add(hbox, 0, wxCENTER | wxALL, 4);
+	vbox->Add(lbCredits, 0, wxCENTER | wxALL, 0);
+	vbox->Add(hbox2, 0, wxCENTER | wxALL, 4);
 
 	panel->SetSizer(vbox);
 

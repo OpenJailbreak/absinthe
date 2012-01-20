@@ -193,7 +193,7 @@ void AbsintheWorker::checkDevice()
 		}
 
 		if (!jb_device_is_supported(productType, buildVersion)) {
-			mainwnd->setStatusText(wxT("Sorry, your device is not supported."));
+			mainwnd->setStatusText(wxT("Sorry, the attached device is not supported."));
 			free(productType);
 			free(productVersion);
 			free(buildVersion);
