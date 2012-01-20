@@ -105,7 +105,7 @@ void AbsintheWorker::checkDevice()
 			mainwnd->setStatusText(str);
 			return;
 		}
-	
+
 		lockdownd_client_t client = NULL;
 		lockdownd_error_t lerr = lockdownd_client_new_with_handshake(dev, &client, "absinthe");
 		if (lerr == LOCKDOWN_E_PASSWORD_PROTECTED) {
@@ -149,7 +149,7 @@ void AbsintheWorker::checkDevice()
 		if (node) {
 			plist_get_string_val(node, &productType);
 			plist_free(node);
-		} 
+		}
 		if ((lerr != LOCKDOWN_E_SUCCESS) || !productType) {
 			lockdownd_client_free(client);
 			idevice_free(dev);
@@ -159,7 +159,7 @@ void AbsintheWorker::checkDevice()
 			return;
 		}
 
-		node = NULL;	
+		node = NULL;
 		lerr = lockdownd_get_value(client, NULL, "ProductVersion", &node);
 		if (node) {
 			plist_get_string_val(node, &productVersion);
@@ -173,10 +173,10 @@ void AbsintheWorker::checkDevice()
 			str.Printf(wxT("Error getting product version (lockdownd error %d)"), lerr);
 			mainwnd->setStatusText(str);
 			return;
-		}	
+		}
 
 		node = NULL;
-		lerr = lockdownd_get_value(client, NULL, "BuildVersion", &node); 
+		lerr = lockdownd_get_value(client, NULL, "BuildVersion", &node);
 		if (node) {
 			plist_get_string_val(node, &buildVersion);
 			plist_free(node);
@@ -207,6 +207,7 @@ void AbsintheWorker::checkDevice()
 			plist_get_bool_val(node, &pcenabled);
 			plist_free(node);
 			if (pcenabled) {
+			        wxString str;
 				str.Printf(wxT("ERROR: Device has a passcode set! If a passcode is set, the jailbreak procedure will most likely fail. Unplug device, go to Settings and DISABLE THE PASSCODE, then plug it back in."));
 				mainwnd->setStatusText(str);
 				return;
