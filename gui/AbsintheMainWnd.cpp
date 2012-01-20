@@ -19,7 +19,7 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 #define FNTSIZE 9
 #endif
 	wxFont fnt(FNTSIZE, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
-	wxStaticText* lbTop = new wxStaticText(panel, wxID_ANY, wxT("Welcome to Absinthe iOS 5.0/5.0.1 untethered A5 jailbreak!\nBefore you use this tool please MAKE A BACKUP of your device data.\nChronic-Dev is not responsible for any damage or loss of data."), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE | wxALIGN_LEFT);
+	wxStaticText* lbTop = new wxStaticText(panel, wxID_ANY, wxT("Welcome to Absinthe iOS 5.0/5.0.1 untethered A5 jailbreak!\n\nPlease make a backup of your device before using this tool. We don't expect any issues, but we aren't responsible if anything happens."), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE | wxALIGN_LEFT);
 	lbTop->Wrap(WND_WIDTH-20);
 	lbTop->SetFont(fnt);
 
@@ -39,7 +39,7 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 
 	lbCredits->SetFont(fnt);
 
-	wxStaticText* lbPaypal = new wxStaticText(panel, wxID_ANY, wxT("Contribute to the A5 Jailbreak"), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
+	wxStaticText* lbPaypal = new wxStaticText(panel, wxID_ANY, wxT("Support Us (PayPal)"), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
 	lbPaypal->SetForegroundColour(wxColour(wxT("BLUE")));
 	lbPaypal->Connect(wxEVT_LEFT_DOWN, wxCommandEventHandler(AbsintheMainWnd::PaypalClicked));
 	lbPaypal->SetFont(fnt);

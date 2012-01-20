@@ -578,7 +578,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
-	status_cb("Connecting to device", 0);
+	status_cb("Connecting to device...", 0);
 
 	int retries = 20;
 	int i = 0;
@@ -633,7 +633,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 
 	debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
 
-	status_cb("Preparing device for Jailbreak...", 2);
+	status_cb("Beginning jailbreak, this may take a while...", 2);
 
 	/********************************************************/
 	/* start AFC and move dirs out of the way */
@@ -712,7 +712,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	/* add vpn on-demand connection to preferences.plist */
 	/********************************************************/
-	status_cb("Preparing stage 1 jailbreak data...", 20);
+	status_cb("Preparing jailbreak files...", 20);
 
 	backup_file_t* bf = NULL;
 	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/preferences.plist");
@@ -882,7 +882,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/********************************************************/
 	/* restore backup */
 	/********************************************************/
-	status_cb("Sending stage 1 jailbreak data...", 30);
+	status_cb("Sending initial data. Your device will appear to be restoring a backup, this may also take a while...", 30);
 	char* rargv[] = {
 		"idevicebackup2",
 		"restore",
@@ -894,7 +894,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	};
 	idevicebackup2(6, rargv);
 
-	status_cb("Waiting for device reboot. DO NOT disconnect the device yet!", 40);
+	status_cb("Waiting for reboot — not done yet, don't unplug your device yet!", 40);
 
 	/********************************************************/
 	/* wait for device reboot */
@@ -911,7 +911,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		sleep(2);
 	}
 	debug("Device %s detected. Connecting...\n", uuid);
-	status_cb("Device detected, connecting...\n", 50);
+	status_cb("Connecting to device...\n", 50);
 	sleep(1);
 
 	/********************************************************/
@@ -965,7 +965,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	lockdown_free(lockdown);
 	lockdown = NULL;
 
-	status_cb("Preparing stage 2 jailbreak data...", 60);
+	status_cb("Preparing jailbreak data...", 60);
 
         crashreport_t* crash = NULL;
         while(1)
@@ -1028,7 +1028,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	generate_rop(f, 1, build, product, pidlen, dscs);
 	fclose(f);
 
-	status_cb("Sending stage 2 jailbreak data...", 80);
+	status_cb("Sending payload data, this may take a while...", 80);
 
 	/********************************************************/
 	/* start AFC and add common and device-dependant files */
@@ -1177,7 +1177,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	status_cb(NULL, 95);
 	rmdir_recursive(BKPTMP);
 
-	status_cb("Done!\nThe rest of the process takes place on the device. Just tap the Jailbreak icon that has been placed on your device's Homescreen.", 100);
+	status_cb("Almost done – just unlock your device if necessary, then tap the \"Jailbreak\" icon to finish. (It might be on a different homescreen, so don't give up looking!)", 100);
 
 	goto leave;
 
