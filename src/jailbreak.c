@@ -666,7 +666,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
                                         if (!strcmp(fileinfo[i], "st_ifmt")) {
                                                 if(strcmp(fileinfo[i + 1], "S_IFLNK") == 0)
                                                 {
-                                                    ffmt == 1;
+                                                    ffmt = 1;
                                                 }
                                                 break;
                                         }
