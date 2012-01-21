@@ -176,9 +176,12 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 		return NULL;
 	}
 
-	FILE* output = fopen(lastItem, "wb");
+        char crash_file[1024];
+        tmpnam(crash_file);
+
+	FILE* output = fopen(crash_file, "wb");
 	if(output == NULL) {
-		printf("Unable to open local file %s\n", lastItem);
+		printf("Unable to open local file %s\n", crash_file);
 		free(lastItem);
 		afc_file_close(crashreporter->copier->client, handle);
 		return NULL;
@@ -199,9 +202,9 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 	plist_t plist = NULL;
 	int ferr = 0;
 	unsigned char* datas = NULL;
-	ferr = file_read(lastItem, &datas, &size);
+	ferr = file_read(crash_file, &datas, &size);
 	if (ferr < 0) {
-		fprintf(stderr, "Unable to open %s\n", lastItem);
+		fprintf(stderr, "Unable to open %s\n", crash_file);
 		free(lastItem);
 		return NULL;
 	}
@@ -213,7 +216,7 @@ crashreport_t* crashreporter_last_crash(crashreporter_t* crashreporter) {
 	if (plist) {
 		report = crashreport_parse_plist(plist);
 		plist_free(plist);
-		remove(lastItem);
+		remove(crash_file);
 	} else {
 		error("Reading crash report as plist failed\n");
 	}
