@@ -2,7 +2,7 @@
 #define __JAILBREAK_H
 
 #define CONNECTION_NAME "jailbreak"
-#define VPN_TRIGGER_ADDRESS "cache.greenpois0n.com"
+#define VPN_TRIGGER_ADDRESS "127.0.0.1"
 #define BKPTMP "nirvana"
 #define AFCTMP "HackStore"
 
