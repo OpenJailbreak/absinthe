@@ -11,6 +11,10 @@
 #include <windows.h>
 #endif
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#endif
+
 #define         ws2s(as)   (std::string((as).mb_str(wxConvUTF8)))
 
 class Absinthe : public wxApp
@@ -37,7 +41,7 @@ static bool hasAdminRights() /*{{{*/
 			AllocateAndInitializeSid(&sia, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &psidAdmins);
 			if (psidAdmins) {
 				unsigned int g;
-				for (g = 0; g < ptg->GroupCount; g++) {         
+				for (g = 0; g < ptg->GroupCount; g++) {
 					if (EqualSid(psidAdmins, ptg->Groups[g].Sid)) {
 						res = true;
 						break;
@@ -55,8 +59,14 @@ static bool hasAdminRights() /*{{{*/
 bool Absinthe::OnInit()
 {
 #ifndef WIN32
+#if defined(__APPLE__)
+        char argv0[1024];
+        uint32_t argv0_size = sizeof(argv0);
+        _NSGetExecutablePath(argv0, &argv0_size);
+#else
 	std::string argv_0 = ws2s(argv[0]);
 	const char* argv0 = argv_0.c_str();
+#endif
 	char* name = strrchr((char*)argv0, '/');
 	if (name) {
 		int nlen = strlen(argv0)-strlen(name);
