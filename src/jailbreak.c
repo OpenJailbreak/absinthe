@@ -506,7 +506,7 @@ static void prefs_add_entry(plist_t* pl) /*{{{*/
 	free(guid);
 } /*}}}*/
 
-int afc_upload_file(afc_client_t afc, const char* filename, const char* todir)
+int afc_upload_file2(afc_client_t afc, const char* filename, const char* dstfn)
 {
 	uint64_t handle = 0;
 	char data[0x1000];
@@ -516,24 +516,6 @@ int afc_upload_file(afc_client_t afc, const char* filename, const char* todir)
 		error("Unable to open local file %s\n", filename);
 		return -1;
 	}
-
-#ifdef WIN32
-	int i = 0;
-	int mfl = strlen(filename);
-	char* bn = (char*)filename;
-	for (i = mfl-1; i >= 0; i--) {
-		if ((bn[i] == '/') || (bn[i] == '\\')) {
-			bn = &bn[i+1];
-			break;
-		}
-	}
-#else
-	char *bn = basename((char*)filename);
-#endif
-	char *dstfn = (char*)malloc(strlen(todir)+1+strlen(bn)+1);
-	strcpy(dstfn, todir);
-	strcat(dstfn, "/");
-	strcat(dstfn, bn);
 
 	afc_error_t err = afc_file_open(afc, dstfn, AFC_FOPEN_WR, &handle);
 	if(err != AFC_E_SUCCESS) {
@@ -555,6 +537,29 @@ int afc_upload_file(afc_client_t afc, const char* filename, const char* todir)
 	fclose(infile);
 
 	return res;
+}
+
+int afc_upload_file(afc_client_t afc, const char* filename, const char* todir)
+{
+#ifdef WIN32
+	int i = 0;
+	int mfl = strlen(filename);
+	char* bn = (char*)filename;
+	for (i = mfl-1; i >= 0; i--) {
+		if ((bn[i] == '/') || (bn[i] == '\\')) {
+			bn = &bn[i+1];
+			break;
+		}
+	}
+#else
+	char *bn = basename((char*)filename);
+#endif
+	char *dstfn = (char*)malloc(strlen(todir)+1+strlen(bn)+1);
+	strcpy(dstfn, todir);
+	strcat(dstfn, "/");
+	strcat(dstfn, bn);
+
+        afc_upload_file2(afc, filename, dstfn);
 }
 
 void jb_signal_handler(int sig)
@@ -1138,7 +1143,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	rmdir_recursive_afc(afc, "/corona", 0);
 
 	// upload files
-	afc_upload_file(afc, stage2_conf, "/corona/racoon-exploit-bootstrap.conf");
+	afc_upload_file2(afc, stage2_conf, "/corona/racoon-exploit-bootstrap.conf");
 
 	afc_upload_file(afc, "data/common/corona/Cydia.tgz", "/corona");
 	afc_upload_file(afc, "data/common/corona/jailbreak", "/corona");

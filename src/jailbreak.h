@@ -3,7 +3,6 @@
 
 #define CONNECTION_NAME "jailbreak"
 #define VPN_TRIGGER_ADDRESS "127.0.0.1"
-#define BKPTMP "nirvana"
 #define AFCTMP "HackStore"
 
 struct dev_vmaddr {
