@@ -114,6 +114,44 @@ static void rmdir_recursive(const char *path) /*{{{*/
 	}
 } /*}}}*/
 
+void sig_chld_ignore(int signal)
+{
+    return;
+}
+
+void sig_chld_waitpid(int signal)
+{
+    while(waitpid(-1, 0, WNOHANG) > 0);
+}
+
+void executeCommand(uid_t uid, gid_t gid, char *const argv[])
+{
+    signal(SIGCHLD, &sig_chld_ignore);
+
+    pid_t fork_pid;
+    if((fork_pid = fork()) != 0)
+    {
+        while(waitpid(fork_pid, NULL, WNOHANG) <= 0)
+            usleep(300);
+    } else
+    {
+        if(uid == 501)
+            chdir("/private/var/mobile");
+
+        setuid(uid);
+        setgid(gid);
+
+        if(execv(argv[0], argv) != 0)
+        {
+            perror("execv");
+            fflush(stderr);
+            fflush(stdout);
+        }
+        exit(0);
+    }
+    signal(SIGCHLD, &sig_chld_waitpid);
+}
+
 static void start()
 {
 	syslog(LOG_NOTICE, "waiting for springboard to launch...\n");
@@ -169,7 +207,11 @@ static void start()
 			closedir(dir);
 			syslog(LOG_ERR, "WARNING: the folder '"MOVE_DIR"' is still present in the user's Media folder. You have to check yourself for any leftovers and move them back if required!");
 		}
-	}	
+	}
+
+        syslog(LOG_NOTICE, "Executing uicache...\n");
+
+        executeCommand(501, 501, (char* const []) {"/usr/bin/uicache", NULL});
 
 	syslog(LOG_NOTICE, "Done. Removing myself.\n");
 	system("launchctl unload /Library/LaunchDaemons/com.chronic-dev.greenpois0n.corona.filemover.plist");
@@ -199,7 +241,7 @@ int main(int argc, char** argv)
 	name = (name ? name+1 : argv[0]);
 	openlog(name, LOG_PID, 0);
 
-	start();	
+	start();
 
 	closelog();
 
