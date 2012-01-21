@@ -724,7 +724,13 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		free_dictionary(list);
 		status_cb("Looks like you attempted to apply this Jailbreak and it failed. Will try to fix now...", 0);
 		sleep(5);
-		goto fix;
+		DIR* dir = opendir(BKPTMP);
+		if (dir) {
+			closedir(dir);
+			goto fix_all;
+		} else {
+			goto fix;
+		}
 	}
 
 	status_cb(NULL, 6);
