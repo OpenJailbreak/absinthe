@@ -1530,7 +1530,7 @@ fix:
 
 	rmdir_recursive(BKPTMP);
 
-	status_cb("Recovery completed.", 100);
+	status_cb("Recovery completed. If you want to retry jailbreaking, unplug your device and plug it back in.", 100);
 
 leave:
 	afc_client_free(afc);
