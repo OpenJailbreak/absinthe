@@ -1254,7 +1254,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	status_cb(NULL, 95);
 	rmdir_recursive(backup_directory);
 
-	status_cb("Almost done – just unlock the screen if necessary, then tap the \"Jailbreak\" icon to finish. (It might be on a different homescreen, so don't give up looking!)", 100);
+	status_cb("Almost done – just unlock the screen if necessary, then tap the \"Absinthe\" icon to finish. (It might be on a different homescreen, so don't give up looking!)", 100);
 
 	goto leave;
 
