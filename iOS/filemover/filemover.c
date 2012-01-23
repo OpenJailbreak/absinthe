@@ -209,9 +209,9 @@ static void start()
 		}
 	}
 
-        syslog(LOG_NOTICE, "Executing uicache...\n");
+//        syslog(LOG_NOTICE, "Executing uicache...\n");
 
-        executeCommand(501, 501, (char* const []) {"/usr/bin/uicache", NULL});
+//        executeCommand(501, 501, (char* const []) {"/usr/bin/uicache", NULL});
 
 	syslog(LOG_NOTICE, "Done. Removing myself.\n");
 	system("launchctl unload /Library/LaunchDaemons/com.chronic-dev.greenpois0n.corona.filemover.plist");
