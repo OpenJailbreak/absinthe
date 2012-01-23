@@ -1031,7 +1031,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	lockdown_free(lockdown);
 	lockdown = NULL;
 
-	status_cb("Preparing jailbreak data...", 60);
+	status_cb("Preparing jailbreak data... Do not touch your device yet!", 60);
 
 	sleep(3);
 
@@ -1105,7 +1105,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	generate_rop(f, 1, build, product, pidlen, dscs);
 	fclose(f);
 
-	status_cb("Sending payload data, this may take a while... (Do not touch your device yet!)", 80);
+	status_cb("Sending payload data, this may take a while... Do not touch your device yet!", 80);
 
 	/********************************************************/
 	/* start AFC and add common and device-dependant files */
