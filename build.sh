@@ -9,19 +9,38 @@ if ! test -f configure; then
     ./autogen.sh
 fi
 
+do_clean=no
+do_x86_64=no
+
 case `uname` in
 	MINGW*)
 	windres resources/win32/res.rc -O coff gui/win32res.o
 	;;
+	Linux*)
+	do_clean=yes
+	if [ "A$BUILD_HOST_CPU" == "Ax86_64" ]; then
+		do_x86_64=yes
+	fi
+	;;
 esac
 
 rm -rf build
+
+if [ "x$do_clean" = "xyes" ]; then
+  make clean
+  ./autogen.sh
+fi
 if ! make; then
   exit 1
 fi
 
 CLIDEST=build/absinthe/cli
 GUIDEST=build/absinthe/gui
+
+if [ "x$do_x86_64" = "xyes" ]; then
+  CLIDEST=build/absinthe.x86_64/cli
+  GUIDEST=build/absinthe.x86_64/gui
+fi
 
 mkdir -p $CLIDEST
 mkdir -p $GUIDEST
@@ -42,12 +61,14 @@ case `uname` in
 	#cp resources/osx/launcher $GUIDEST/${OSX_BUNDLE_NAME}
 	;;
 	Linux)
-	cp src/absinthe build/absinthe/cli/
-	cp gui/absinthe build/absinthe/gui/
+	cp src/absinthe $CLIDEST/
+	cp gui/absinthe $GUIDEST/
+	mkdir -p $GUIDEST/data
+	cp resources/linux/icon.png $GUIDEST/data/
 	;;
 	MINGW*)
-	cp src/absinthe.exe build/absinthe/cli/
-	cp gui/absinthe.exe build/absinthe/gui/
+	cp src/absinthe.exe $CLIDEST/
+	cp gui/absinthe.exe $GUIDEST/
 	;;
 esac
 

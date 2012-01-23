@@ -18,6 +18,8 @@ AC_PROG_CXX
 ACCFLAGS="-m32 -I\$(top_srcdir)/include -DLIBXML_STATIC=1 -g -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES "
 ACSHAREDLIBS=""
 
+OPENSSL_STATIC=""
+
 SYSTYPE=
 case "$host_os" in
 	darwin*)
@@ -35,11 +37,29 @@ case "$host_os" in
 			$LIBSDIR/libwx_baseu-2.9.a \
 			$LIBSDIR/libwx_osx_cocoau_core-2.9.a \
 			-framework IOKit -framework Carbon -framework Cocoa -framework QuickTime -framework OpenGL -framework System -framework Security"
+		OPENSSL_STATIC=$LIBDIR/libssl.a $LIBDIR/libcrypto.a
 	;;
 	linux*)
+		case "$BUILD_HOST_CPU" in
+		x86_64)
+		SYSTYPE=linux.x86_64
+		ACCFLAGS="-fPIC -I\$(top_srcdir)/include -DLIBXML_STATIC=1 -g -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES "
+		ACSHAREDLIBS+="-lpthread -lz -lm -lssl -lcrypto"
+		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
+		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
+			-DwxDEBUG_LEVEL=0 \
+			-I\$(top_srcdir)/include/wxWidgets-2.9.2/include \
+			-I\$(top_srcdir)/include/os/linux/wxWidgets-2.9.2/lib/wx/include/x86_64-linux-gnu-gtk2-unicode-static-2.9 \
+			-D__WXGTK__ -pthread"
+                ACGUI_LDFLAGS+="-pthread -Wl,-Bsymbolic-functions -static-libstdc++"
+                ACGUI_LDADD+="$LIBSDIR/libwx_gtk2u_core-2.9.a \
+			$LIBSDIR/libwx_baseu-2.9.a \
+			-lpthread -lz -lm -lglib-2.0 -lgtk-x11-2.0"
+		;;
+		*)
 		SYSTYPE=linux
 		ACCFLAGS+="-fPIC "
-		ACSHAREDLIBS+="-lpthread -lz -lm "
+		ACSHAREDLIBS+="-lpthread -lz -lm -lssl -lcrypto"
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
 			-DwxDEBUG_LEVEL=0 \
@@ -50,6 +70,8 @@ case "$host_os" in
 		ACGUI_LDADD+="$LIBSDIR/libwx_gtk2u_core-2.9.a \
 			$LIBSDIR/libwx_baseu-2.9.a \
 			-lpthread -lz -lm -lglib-2.0 -lgtk-x11-2.0"
+		;;
+		esac
 	;;
 	mingw32)
 		SYSTYPE=win32
@@ -65,6 +87,7 @@ case "$host_os" in
 		ACGUI_LDADD+="\$(top_srcdir)/gui/win32res.o $LIBSDIR/libwx_mswu_core-2.8.a \
 			$LIBSDIR/libwx_baseu-2.8.a \
 			-lz -lm -lws2_32 -lgdi32 -lole32 -loleaut32 -luuid -lcomctl32 -lsetupapi"
+		OPENSSL_STATIC=$LIBDIR/libssl.a $LIBDIR/libcrypto.a
 	;;
 	*)
 	;;
@@ -82,8 +105,7 @@ GLOBAL_LIBS=" \
  $LIBDIR/libimobiledevice.a \
  $LIBDIR/libplist.a \
  $LIBDIR/libxml2.a \
- $LIBDIR/libssl.a \
- $LIBDIR/libcrypto.a \
+ $OPENSSL_STATIC \
  $LIBDIR/libusbmuxd.a \
  $ACSHAREDLIBS \ 
 "
