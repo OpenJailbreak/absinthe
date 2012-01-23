@@ -1,7 +1,8 @@
 #include "AbsintheMainWnd.h"
+#include "version.h"
 
 AbsintheMainWnd::AbsintheMainWnd(void)
-	: wxFrame(NULL, wxID_ANY, wxT(WND_TITLE), wxDefaultPosition, wxSize(WND_WIDTH, WND_HEIGHT), (wxSTAY_ON_TOP | wxDEFAULT_FRAME_STYLE) & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX))
+	: wxFrame(NULL, wxID_ANY, wxT(WND_TITLE " - Version " ABSINTHE_VERSION_STRING), wxDefaultPosition, wxSize(WND_WIDTH, WND_HEIGHT), (wxSTAY_ON_TOP | wxDEFAULT_FRAME_STYLE) & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX))
 {
 #if defined(__WXMSW__)
 	SetIcon(wxICON(AppIcon));
