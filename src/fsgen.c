@@ -461,7 +461,7 @@ void prepareMount(Addr vndevice, Addr mntPoint, char* vnimage) {
 
         ropLoadReg0Const(newString(vnimage));
 	ropSaveReg0(vn + 0x00); // vn.vn_file
-	ropLoadReg0Const(vncontrol_readwrite_io_e);
+	ropLoadReg0Const((int)vncontrol_readwrite_io_e);
 	ropSaveReg0(vn + 0x08); // vn.vn_control
 
 	ropLoadReg0(ptrFd);
