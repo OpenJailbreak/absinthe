@@ -7,6 +7,9 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 #if defined(__WXMSW__)
 	SetIcon(wxICON(AppIcon));
 #endif
+#if defined(__WXGTK__)
+	SetIcon(wxIcon(wxT("data/icon.png")));
+#endif
 	wxPanel* panel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(WND_WIDTH, WND_HEIGHT));
 
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
