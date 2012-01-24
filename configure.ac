@@ -37,7 +37,7 @@ case "$host_os" in
 			$LIBSDIR/libwx_baseu-2.9.a \
 			$LIBSDIR/libwx_osx_cocoau_core-2.9.a \
 			-framework IOKit -framework Carbon -framework Cocoa -framework QuickTime -framework OpenGL -framework System -framework Security"
-		OPENSSL_STATIC=$LIBDIR/libssl.a $LIBDIR/libcrypto.a
+		OPENSSL_STATIC="$LIBDIR/libssl.a $LIBDIR/libcrypto.a"
 	;;
 	linux*)
 		case "$BUILD_HOST_CPU" in
@@ -87,7 +87,7 @@ case "$host_os" in
 		ACGUI_LDADD+="\$(top_srcdir)/gui/win32res.o $LIBSDIR/libwx_mswu_core-2.8.a \
 			$LIBSDIR/libwx_baseu-2.8.a \
 			-lz -lm -lws2_32 -lgdi32 -lole32 -loleaut32 -luuid -lcomctl32 -lsetupapi"
-		OPENSSL_STATIC=$LIBDIR/libssl.a $LIBDIR/libcrypto.a
+		OPENSSL_STATIC="$LIBDIR/libssl.a $LIBDIR/libcrypto.a"
 	;;
 	*)
 	;;
