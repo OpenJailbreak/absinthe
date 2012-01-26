@@ -16,7 +16,7 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 #if defined(__WXGTK__)
 #define FNTSIZE 10
 #endif
-#if defined(__WXOSX_COCOA__)
+#if defined(__WXOSX_COCOA__) || defined(__WXMAC__)
 #define FNTSIZE 12
 #endif
 #if defined(__WXMSW__)
