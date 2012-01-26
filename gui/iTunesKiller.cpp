@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <syslog.h>
+#include <signal.h>
 
 typedef struct kinfo_proc kinfo_proc;
 
