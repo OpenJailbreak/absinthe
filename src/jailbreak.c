@@ -73,6 +73,11 @@ int jb_device_is_supported(const char* product, const char* build)
 	return (vmaddr != 0);
 }
 
+int jb_check_consistency(const char* product, const char* build)
+{
+	return fsgen_check_consistency(build, product);
+}
+
 crashreport_t* fetch_crashreport(device_t* device) {
 	// We open crashreporter so we can download the mobilebackup2 crashreport
 	//  and parse the "random" dylib addresses. Thank you ASLR for nothing. ;P

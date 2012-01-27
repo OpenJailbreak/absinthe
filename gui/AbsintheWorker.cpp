@@ -200,6 +200,35 @@ void AbsintheWorker::checkDevice()
 			return;
 		}
 
+		int cc = jb_check_consistency(productType, buildVersion);
+		if (cc == 0) {
+			// Consistency check passed
+		} else if (cc == -1) {
+			mainwnd->setStatusText(wxT("ERROR: Consistency check failed: attached device not supported"));
+			free(productType);
+			free(productVersion);
+			free(buildVersion);
+			lockdownd_client_free(client);
+			idevice_free(dev);
+			return;
+		} else if (cc == -2) {
+			mainwnd->setStatusText(wxT("ERROR: Consistency check failed: could not find required files"));
+			free(productType);
+			free(productVersion);
+			free(buildVersion);
+			lockdownd_client_free(client);
+			idevice_free(dev);
+			return;
+		} else {
+			mainwnd->setStatusText(wxT("ERROR: Consistency check failed: unknown error"));
+			free(productType);
+			free(productVersion);
+			free(buildVersion);
+			lockdownd_client_free(client);
+			idevice_free(dev);
+			return;
+		}
+
 		node = NULL;
 		lockdownd_get_value(client, NULL, "PasswordProtected", &node);
 		if (node) {

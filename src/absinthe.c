@@ -240,6 +240,32 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	int cc = jb_check_consistency(product, build);
+	if (cc == 0) {
+		debug("Consistency check passed\n");
+	} else if (cc == -1) {
+		error("ERROR: Consistency check failed: device %s build %s not supported\n", product, build);
+		free(product);
+		free(build);
+		lockdown_free(lockdown);
+		device_free(device);
+		return -1;
+	} else if (cc == -2) {
+		error("ERROR: Consistency check failed: could not find required files for device %s build %s\n", product, build);
+		free(product);
+		free(build);
+		lockdown_free(lockdown);
+		device_free(device);
+		return -1;
+	} else {
+		error("ERROR: Consistency check failed: unknown error\n");
+		free(product);
+		free(build);
+		lockdown_free(lockdown);
+		device_free(device);
+		return -1;
+	}
+
 	plist_t pl = NULL;
 	lockdown_get_value(lockdown, "com.apple.mobile.backup", "WillEncrypt", &pl);
 	if (pl && plist_get_node_type(pl) == PLIST_BOOLEAN) {

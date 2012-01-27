@@ -1026,6 +1026,95 @@ void exploit()
 
 }
 
+int fsgen_check_consistency(const char* firmwareName, const char* deviceName)
+{
+	int device = -1;
+	int firmware = -1;
+	int i;
+	for (i = 0; i < MAX_FIRMWARE; ++i) {
+		if (strcmp(firmwareName, firmwares[i]) == 0) {
+			firmware = i;
+			break;
+		}
+	}
+
+	if (firmware == -1) {
+		fprintf(stderr, "Unrecognized firmware: %s\n", firmwareName);
+		return -1;
+	}
+
+	for (i = 0; i < MAX_DEVICE; ++i) {
+		if (strcmp(deviceName, devices[i]) == 0) {
+			device = i;
+			break;
+		}
+	}
+
+        if (device == -1) {
+		fprintf(stderr, "Unrecognized device: %s\n", deviceName);
+		return -1;
+	}
+
+	// check for required files
+	char dPath[1024];
+	char fName[1024];
+	FILE *f = NULL;
+
+	// data path
+        snprintf(dPath, sizeof(dPath), "data/%s/%s/fsgen", firmwareName, deviceName);
+
+	// check files
+	snprintf(fName, sizeof(fName), "%s/sysent_1c50", dPath);
+	f = fopen(fName, "rb");
+	if (!f) {
+		fprintf(stderr, "ERROR: missing file '%s'\n", fName);
+		return -2;
+	}
+	fclose(f);
+
+	snprintf(fName, sizeof(fName), "%s/zfreehooker.bin", dPath);
+	f = fopen(fName, "rb");
+	if (!f) {
+		fprintf(stderr, "ERROR: missing file '%s'\n", fName);
+		return -2;
+	}
+	fclose(f);
+
+	snprintf(fName, sizeof(fName), "%s/zfreehook.bin", dPath);
+	f = fopen(fName, "rb");
+	if (!f) {
+		fprintf(stderr, "ERROR: missing file '%s'\n", fName);
+		return -2;
+	}
+	fclose(f);
+
+	snprintf(fName, sizeof(fName), "%s/shellcode.bin", dPath);
+	f = fopen(fName, "rb");
+	if (!f) {
+		fprintf(stderr, "ERROR: missing file '%s'\n", fName);
+		return -2;
+	}
+	fclose(f);
+
+	snprintf(fName, sizeof(fName), "%s/sb_evaluatehooker.bin", dPath);
+	f = fopen(fName, "rb");
+	if (!f) {
+		fprintf(stderr, "ERROR: missing file '%s'\n", fName);
+		return -2;
+	}
+	fclose(f);
+
+	snprintf(fName, sizeof(fName), "%s/sb_evaluatehook.bin", dPath);
+	f = fopen(fName, "rb");
+	if (!f) {
+		fprintf(stderr, "ERROR: missing file '%s'\n", fName);
+		return -2;
+	}
+	fclose(f);
+
+	return 0;
+}
+
 int generate_rop(FILE* out, int is_bootstrap, const char* firmwareName, const char* deviceName, int pid_len, unsigned int slide)
 {
         outFile = out;
