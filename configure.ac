@@ -94,7 +94,7 @@ case "$host_os" in
 	;;
 	mingw32)
 		SYSTYPE=win32
-		ACCFLAGS+="-DWIN32 "
+		ACCFLAGS+="-DWIN32 -D__LITTLE_ENDIAN__=1 "
 		ACSHAREDLIBS+="-lz -lm -lws2_32 -lgdi32 -lole32 "
 		ACLDFLAGS+="-s"
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
