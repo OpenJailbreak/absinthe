@@ -4,4 +4,4 @@ autoconf
 autoheader
 automake -a -c
 autoreconf -i
-./configure
+./configure --disable-dependency-tracking

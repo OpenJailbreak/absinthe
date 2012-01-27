@@ -11,8 +11,15 @@ fi
 
 do_clean=no
 do_x86_64=no
+do_osx_10_5=no
 
 case `uname` in
+	Darwin*)
+	rm -f absinthe-10.5
+	if test -d "/Developer/SDKs/MacOSX10.5.sdk"; then
+		do_osx_10_5=yes
+	fi
+	;;
 	MINGW*)
 	windres resources/win32/res.rc -O coff gui/win32res.o
 	;;
@@ -30,6 +37,18 @@ if [ "x$do_clean" = "xyes" ]; then
   make clean
   ./autogen.sh
 fi
+
+if [ "x$do_osx_10_5" = "xyes" ]; then
+  BUILD_10_5=1 ./autogen.sh
+  make clean
+  if ! make; then
+    exit 1
+  fi
+  cp gui/absinthe absinthe-10.5
+  make clean
+  ./autogen.sh
+fi
+
 if ! make; then
   exit 1
 fi
@@ -55,7 +74,14 @@ case `uname` in
 	cp resources/osx/Info.plist $GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/
 	cp resources/osx/Icon.icns $GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/Resources/
 	GUIDEST=$GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/MacOS
-	cp gui/absinthe $GUIDEST/${OSX_BUNDLE_NAME}
+	if test -f absinthe-10.5; then
+		cp gui/absinthe $GUIDEST/${OSX_BUNDLE_NAME}-10.6
+		cp absinthe-10.5 $GUIDEST/${OSX_BUNDLE_NAME}-10.5
+		cp resources/osx/Absinthe-launcher.sh $GUIDEST/${OSX_BUNDLE_NAME}
+		chmod 755 $GUIDEST/${OSX_BUNDLE_NAME}
+	else
+		cp gui/absinthe $GUIDEST/${OSX_BUNDLE_NAME}
+	fi
 	# if running as root required:
 	#cp gui/absinthe $GUIDEST/${OSX_BUNDLE_NAME}_
 	#cp resources/osx/launcher $GUIDEST/${OSX_BUNDLE_NAME}

@@ -17,15 +17,31 @@ AC_PROG_CXX
 
 ACCFLAGS="-m32 -I\$(top_srcdir)/include -DLIBXML_STATIC=1 -g -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES "
 ACSHAREDLIBS=""
+ACLDFLAGS=""
 
 OPENSSL_STATIC=""
 
 SYSTYPE=
 case "$host_os" in
 	darwin*)
+		if test "x$BUILD_10_5" = "x1"; then
+		SYSTYPE=osx.10.5
+		ACCFLAGS+="-fPIC -arch i386 -arch ppc "
+		ACSHAREDLIBS+="-lpthread -lz -lm -liconv -lssl -lcrypto "
+		ACLDFLAGS="-arch i386 -arch ppc "
+		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
+		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
+                        -isysroot /Developer/SDKs/MacOSX10.5.sdk \
+			-mmacosx-version-min=10.5 \
+                        -DCURL_PULL_SYS_SOCKET_H \
+                        -I/usr/lib/wx/include/mac-unicode-debug-2.8 -I/Developer/SDKs/MacOSX10.5.sdk/usr/include/wx-2.8 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -D__WXDEBUG__ -D__WXMAC__"
+                ACGUI_LDFLAGS+="-pthread -static-libstdc++"
+                ACGUI_LDADD+="-framework QuickTime -framework IOKit -framework Carbon -framework Cocoa -framework System  -lwx_macud-2.8"
+		else
 		SYSTYPE=osx
 		ACCFLAGS+="-fPIC -arch i386 "
 		ACSHAREDLIBS+="-lpthread -lz -lm -liconv "
+		ACLDFLAGS+="-arch i386 "
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
 			-isysroot /Developer/SDKs/MacOSX10.6.sdk \
@@ -38,6 +54,7 @@ case "$host_os" in
 			$LIBSDIR/libwx_osx_cocoau_core-2.9.a \
 			-framework IOKit -framework Carbon -framework Cocoa -framework QuickTime -framework OpenGL -framework System -framework Security"
 		OPENSSL_STATIC="$LIBSDIR/libssl.a $LIBSDIR/libcrypto.a"
+		fi
 	;;
 	linux*)
 		case "$BUILD_HOST_CPU" in
