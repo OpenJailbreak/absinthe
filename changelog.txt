@@ -1,0 +1,28 @@
+Version 0.4
+~~~~~~~~~~~
+- Mac: added support for OSX 10.5, PPC and Intel CPU
+- added consistency check on startup to make sure required files are in place
+- Windows: fixed bug in payload generator that might cause a crash
+
+Version 0.3
+~~~~~~~~~~~
+- first public Linux x86/x86_64 release
+- Windows: fixed possible bug in payload generation
+- small additions and changes to the text instructions (e.g. 'Absinthe' icon instead 'Jailbreak' icon)
+
+Version 0.2
+~~~~~~~~~~~
+- first public Windows release
+- improved webclip VPN triggering
+- ensure crashreport data is sane so payload generation does not fail
+- use temporary files and folders to solve permission issues
+- Mac: fixed getting executable path so the payload data is actually found
+
+Version 0.1.2-2
+~~~~~~~~~~~~~~~
+- small fixes
+
+Version 0.1.2-1
+~~~~~~~~~~~~~~~
+- first public Mac release (OSX >= 10.6)
+
