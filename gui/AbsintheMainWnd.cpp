@@ -30,7 +30,11 @@ AbsintheMainWnd::AbsintheMainWnd(void)
 	lbStatus = new wxStaticText(panel, wxID_ANY, wxT(""), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE);
 	lbStatus->SetFont(fnt);
 
+#if defined (__WXMAC__)
+	progressBar = new wxGauge(panel, wxID_ANY, 100, wxDefaultPosition, wxSize(300,11), wxGA_HORIZONTAL | wxGA_SMOOTH);
+#else
 	progressBar = new wxGauge(panel, wxID_ANY, 100, wxDefaultPosition, wxSize(300,17), wxGA_HORIZONTAL | wxGA_SMOOTH);
+#endif
 	btnStart = new wxButton(panel, 1111, wxT("Jailbreak"));
 	btnStart->Enable(0);
 	Connect(1111, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(AbsintheMainWnd::handleStartClicked));
