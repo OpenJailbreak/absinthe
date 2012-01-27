@@ -549,12 +549,17 @@ void bootstrap()
 	// - syscalls table restore (generated at ROP compile time)
 	FILE* f;
 	char fileName[1024];
+	int len = 0;
 	unsigned int j;
 	unsigned int sysentRestore[0x80];
 	snprintf(fileName, sizeof(fileName), "%s/sysent_1c50", dataPath);
 	f = fopen(fileName, "rb");
-	fread(&sysentRestore[0], 4, 0x80, f);
-	fclose(f);
+	if (f) {
+		fread(&sysentRestore[0], 4, 0x80, f);
+		fclose(f);
+	} else {
+		fprintf(stderr, "Error opening '%s'\n", fileName);
+	}
 	for (j = 0; j < 0x80; j++) {
 		sysentRestore[j] = le32toh(sysentRestore[j]);
 	}
@@ -570,29 +575,37 @@ void bootstrap()
 	// zfree hooker
 	snprintf(fileName, sizeof(fileName), "%s/zfreehooker.bin", dataPath);
 	f = fopen(fileName, "rb");
-        fseek(f, 0, SEEK_END);
-        int len = ftell(f);
-        fseek(f, 0, SEEK_SET);
-	unsigned int zfreehooker[len >> 2];
-	fread(&zfreehooker[0], 4, len >> 2, f);
-	fclose(f);
-	for (j = 0; j < (len >> 2); j++) {
-		zfreehooker[j] = le32toh(zfreehooker[j]);
-		ropCall3(dscs + offsets->_dsc_syscall, 309, ZFREEHOOKER_ADDR + (j << 2) - 4, zfreehooker[j]);
+	if (f) {
+		fseek(f, 0, SEEK_END);
+		len = ftell(f);
+		fseek(f, 0, SEEK_SET);
+		unsigned int zfreehooker[len >> 2];
+		fread(&zfreehooker[0], 4, len >> 2, f);
+		fclose(f);
+		for (j = 0; j < (len >> 2); j++) {
+			zfreehooker[j] = le32toh(zfreehooker[j]);
+			ropCall3(dscs + offsets->_dsc_syscall, 309, ZFREEHOOKER_ADDR + (j << 2) - 4, zfreehooker[j]);
+		}
+	} else {
+		fprintf(stderr, "Error opening '%s'\n", fileName);
 	}
 
 	// zfree hook
 	snprintf(fileName, sizeof(fileName), "%s/zfreehook.bin", dataPath);
 	f = fopen(fileName, "rb");
-        fseek(f, 0, SEEK_END);
-        len = ftell(f);
-        fseek(f, 0, SEEK_SET);
-	unsigned int zfreehook[len >> 2];
-	fread(&zfreehook[0], 4, len >> 2, f);
-	fclose(f);
-	for (j = 0; j < (len >> 2); j++) {
-		zfreehook[j] = le32toh(zfreehook[j]);
-		ropCall3(dscs + offsets->_dsc_syscall, 309, ZFREEHOOK_ADDR + (j << 2) - 4, zfreehook[j]);
+	if (f) {
+		fseek(f, 0, SEEK_END);
+		len = ftell(f);
+		fseek(f, 0, SEEK_SET);
+		unsigned int zfreehook[len >> 2];
+		fread(&zfreehook[0], 4, len >> 2, f);
+		fclose(f);
+		for (j = 0; j < (len >> 2); j++) {
+			zfreehook[j] = le32toh(zfreehook[j]);
+			ropCall3(dscs + offsets->_dsc_syscall, 309, ZFREEHOOK_ADDR + (j << 2) - 4, zfreehook[j]);
+		}
+	} else {
+		fprintf(stderr, "Error opening '%s'\n", fileName);
 	}
 
 	// invalidate all dcache
@@ -605,43 +618,55 @@ void bootstrap()
 	// shellcode copy
 	snprintf(fileName, sizeof(fileName), "%s/shellcode.bin", dataPath);
 	f = fopen(fileName, "rb");
-        fseek(f, 0, SEEK_END);
-        len = ftell(f);
-        fseek(f, 0, SEEK_SET);
-	unsigned int shellcode[len >> 2];
-	fread(&shellcode[0], 4, len >> 2, f);
-	fclose(f);
-	for (j = 0; j < (len >> 2); j++) {
-		shellcode[j] = le32toh(shellcode[j]);
-		ropCall3(dscs + offsets->_dsc_syscall, 309, SHELLCODE_ADDR + (j << 2) - 4, shellcode[j]);
+	if (f) {
+		fseek(f, 0, SEEK_END);
+		len = ftell(f);
+		fseek(f, 0, SEEK_SET);
+		unsigned int shellcode[len >> 2];
+		fread(&shellcode[0], 4, len >> 2, f);
+		fclose(f);
+		for (j = 0; j < (len >> 2); j++) {
+			shellcode[j] = le32toh(shellcode[j]);
+			ropCall3(dscs + offsets->_dsc_syscall, 309, SHELLCODE_ADDR + (j << 2) - 4, shellcode[j]);
+		}
+	} else {
+		fprintf(stderr, "Error opening '%s'\n", fileName);
 	}
 
 	// sb_evaluate hooker
 	snprintf(fileName, sizeof(fileName), "%s/sb_evaluatehooker.bin", dataPath);
 	f = fopen(fileName, "rb");
-        fseek(f, 0, SEEK_END);
-        len = ftell(f);
-        fseek(f, 0, SEEK_SET);
-	unsigned int sb_evaluatehooker[len >> 2];
-	fread(&sb_evaluatehooker[0], 4, len >> 2, f);
-	fclose(f);
-	for (j = 0; j < (len >> 2); j++) {
-		sb_evaluatehooker[j] = le32toh(sb_evaluatehooker[j]);
-		ropCall3(dscs + offsets->_dsc_syscall, 309, SB_EVALUATEHOOKER_ADDR + (j << 2) - 4, sb_evaluatehooker[j]);
+	if (f) {
+		fseek(f, 0, SEEK_END);
+		len = ftell(f);
+		fseek(f, 0, SEEK_SET);
+		unsigned int sb_evaluatehooker[len >> 2];
+		fread(&sb_evaluatehooker[0], 4, len >> 2, f);
+		fclose(f);
+		for (j = 0; j < (len >> 2); j++) {
+			sb_evaluatehooker[j] = le32toh(sb_evaluatehooker[j]);
+			ropCall3(dscs + offsets->_dsc_syscall, 309, SB_EVALUATEHOOKER_ADDR + (j << 2) - 4, sb_evaluatehooker[j]);
+		}
+	} else {
+		fprintf(stderr, "Error opening '%s'\n", fileName);
 	}
 
 	// sb_evaluate hook
 	snprintf(fileName, sizeof(fileName), "%s/sb_evaluatehook.bin", dataPath);
 	f = fopen(fileName, "rb");
-        fseek(f, 0, SEEK_END);
-        len = ftell(f);
-        fseek(f, 0, SEEK_SET);
-	unsigned int sb_evaluatehook[len >> 2];
-	fread(&sb_evaluatehook[0], 4, len >> 2, f);
-	fclose(f);
-	for (j = 0; j < (len >> 2); j++) {
-		sb_evaluatehook[j] = le32toh(sb_evaluatehook[j]);
-		ropCall3(dscs + offsets->_dsc_syscall, 309, SB_EVALUATEHOOK_ADDR + (j << 2) - 4, sb_evaluatehook[j]);
+	if (f) {
+		fseek(f, 0, SEEK_END);
+		len = ftell(f);
+		fseek(f, 0, SEEK_SET);
+		unsigned int sb_evaluatehook[len >> 2];
+		fread(&sb_evaluatehook[0], 4, len >> 2, f);
+		fclose(f);
+		for (j = 0; j < (len >> 2); j++) {
+			sb_evaluatehook[j] = le32toh(sb_evaluatehook[j]);
+			ropCall3(dscs + offsets->_dsc_syscall, 309, SB_EVALUATEHOOK_ADDR + (j << 2) - 4, sb_evaluatehook[j]);
+		}
+	} else {
+		fprintf(stderr, "Error opening '%s'\n", fileName);
 	}
 
 	// invalidate all dcache
