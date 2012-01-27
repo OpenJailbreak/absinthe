@@ -91,6 +91,18 @@
 #define be64toh htobe64
 #endif
 
+#ifndef le32toh
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+#define le32toh(x) (x)
+#else
+#define le32toh(x) __bswap_32(x)
+#endif
+#endif
+
+#ifndef htole32
+#define htole32 le32toh
+#endif
+
 #ifndef le64toh
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define le64toh(x) (x)
