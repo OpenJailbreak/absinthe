@@ -62,6 +62,7 @@ case "$host_os" in
 		SYSTYPE=linux.x86_64
 		ACCFLAGS="-fPIC -I\$(top_srcdir)/include -DLIBXML_STATIC=1 -g -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES "
 		ACSHAREDLIBS+="-lpthread -lz -lm -lssl -lcrypto"
+		ACLDFLAGS+="-s"
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
 			-DwxDEBUG_LEVEL=0 \
@@ -77,6 +78,7 @@ case "$host_os" in
 		SYSTYPE=linux
 		ACCFLAGS+="-fPIC "
 		ACSHAREDLIBS+="-lpthread -lz -lm -lssl -lcrypto"
+		ACLDFLAGS+="-s"
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
 			-DwxDEBUG_LEVEL=0 \
@@ -94,6 +96,7 @@ case "$host_os" in
 		SYSTYPE=win32
 		ACCFLAGS+="-DWIN32 "
 		ACSHAREDLIBS+="-lz -lm -lws2_32 -lgdi32 -lole32 "
+		ACLDFLAGS+="-s"
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-D_WIN32 -D__LITTLE_ENDIAN__=1 \
 			-DCURL_PULL_WS2TCPIP_H=1 \
@@ -128,7 +131,7 @@ GLOBAL_LIBS=" \
 "
 AC_SUBST(GLOBAL_LIBS)
 
-GLOBAL_LDFLAGS="-static-libgcc"
+GLOBAL_LDFLAGS="-static-libgcc $ACLDFLAGS"
 AC_SUBST(GLOBAL_LDFLAGS)
 
 GUI_CFLAGS=$ACGUI_CFLAGS
