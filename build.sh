@@ -114,6 +114,9 @@ case `uname` in
 	;;
 esac
 
+# copy changelog
+cp changelog.txt $GUIDEST/
+
 mkdir -p $CLIDEST/data/common/corona
 mkdir -p $GUIDEST/data/common/corona
 
