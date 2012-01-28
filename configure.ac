@@ -40,7 +40,7 @@ case "$host_os" in
 		else
 		SYSTYPE=osx
 		ACCFLAGS+="-fPIC -arch i386 "
-		ACSHAREDLIBS+="-lpthread -lz -lm -liconv "
+		ACSHAREDLIBS+="-lpthread -lz -lm -liconv -lssl -lcrypto "
 		ACLDFLAGS+="-arch i386 "
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
@@ -53,7 +53,6 @@ case "$host_os" in
 			$LIBSDIR/libwx_baseu-2.9.a \
 			$LIBSDIR/libwx_osx_cocoau_core-2.9.a \
 			-framework IOKit -framework Carbon -framework Cocoa -framework QuickTime -framework OpenGL -framework System -framework Security"
-		OPENSSL_STATIC="$LIBSDIR/libssl.a $LIBSDIR/libcrypto.a"
 		fi
 	;;
 	linux*)
