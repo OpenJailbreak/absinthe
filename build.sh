@@ -42,6 +42,7 @@ if [ "x$do_osx_10_5" = "xyes" ]; then
     exit 1
   fi
   cp gui/absinthe absinthe-10.5
+  cp src/absinthe absinthe-cli-10.5
   make clean
   ./autogen.sh
 fi
