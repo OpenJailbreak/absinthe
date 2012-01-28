@@ -122,11 +122,13 @@ esac
 
 # copy changelog
 cp changelog.txt build/absinthe/$PKGNAME/
+cp readme.txt build/absinthe/$PKGNAME/
 
 case `uname` in
 	MINGW*)
 		# convert LF to CRLF
 		conv --u2d $GUIDEST/changelog.txt
+		conv --u2d $GUIDEST/readme.txt
 	;;
 	*)
 	;;
