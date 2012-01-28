@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "x$1" = "xclean" ]; then
-  rm -f build
+  rm -rf build
   make clean
 fi
 
@@ -12,15 +12,20 @@ fi
 do_linux_x86_64=no
 do_osx_10_5=no
 
+VER=`grep ABSINTHE_VERSION_STRING src/version.h |cut -d " " -f 3 |sed 's/"//g'`
+PKGNAME=absinthe-$VER
+
 case `uname` in
 	Darwin*)
 	rm -f absinthe-10.5
 	if test -d "/Developer/SDKs/MacOSX10.5.sdk"; then
 		do_osx_10_5=yes
 	fi
+	PKGNAME=absinthe-mac-$VER
 	;;
 	MINGW*)
 	windres resources/win32/res.rc -O coff gui/win32res.o
+	PKGNAME=absinthe-win-$VER
 	;;
 	Linux*)
 	rm -f absinthe.x86_64 absinthe-cli.x86_64
@@ -30,6 +35,7 @@ case `uname` in
 		./autogen.sh
 		make clean
 	fi
+	PKGNAME=absinthe-linux-$VER
 	;;
 esac
 
@@ -65,13 +71,13 @@ if ! make; then
 fi
 
 CLIDEST=build/absinthe/cli
-GUIDEST=build/absinthe/gui
+GUIDEST=build/absinthe/$PKGNAME
 
 mkdir -p $CLIDEST
 mkdir -p $GUIDEST
 
 case `uname` in
-	Darwin)
+	Darwin*)
 	OSX_BUNDLE_NAME=Absinthe
 	cp src/absinthe build/absinthe/cli/
 	mkdir -p $GUIDEST/${OSX_BUNDLE_NAME}.app/Contents/MacOS
@@ -92,7 +98,7 @@ case `uname` in
 	#cp gui/absinthe $GUIDEST/${OSX_BUNDLE_NAME}_
 	#cp resources/osx/launcher $GUIDEST/${OSX_BUNDLE_NAME}
 	;;
-	Linux)
+	Linux*)
 	cp src/absinthe $CLIDEST/
 	if test -f absinthe-cli.x86_64; then
  		cp absinthe-cli.x86_64 $CLIDEST/absinthe.x86_64
@@ -115,7 +121,16 @@ case `uname` in
 esac
 
 # copy changelog
-cp changelog.txt $GUIDEST/
+cp changelog.txt build/absinthe/$PKGNAME/
+
+case `uname` in
+	MINGW*)
+		# convert LF to CRLF
+		conv --u2d $GUIDEST/changelog.txt
+	;;
+	*)
+	;;
+esac
 
 mkdir -p $CLIDEST/data/common/corona
 mkdir -p $GUIDEST/data/common/corona
