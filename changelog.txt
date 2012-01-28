@@ -8,7 +8,7 @@ Version 0.3
 ~~~~~~~~~~~
 - first public Linux x86/x86_64 release
 - Windows: fixed possible bug in payload generation
-- small additions and changes to the text instructions (e.g. 'Absinthe' icon instead 'Jailbreak' icon)
+- small additions and changes to the text instructions (e.g. 'Absinthe' icon instead of 'Jailbreak' icon)
 
 Version 0.2
 ~~~~~~~~~~~
