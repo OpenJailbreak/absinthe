@@ -789,10 +789,22 @@ static int mb2_handle_receive_files(plist_t message, const char *backup_dir)
 			break;
 		r = 0;
 		mobilebackup2_receive_raw(mobilebackup2, (char*)&nlen, 4, &r);
+		int fc = 20;
+		while ((r == 0) && (fc-- >= 0) && !quit_flag) {
+			sleep(1);
+			mobilebackup2_receive_raw(mobilebackup2, (char*)&nlen, 4, &r);
+		}
+		if (r == 0) {
+			printf("ERROR: timeout waiting for file data!\n", __func__);
+			break;
+		}
 		nlen = be32toh(nlen);
 		if (nlen == 0) {
 			// we're done here
 			break;
+		} else if (nlen == 16777216) {
+			// hm. does that mean wait a second?
+			continue;
 		} else if (nlen > 4096) {
 			// too very long path
 			printf("ERROR: %s: too long device filename (%d)!\n", __func__, nlen);
