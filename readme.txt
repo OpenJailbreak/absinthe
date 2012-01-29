@@ -30,7 +30,7 @@ SUPPORTED DEVICES/FIRMWARE:
 
 USAGE: (MacOSX, Windows & Linux)
 
-1. Always backup your device before you start.
+1. Always backup your device before you start. Remove the passcode lock and make sure you do not have a backup password set.
 2. Unzip/extract the absinthe .zip package to a directory easy to find. 
 3. Double click the absinthe icon to launch the application.
 4. Connect your device via USB to your computer.
