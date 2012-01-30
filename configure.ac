@@ -27,13 +27,11 @@ case "$host_os" in
 	darwin*)
 		if test "x$BUILD_10_5" = "x1"; then
 		SYSTYPE=osx.10.5
-		ACCFLAGS+="-fPIC -arch i386 -arch ppc "
+		ACCFLAGS+="-fPIC -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 "
 		ACSHAREDLIBS+="-lpthread -lz -lm -liconv -lssl -lcrypto -lxml2 "
 		ACLDFLAGS="-arch i386 -arch ppc "
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
-		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
-                        -isysroot /Developer/SDKs/MacOSX10.5.sdk \
-			-mmacosx-version-min=10.5 \
+		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \ 
                         -DCURL_PULL_SYS_SOCKET_H \
                         -I/usr/lib/wx/include/mac-unicode-debug-2.8 -I/Developer/SDKs/MacOSX10.5.sdk/usr/include/wx-2.8 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -D__WXDEBUG__ -D__WXMAC__"
                 ACGUI_LDFLAGS+="-pthread -static-libstdc++"
