@@ -250,6 +250,21 @@ void AbsintheWorker::checkDevice()
 		int ready_to_go = 1;
 
 		plist_t pl = NULL;
+		lockdownd_get_value(client, NULL, "ActivationState", &pl);
+		if (pl && plist_get_node_type(pl) == PLIST_STRING) {
+			char* as = NULL;
+			plist_get_string_val(pl, &as);
+			plist_free(pl);
+			if (as) {
+				if (strcmp(as, "Unactivated") == 0) {
+					ready_to_go = 0;
+					mainwnd->msgBox(wxT("The attached device is not activated. You need to activate it before it can be used with Absinthe."), wxT("Error"), wxOK | wxICON_ERROR);
+				}
+				free(as);
+			}
+		}
+
+		pl = NULL;
 		lockdownd_get_value(client, "com.apple.mobile.backup", "WillEncrypt", &pl);
 		lockdownd_client_free(client);
 

@@ -267,6 +267,24 @@ int main(int argc, char* argv[]) {
 	}
 
 	plist_t pl = NULL;
+	lockdown_get_value(lockdown, NULL, "ActivationState", &pl);
+	if (pl && plist_get_node_type(pl) == PLIST_STRING) {
+		char* as = NULL;
+		plist_get_string_val(pl, &as);
+		plist_free(pl);
+		if (as) {
+			if (strcmp(as, "Unactivated") == 0) {
+				free(as);
+				error("Error: The attached device is not activated. You need to activate it before it can be used with Absinthe.\n");
+				lockdown_free(lockdown);
+				device_free(device);
+				return -1;
+			}
+			free(as);
+		}
+	}
+
+	pl = NULL;
 	lockdown_get_value(lockdown, "com.apple.mobile.backup", "WillEncrypt", &pl);
 	if (pl && plist_get_node_type(pl) == PLIST_BOOLEAN) {
 		char c = 0;
