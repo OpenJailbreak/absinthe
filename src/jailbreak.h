@@ -15,7 +15,7 @@ static struct dev_vmaddr devices_vmaddr_libcopyfile[] = {
 	// iOS 5.0
 	{ "iPhone4,1", "9A334", 0x36f60000 },
 	// iOS 5.0.1
-	//{ "iPad1,1", "9A405", 0x3012f000 },
+	{ "iPad1,1", "9A405", 0x3012f000 },
 	{ "iPad2,1", "9A405", 0x37d2a000 },
 	{ "iPad2,2", "9A405", 0x37bfc000 },
 	{ "iPad2,3", "9A405", 0x36c23000 },
