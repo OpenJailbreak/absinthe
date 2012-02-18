@@ -138,6 +138,7 @@ struct offsets
 
 enum
 {
+    iPad1_1,
     iPhone3_1,
     iPhone4_1,
     iPad2_1,
