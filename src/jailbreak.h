@@ -24,7 +24,7 @@ static struct dev_vmaddr devices_vmaddr_libcopyfile[] = {
 	{ "iPhone3,3", "9A405", 0x323b1000 },
 	{ "iPhone4,1", "9A405", 0x31f54000 },
 	{ "iPhone4,1", "9A406", 0x31cfb000 },
-	//{ "iPod3,1", "9A405", 0x35202000 },
+	{ "iPod3,1", "9A405", 0x35202000 },
 	//{ "iPod4,1", "9A405", 0x30c29000 },
 	{ NULL, NULL, 0 }
 };
