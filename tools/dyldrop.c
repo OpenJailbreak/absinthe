@@ -89,7 +89,8 @@ int main(int argc, char* argv[]) {
 		     "       %s <dyldcache> -s <symbol>\n"
 		     "       %s <dyldcache> -h PATH\n"
 		     "       %s <dyldcache> -S <symbol1> [<symbol2> ...]\n"
-		     "       %s <mach-o> <symbol>\n", name, name, name, name, name, name);
+		     "       %s <mach-o> -l\n"
+		     "       %s <mach-o> <symbol>\n", name, name, name, name, name, name, name);
 		return 0;
 	}
 
@@ -230,9 +231,14 @@ int main(int argc, char* argv[]) {
 		}
 		//macho_debug(dylib);
 
-		address = macho_lookup(macho, symbol);
-		if (address != 0) {
-			printf("#define %s (void*)0x%08x\n", symbol, address);
+		if (strcmp(symbol, "-l") == 0) {
+			macho_list_symbols(macho, print_sym, NULL);
+			address = 0;
+		} else {
+			address = macho_lookup(macho, symbol);
+			if (address != 0) {
+				printf("#define %s (void*)0x%08x\n", symbol, address);
+			}
 		}
 	}
 
