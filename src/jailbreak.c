@@ -1165,7 +1165,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 
 	sprintf(tmpfn, "data/%s/%s/corona/corona.tgz", build, product);
 	afc_upload_file(afc, tmpfn, "/corona");
-	sprintf(tmpfn, "data/%s/%s/corona/vnimage.clean", build, product);
+	sprintf(tmpfn, "data/common/corona/vnimage.clean", build, product);
 	afc_upload_file(afc, tmpfn, "/corona");
 	sprintf(tmpfn, "data/%s/%s/corona/vnimage.overflow", build, product);
 	afc_upload_file(afc, tmpfn, "/corona");
