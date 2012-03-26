@@ -180,6 +180,149 @@ const char* firmwares[MAX_FIRMWARE] =
     [FW9A406] = "9A406"
 };
 
+
+struct constants constants_bootstrap_iPad1_1_9A334 =
+{
+    .STRLEN_FILENAME = 29,
+
+    .P1 = 402,
+    .P2 = 619,
+    .P3 = 625,
+    //   p2 address: 0xXXXXXX[0c]
+    .P2_ADDR_LO = 0x0c,
+    .LR_ADDR_LO = 0x10,
+};
+
+struct constants constants_iPad1_1_9A334 =
+{
+    .STRLEN_FILENAME = 66,
+
+    .P1 = 402,
+    .P2 = 619,
+    .P3 = 625,
+    //   p2 address: 0xXXXXXX[2c]
+    .P2_ADDR_LO = 0x2c,
+    .LR_ADDR_LO = 0x30,
+};
+
+struct offsets offsets_iPad1_1_9A334 =
+{
+    // libsystem_kernel.dylib
+    ._dsc_open = 0x3573ddc4,
+    ._dsc_fstat = 0x3572e6f4,
+    ._dsc_chown = 0x35730518,
+    ._dsc_chmod = (0x3572fae0 + 1),
+    ._dsc_memcpy = (0x3572e98c + 1),
+    ._dsc_munmap = 0x3573dd68,
+    ._dsc_unlink = (0x3572feb4 + 1),
+    ._dsc_mkdir = 0x35730c34,
+    ._dsc_ftruncate = 0x35730ca0,
+    ._dsc_ioctl = (0x3572fbf8 + 1),
+    ._dsc_close = 0x3572e71c,
+    ._dsc_ptrace = 0x3573e394,
+    ._dsc_bsdthread_terminate = 0x3573d228,
+    ._dsc_shm_open = 0x357304a8,
+    ._dsc_mmap = (0x3572e658 + 1),
+    ._dsc_mach_task_self = (0x3573cd88 + 1),
+    ._dsc_mach_port_allocate = (0x3572ee44 + 1),
+    ._dsc_mach_port_insert_right = (0x3572ee70 + 1),
+    ._dsc_mach_msg = (0x3572e1d4 + 1),
+    ._dsc_mount = 0x3573f6e4,
+    ._dsc_unmount = 0x35740040,
+    ._dsc_syscall = 0x3573eafc,
+    ._dsc_psynch_rw_unlock = 0x3573e1a0,
+
+    // libsystem_c.dylib
+    ._dsc_fopen = (0x35757004 + 1),
+    ._dsc_fread = (0x3575d814 + 1),
+    ._dsc_fclose = (0x3575765c + 1),
+    ._dsc_exit = (0x357599d0 + 1),
+    ._dsc_syslog = (0x35751ad0 + 1),
+    ._dsc_sysctl = (0x3574ec64 + 1),
+    ._dsc_malloc = (0x3574e184 + 1),
+    ._dsc_memmem = (0x35767cf0 + 1),
+    ._dsc_sleep = (0x35765a54 + 1),
+    ._dsc_proc_pidinfo = (0x357564e0 + 1),
+    ._dsc_execl = (0x35779cac + 1),
+    ._dsc_strcpy = 0x35753d30,
+    ._dsc_sys_dcache_flush = 0x3575f80c,
+
+    // __aeabi_cdcmpeq+0x10
+    .LIBC_POP_R0 = 0x357be340,
+    // __aeabi_cfcmpeq+0x10
+    .LIBC_POP_R0123 = 0x357beb10,
+    // wctomb_l+0x4A
+    .LIBC_POP_R47 = (0x35771f3e + 1),
+    // wctomb_l+0x44
+    .LIBC_BLX_R4_POP_R47 = (0x35771f38 + 1),
+    // lockf$NOCANCEL+0x98
+    .LIBC_MOV_SP_R4__POP_R47 = (0x35777cd8 + 1),
+    // filesec_discard_aclbuf+0x26 
+    .LIBC_STR_R0_R4__POP_R47 = (0x3578b49a + 1),
+    // malloc_default_zone+0x24
+    .LIBC_LDR_R0_R0__POP_R7 = (0x357514b4 + 1),
+    // strvis+0x32
+    .LIBC_SUB_R0_R4__POP_R4567 = (0x35776246 + 1),
+    // pthread_mutex_lock+0x1B6
+    .GADGET_MOV_SP_R4_POP8_10_11_4567 = (0x35749c82 + 1),
+
+    // libicucore.A.dylib
+    // uloc_toLanguageTag+0x24B2
+    .GADGET_ADD_SP_120_POP8_10_4567 = (0x34cbfe2e + 1),
+
+    // libxml2.dylib
+    // xmlRegisterInputCallbacks+0x36
+    .GADGET_MOV_LR_R4_MOV_R0_LR_POP47 = (0x36f8001a + 1),
+
+    // liblaunch.dylib
+    ._dsc_bootstrap_look_up = (0x36695fe8 + 1),
+
+    // libdyld.dylib
+    ._dsc_dlsym = (0x30ea06ec + 1),
+
+    // libxpc.dylib
+    // ___create_with_format_and_arguments_block_invoke_4+0x2c
+    .LIBC_BLX_R4_POP_R457 = (0x3198539c + 1),
+
+    // /System/Library/Frameworks/CoreData.framework/CoreData
+    // _PF_SnowLeopard_CFBasicHashFold+0x78
+    .GADGET_SUBS_R0_R0_R1__POP7 = (0x358fd748 + 1),
+
+    // /System/Library/Frameworks/AudioToolbox.framework/AudioToolbox
+    // _ZN10NUMovieBox14GetTotalFramesEPS_+0xC
+    .GADGET_MOV_R1_R0__POP_R47 = (0x32a4d9cc + 1),
+
+    // /System/Library/Frameworks/AddressBook.framework/AddressBook
+    // _ABCGetISOCountryCodeFromAddressFormatPlistCountryCode+0x66
+    .GADGET_MOV_R0_R1__POP_R47 = (0x306c828a + 1),
+    // ABCMultiValueCopyLabelAtIndex+0x28
+    .GADGET_MOV_R0_R4__POP_R47 = (0x306cbd78 + 1),
+
+    // /System/Library/PrivateFrameworks/JavaScriptCore.framework/JavaScriptCore
+    // _ZN3JSCL20dateProtoFuncGetTimeEPNS_9ExecStateE+0x54
+    .GADGET_MOV_R1_R4__POP_R47 = (0x345ad0ec + 1),
+
+    // /System/Library/PrivateFrameworks/DataDetectorsCore.framework/DataDetectorsCore
+    // DDScannerGetMemoryUsed+0x28
+    .GADGET_ADD_R0_R0_R1__POP457 = 0x34c56ae8,
+
+    // /System/Library/PrivateFrameworks/VideoToolbox.framework/VideoToolbox
+    // vt_Copy_420f_420v_arm+0x220
+    // 35982100        e28dd008        add     sp, sp, #8      @ 0x8
+    // 35982104        ecbd8b08        vldmia  sp!, {d8-d11}
+    // 35982108        ecbdcb08        vldmia  sp!, {d12-d15}
+    // 3598210c        e8bd0d00        pop     {r8, sl, fp}
+    // 35982110        e8bd80f0        pop     {r4, r5, r6, r7, pc}
+    .GADGET_HOLY = 0x31b96100,
+
+    .ZFREE = (0x8002f3d0 + 1),
+    .SYSENT = 0x802ccbac,
+    .FLUSH_DCACHE_ALL = 0x80071b0c,
+    .INVALIDATE_ICACHE_ALL = 0x800719c4,
+    .SB_EVALUATE = (0x806030ec + 1)
+};
+
+
 struct constants constants_bootstrap_iPad1_1 =
 {
     .STRLEN_FILENAME = 29,
@@ -322,6 +465,148 @@ struct offsets offsets_iPad1_1 =
 };
 
 
+struct constants constants_bootstrap_iPhone2_1_9A334 =
+{
+    .STRLEN_FILENAME = 29,
+
+    .P1 = 402,
+    .P2 = 619,
+    .P3 = 625,
+    //   p2 address: 0xXXXXXX[0c]
+    .P2_ADDR_LO = 0x0c,
+    .LR_ADDR_LO = 0x10,
+};
+
+struct constants constants_iPhone2_1_9A334 =
+{
+    .STRLEN_FILENAME = 66,
+
+    .P1 = 402,
+    .P2 = 619,
+    .P3 = 625,
+    //   p2 address: 0xXXXXXX[2c]
+    .P2_ADDR_LO = 0x2c,
+    .LR_ADDR_LO = 0x30,
+};
+
+struct offsets offsets_iPhone2_1_9A334 =
+{
+    // libsystem_kernel.dylib
+    ._dsc_open = 0x30cc9dc4,
+    ._dsc_fstat = 0x30cba6f4,
+    ._dsc_chown = 0x30cbc518,
+    ._dsc_chmod = (0x30cbbae0 + 1),
+    ._dsc_memcpy = (0x30cba98c + 1),
+    ._dsc_munmap = 0x30cc9d68,
+    ._dsc_unlink = (0x30cbbeb4 + 1),
+    ._dsc_mkdir = 0x30cbcc34,
+    ._dsc_ftruncate = 0x30cbcca0,
+    ._dsc_ioctl = (0x30cbbbf8 + 1),
+    ._dsc_close = 0x30cba71c,
+    ._dsc_ptrace = 0x30cca394,
+    ._dsc_bsdthread_terminate = 0x30cc9228,
+    ._dsc_shm_open = 0x30cbc4a8,
+    ._dsc_mmap = (0x30cba658 + 1),
+    ._dsc_mach_task_self = (0x30cc8d88 + 1),
+    ._dsc_mach_port_allocate = (0x30cbae44 + 1),
+    ._dsc_mach_port_insert_right = (0x30cbae70 + 1),
+    ._dsc_mach_msg = (0x30cba1d4 + 1),
+    ._dsc_mount = 0x30ccb6e4,
+    ._dsc_unmount = 0x30ccc040,
+    ._dsc_syscall = 0x30ccaafc,
+    ._dsc_psynch_rw_unlock = 0x30cca1a0,
+
+    // libsystem_c.dylib
+    ._dsc_fopen = (0x33770004 + 1),
+    ._dsc_fread = (0x33776814 + 1),
+    ._dsc_fclose = (0x3377065c + 1),
+    ._dsc_exit = (0x337729d0 + 1),
+    ._dsc_syslog = (0x3376aad0 + 1),
+    ._dsc_sysctl = (0x33767c64 + 1),
+    ._dsc_malloc = (0x33767184 + 1),
+    ._dsc_memmem = (0x33780cf0 + 1),
+    ._dsc_sleep = (0x3377ea54 + 1),
+    ._dsc_proc_pidinfo = (0x3376f4e0 + 1),
+    ._dsc_execl = (0x33792cac + 1),
+    ._dsc_strcpy = 0x3376cd30,
+    ._dsc_sys_dcache_flush = 0x3377880c,
+
+    // __aeabi_cdcmpeq+0x10
+    .LIBC_POP_R0 = 0x337d7340,
+    // __aeabi_cfcmpeq+0x10
+    .LIBC_POP_R0123 = 0x337d7b10,
+    // wctomb_l+0x4A
+    .LIBC_POP_R47 = (0x3378af3e + 1),
+    // wctomb_l+0x44
+    .LIBC_BLX_R4_POP_R47 = (0x3378af38 + 1),
+    // lockf$NOCANCEL+0x98
+    .LIBC_MOV_SP_R4__POP_R47 = (0x33790cd8 + 1),
+    // filesec_discard_aclbuf+0x26 
+    .LIBC_STR_R0_R4__POP_R47 = (0x337a449a + 1),
+    // malloc_default_zone+0x24
+    .LIBC_LDR_R0_R0__POP_R7 = (0x3376a4b4 + 1),
+    // strvis+0x32
+    .LIBC_SUB_R0_R4__POP_R4567 = (0x3378f246 + 1),
+    // pthread_mutex_lock+0x1B6
+    .GADGET_MOV_SP_R4_POP8_10_11_4567 = (0x33762c82 + 1),
+
+    // libicucore.A.dylib
+    // uloc_toLanguageTag+0x24B2
+    .GADGET_ADD_SP_120_POP8_10_4567 = (0x37a00e2e + 1),
+
+    // libxml2.dylib
+    // xmlRegisterInputCallbacks+0x36
+    .GADGET_MOV_LR_R4_MOV_R0_LR_POP47 = (0x362b701a + 1),
+
+    // liblaunch.dylib
+    ._dsc_bootstrap_look_up = (0x35d68fe8 + 1),
+
+    // libdyld.dylib
+    ._dsc_dlsym = (0x356dc6ec + 1),
+
+    // libxpc.dylib
+    // ___create_with_format_and_arguments_block_invoke_4+0x2c
+    .LIBC_BLX_R4_POP_R457 = (0x36eaf39c + 1),
+
+    // /System/Library/Frameworks/CoreData.framework/CoreData
+    // _PF_SnowLeopard_CFBasicHashFold+0x78
+    .GADGET_SUBS_R0_R0_R1__POP7 = (0x36fc5748 + 1),
+
+    // /System/Library/Frameworks/AudioToolbox.framework/AudioToolbox
+    // _ZN10NUMovieBox14GetTotalFramesEPS_+0xC
+    .GADGET_MOV_R1_R0__POP_R47 = (0x31a209cc + 1),
+
+    // /System/Library/Frameworks/AddressBook.framework/AddressBook
+    // _ABCGetISOCountryCodeFromAddressFormatPlistCountryCode+0x66
+    .GADGET_MOV_R0_R1__POP_R47 = (0x3663228a + 1),
+    // ABCMultiValueCopyLabelAtIndex+0x28
+    .GADGET_MOV_R0_R4__POP_R47 = (0x36635d78 + 1),
+
+    // /System/Library/PrivateFrameworks/JavaScriptCore.framework/JavaScriptCore
+    // _ZN3JSCL20dateProtoFuncGetTimeEPNS_9ExecStateE+0x54
+    .GADGET_MOV_R1_R4__POP_R47 = (0x32b0e0ec + 1),
+
+    // /System/Library/PrivateFrameworks/DataDetectorsCore.framework/DataDetectorsCore
+    // DDScannerGetMemoryUsed+0x28
+    .GADGET_ADD_R0_R0_R1__POP457 = 0x3002aae8,
+
+    // /System/Library/PrivateFrameworks/VideoToolbox.framework/VideoToolbox
+    // vt_Copy_420f_420v_arm+0x220
+    // 35982100        e28dd008        add     sp, sp, #8      @ 0x8
+    // 35982104        ecbd8b08        vldmia  sp!, {d8-d11}
+    // 35982108        ecbdcb08        vldmia  sp!, {d12-d15}
+    // 3598210c        e8bd0d00        pop     {r8, sl, fp}
+    // 35982110        e8bd80f0        pop     {r4, r5, r6, r7, pc}
+    .GADGET_HOLY = 0x36469100,
+
+    .ZFREE = (0x8002f3d0 + 1),
+    .SYSENT = 0x802ccbac,
+    .FLUSH_DCACHE_ALL = 0x80071198,
+    .INVALIDATE_ICACHE_ALL = 0x80071b88,
+    .SB_EVALUATE = (0x805780ec + 1)
+};
+
+
 struct constants constants_bootstrap_iPhone2_1 =
 {
     .STRLEN_FILENAME = 29,
@@ -461,6 +746,148 @@ struct offsets offsets_iPhone2_1 =
     .FLUSH_DCACHE_ALL = 0x80071b0c,
     .INVALIDATE_ICACHE_ALL = 0x800719c4,
     .SB_EVALUATE = (0x805780ec + 1)
+};
+
+
+struct constants constants_bootstrap_iPhone3_1_9A334 =
+{
+    .STRLEN_FILENAME = 29,
+
+    .P1 = 402,
+    .P2 = 619,
+    .P3 = 625,
+    //   p2 address: 0xXXXXXX[0c]
+    .P2_ADDR_LO = 0x0c,
+    .LR_ADDR_LO = 0x10,
+};
+
+struct constants constants_iPhone3_1_9A334 =
+{
+    .STRLEN_FILENAME = 66,
+
+    .P1 = 402,
+    .P2 = 619,
+    .P3 = 625,
+    //   p2 address: 0xXXXXXX[2c]
+    .P2_ADDR_LO = 0x2c,
+    .LR_ADDR_LO = 0x30,
+};
+
+struct offsets offsets_iPhone3_1_9A334 =
+{
+    // libsystem_kernel.dylib
+    ._dsc_open = 0x31d5ddc4,
+    ._dsc_fstat = 0x31d4e6f4,
+    ._dsc_chown = 0x31d50518,
+    ._dsc_chmod = (0x31d4fae0 + 1),
+    ._dsc_memcpy = (0x31d4e98c + 1),
+    ._dsc_munmap = 0x31d5dd68,
+    ._dsc_unlink = (0x31d4feb4 + 1),
+    ._dsc_mkdir = 0x31d50c34,
+    ._dsc_ftruncate = 0x31d50ca0,
+    ._dsc_ioctl = (0x31d4fbf8 + 1),
+    ._dsc_close = 0x31d4e71c,
+    ._dsc_ptrace = 0x31d5e394,
+    ._dsc_bsdthread_terminate = 0x31d5d228,
+    ._dsc_shm_open = 0x31d504a8,
+    ._dsc_mmap = (0x31d4e658 + 1),
+    ._dsc_mach_task_self = (0x31d5cd88 + 1),
+    ._dsc_mach_port_allocate = (0x31d4ee44 + 1),
+    ._dsc_mach_port_insert_right = (0x31d4ee70 + 1),
+    ._dsc_mach_msg = (0x31d4e1d4 + 1),
+    ._dsc_mount = 0x31d5f6e4,
+    ._dsc_unmount = 0x31d60040,
+    ._dsc_syscall = 0x31d5eafc,
+    ._dsc_psynch_rw_unlock = 0x31d5e1a0,
+
+    // libsystem_c.dylib
+    ._dsc_fopen = (0x36217004 + 1),
+    ._dsc_fread = (0x3621d814 + 1),
+    ._dsc_fclose = (0x3621765c + 1),
+    ._dsc_exit = (0x362199d0 + 1),
+    ._dsc_syslog = (0x36211ad0 + 1),
+    ._dsc_sysctl = (0x3620ec64 + 1),
+    ._dsc_malloc = (0x3620e184 + 1),
+    ._dsc_memmem = (0x36227cf0 + 1),
+    ._dsc_sleep = (0x36225a54 + 1),
+    ._dsc_proc_pidinfo = (0x362164e0 + 1),
+    ._dsc_execl = (0x36239cac + 1),
+    ._dsc_strcpy = 0x36213d30,
+    ._dsc_sys_dcache_flush = 0x3621f80c,
+
+    // __aeabi_cdcmpeq+0x10
+    .LIBC_POP_R0 = 0x3627e340,
+    // __aeabi_cfcmpeq+0x10
+    .LIBC_POP_R0123 = 0x3627eb10,
+    // wctomb_l+0x4A
+    .LIBC_POP_R47 = (0x36231f3e + 1),
+    // wctomb_l+0x44
+    .LIBC_BLX_R4_POP_R47 = (0x36231f38 + 1),
+    // lockf$NOCANCEL+0x98
+    .LIBC_MOV_SP_R4__POP_R47 = (0x36237cd8 + 1),
+    // filesec_discard_aclbuf+0x26 
+    .LIBC_STR_R0_R4__POP_R47 = (0x3624b49a + 1),
+    // malloc_default_zone+0x24
+    .LIBC_LDR_R0_R0__POP_R7 = (0x362114b4 + 1),
+    // strvis+0x32
+    .LIBC_SUB_R0_R4__POP_R4567 = (0x36236246 + 1),
+    // pthread_mutex_lock+0x1B6
+    .GADGET_MOV_SP_R4_POP8_10_11_4567 = (0x36209c82 + 1),
+
+    // libicucore.A.dylib
+    // uloc_toLanguageTag+0x24B2
+    .GADGET_ADD_SP_120_POP8_10_4567 = (0x36079e2e + 1),
+
+    // libxml2.dylib
+    // xmlRegisterInputCallbacks+0x36
+    .GADGET_MOV_LR_R4_MOV_R0_LR_POP47 = (0x33a0001a + 1),
+
+    // liblaunch.dylib
+    ._dsc_bootstrap_look_up = (0x36a91fe8 + 1),
+
+    // libdyld.dylib
+    ._dsc_dlsym = (0x35c706ec + 1),
+
+    // libxpc.dylib
+    // ___create_with_format_and_arguments_block_invoke_4+0x2c
+    .LIBC_BLX_R4_POP_R457 = (0x3509939c + 1),
+
+    // /System/Library/Frameworks/CoreData.framework/CoreData
+    // _PF_SnowLeopard_CFBasicHashFold+0x78
+    .GADGET_SUBS_R0_R0_R1__POP7 = (0x34ba2748 + 1),
+
+    // /System/Library/Frameworks/AudioToolbox.framework/AudioToolbox
+    // _ZN10NUMovieBox14GetTotalFramesEPS_+0xC
+    .GADGET_MOV_R1_R0__POP_R47 = (0x334a19cc + 1),
+
+    // /System/Library/Frameworks/AddressBook.framework/AddressBook
+    // _ABCGetISOCountryCodeFromAddressFormatPlistCountryCode+0x66
+    .GADGET_MOV_R0_R1__POP_R47 = (0x3258e28a + 1),
+    // ABCMultiValueCopyLabelAtIndex+0x28
+    .GADGET_MOV_R0_R4__POP_R47 = (0x32591d78 + 1),
+
+    // /System/Library/PrivateFrameworks/JavaScriptCore.framework/JavaScriptCore
+    // _ZN3JSCL20dateProtoFuncGetTimeEPNS_9ExecStateE+0x54
+    .GADGET_MOV_R1_R4__POP_R47 = (0x36e8d0ec + 1),
+
+    // /System/Library/PrivateFrameworks/DataDetectorsCore.framework/DataDetectorsCore
+    // DDScannerGetMemoryUsed+0x28
+    .GADGET_ADD_R0_R0_R1__POP457 = 0x36b98ae8,
+
+    // /System/Library/PrivateFrameworks/VideoToolbox.framework/VideoToolbox
+    // vt_Copy_420f_420v_arm+0x220
+    // 35982100        e28dd008        add     sp, sp, #8      @ 0x8
+    // 35982104        ecbd8b08        vldmia  sp!, {d8-d11}
+    // 35982108        ecbdcb08        vldmia  sp!, {d12-d15}
+    // 3598210c        e8bd0d00        pop     {r8, sl, fp}
+    // 35982110        e8bd80f0        pop     {r4, r5, r6, r7, pc}
+    .GADGET_HOLY = 0x355bd100,
+
+    .ZFREE = (0x8002f3d0 + 1),
+    .SYSENT = 0x802ccbac,
+    .FLUSH_DCACHE_ALL = 0x80071b0c,
+    .INVALIDATE_ICACHE_ALL = 0x800719c4,
+    .SB_EVALUATE = (0x805fb0ec + 1)
 };
 
 
@@ -1766,6 +2193,9 @@ struct offsets offsets_iPhone4_1_9A334 =
 struct constants* global_constants[MAX_FIRMWARE][MAX_DEVICE] =
 {
     [FW9A334] = {
+        [iPad1_1] = &constants_iPad1_1_9A334,
+        [iPhone2_1] = &constants_iPhone2_1_9A334,
+        [iPhone3_1] = &constants_iPhone3_1_9A334,
         [iPhone4_1] = &constants_iPhone4_1_9A334,
     },
 
@@ -1790,6 +2220,9 @@ struct constants* global_constants[MAX_FIRMWARE][MAX_DEVICE] =
 struct constants* global_constants_bootstrap[MAX_FIRMWARE][MAX_DEVICE] =
 {
     [FW9A334] = {
+        [iPad1_1] = &constants_bootstrap_iPad1_1_9A334,
+        [iPhone2_1] = &constants_bootstrap_iPhone2_1_9A334,
+        [iPhone3_1] = &constants_bootstrap_iPhone3_1_9A334,
         [iPhone4_1] = &constants_bootstrap_iPhone4_1_9A334,
     },
 
@@ -1814,6 +2247,9 @@ struct constants* global_constants_bootstrap[MAX_FIRMWARE][MAX_DEVICE] =
 struct offsets* global_offsets[MAX_FIRMWARE][MAX_DEVICE] =
 {
     [FW9A334] = {
+        [iPad1_1] = &offsets_iPad1_1_9A334,
+        [iPhone2_1] = &offsets_iPhone2_1_9A334,
+        [iPhone3_1] = &offsets_iPhone3_1_9A334,
         [iPhone4_1] = &offsets_iPhone4_1_9A334,
     },
 
