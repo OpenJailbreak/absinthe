@@ -55,7 +55,7 @@ static uint32_t get_virtual_address(macho_t* macho, uint32_t offset)
 	for (i = 0; i < macho->segment_count; i++) {
 		macho_segment_t* seg = macho->segments[i];
 		if ((offset >= seg->offset) && (offset < seg->offset + seg->size)) {
-			vaddr = offset + seg->address;
+			vaddr = (offset + seg->address) - seg->offset;
 			break;
 		}
 	}
