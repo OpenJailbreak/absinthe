@@ -69,12 +69,18 @@ static uint32_t get_libcopyfile_vmaddr(const char* product, const char* build)
 
 int jb_device_is_supported(const char* product, const char* build)
 {
-	uint32_t vmaddr = get_libcopyfile_vmaddr(product, build);
-	return (vmaddr != 0);
+	// FIXME TODO just for testing
+	//uint32_t vmaddr = get_libcopyfile_vmaddr(product, build);
+	//return (vmaddr != 0);
+	return 1;
 }
 
 int jb_check_consistency(const char* product, const char* build)
 {
+	if (strcmp(build, "9B176") == 0) {
+		// FIXME TODO fix me!
+		return 0;
+	}
 	return fsgen_check_consistency(build, product);
 }
 
@@ -586,6 +592,40 @@ static void afc_free_dictionary(char **dictionary) //ghetto i know, not sure whe
 	free(dictionary);
 }
 
+static void move_back_files_afc(afc_client_t afc)
+{
+	char** list = NULL;
+	if (afc_read_directory(afc, "/"AFCTMP, &list) != AFC_E_SUCCESS) {
+		//fprintf(stderr, "Uh, oh, the folder '%s' does not exist or is not accessible...\n", AFCTMP);
+	}
+
+	int i = 0;
+	while (list && list[i]) {
+		if (!strcmp(list[i], ".") || !strcmp(list[i], "..")) {
+			i++;
+			continue;
+		}
+
+		char* tmpname = (char*)malloc(1+strlen(list[i])+1);
+		strcpy(tmpname, "/");
+		strcat(tmpname, list[i]);
+		rmdir_recursive_afc(afc, tmpname, 1);
+
+		char* tmxname = (char*)malloc(1+strlen(AFCTMP)+1+strlen(list[i])+1);
+		strcpy(tmxname, "/"AFCTMP"/");
+		strcat(tmxname, list[i]);
+
+		debug("moving %s to %s\n", tmxname, tmpname);
+		afc_rename_path(afc, tmxname, tmpname);
+
+		free(tmxname);
+		free(tmpname);
+
+		i++;
+	}
+	free_dictionary(list);
+}
+
 int jailbreak(const char* uuid, status_cb_t status_cb) {
         char backup_directory[1024];
         tmpnam(backup_directory);
@@ -646,18 +686,22 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
-	// get libcopyfile_vmaddr
-	uint32_t libcopyfile_vmaddr = get_libcopyfile_vmaddr(product, build);
-	if (libcopyfile_vmaddr == 0) {
-		debug("Error: device %s build %s is not supported.\n", product, build);
-		status_cb("Sorry, your device is not supported.", 0);
-		free(product);
-		free(build);
-		device_free(device);
-		return -1;
-	}
+	int IOS_5_1 = (strcmp(build, "9B176") == 0);
 
-	debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
+	// get libcopyfile_vmaddr
+	uint32_t libcopyfile_vmaddr = 0;
+	if (!IOS_5_1) {
+		libcopyfile_vmaddr = get_libcopyfile_vmaddr(product, build);
+		if (libcopyfile_vmaddr == 0) {
+			debug("Error: device %s build %s is not supported.\n", product, build);
+			status_cb("Sorry, your device is not supported.", 0);
+			free(product);
+			free(build);
+			device_free(device);
+			return -1;
+		}
+		debug("Found libcopyfile.dylib address in database of 0x%x\n", libcopyfile_vmaddr);
+	}
 
 	status_cb("Beginning jailbreak, this may take a while...", 2);
 
@@ -665,6 +709,8 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	/* start AFC and move dirs out of the way */
 	/********************************************************/
 	uint16_t port = 0;
+	// FIXME TODO re-enable this later
+#if 0
 	if (lockdown_start_service(lockdown, "com.apple.afc2", &port) == 0) {
                 char **fileinfo = NULL;
                 uint32_t ffmt = 0;
@@ -709,6 +755,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	                afc_client_free(afc2);
                 }
 	}
+#endif
 
 	if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
 		status_cb("ERROR: Failed to start AFC service", 0);
@@ -740,11 +787,20 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		goto fix;
 	}
 
+	if (IOS_5_1) {
+		if (afc_make_link(afc, AFC_SYMLINK, "../../../db/launchd.db/com.apple.launchd", "/Books/fakedir") != AFC_E_SUCCESS) {
+			status_cb("ERROR: could not create link!", 0);
+			afc_client_free(afc);
+			device_free(device);
+			return -1;
+		}
+	}
+
 	status_cb(NULL, 6);
 	afc_make_directory(afc, "/"AFCTMP);
 
 	debug("moving dirs aside...\n");
-	afc_rename_path(afc, "/Books", "/"AFCTMP"/Books");
+	//afc_rename_path(afc, "/Books", "/"AFCTMP"/Books"); // seems to not break it if we leave it out!!!
 	afc_rename_path(afc, "/DCIM", "/"AFCTMP"/DCIM");
 	afc_rename_path(afc, "/PhotoData", "/"AFCTMP"/PhotoData");
 	afc_rename_path(afc, "/Photos", "/"AFCTMP"/Photos");
@@ -780,12 +836,41 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
+	status_cb("Preparing jailbreak data...", 20);
+	backup_file_t* bf = NULL;
+if (IOS_5_1) {
+	// add overrides.plist
+	char* buff = NULL;
+	int buffsize = 0;
+	file_read("data/common/overrides.plist", (unsigned char**)&buff, &buffsize);
+	bf = backup_file_create_with_data(buff, buffsize, 0);
+	if (bf) {
+		backup_file_set_domain(bf, "BooksDomain");
+		backup_file_set_path(bf, "fakedir/overrides.plist");
+		backup_file_set_mode(bf, 0100644);
+		backup_file_set_inode(bf, 54323);
+		backup_file_set_uid(bf, 0);
+		backup_file_set_gid(bf, 0);
+		unsigned int tm = (unsigned int)(time(NULL));
+		backup_file_set_time1(bf, tm);
+		backup_file_set_time2(bf, tm);
+		backup_file_set_time3(bf, tm);
+		backup_file_set_length(bf, buffsize);
+		backup_file_set_flag(bf, 4);
+		backup_file_update_hash(bf);
+
+		if (backup_update_file(backup, bf) < 0) {
+			fprintf(stderr, "ERROR: could not add file to backup\n");
+		}
+		backup_file_free(bf);
+		if (buff) {
+			free(buff);
+		}
+	}	
+} else {
 	/********************************************************/
 	/* add vpn on-demand connection to preferences.plist */
 	/********************************************************/
-	status_cb("Preparing jailbreak files...", 20);
-
-	backup_file_t* bf = NULL;
 	bf = backup_get_file(backup, "SystemPreferencesDomain", "SystemConfiguration/preferences.plist");
 	if (bf) {
 		char* fn = backup_get_file_path(backup, bf);
@@ -947,6 +1032,8 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	if (icon_data) {
 		free(icon_data);
 	}
+} // !IOS_5_1
+
 	backup_write_mbdb(backup);
 	backup_free(backup);
 
@@ -965,6 +1052,9 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	};
 	idevicebackup2(6, rargv);
 
+	if (IOS_5_1) {
+		rmdir_recursive(backup_directory);
+	}
 	status_cb("Waiting for reboot — not done yet, don't unplug your device yet!", 40);
 
 	/********************************************************/
@@ -985,16 +1075,53 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	status_cb("Connecting to device...\n", 50);
 	sleep(1);
 
-	/********************************************************/
-	/* wait for device to finish booting to springboard */
-	/********************************************************/
 	device = device_create(uuid);
 	if (!device) {
-		status_cb("ERROR: Could not connect to device. Aborting.", 0);
-		// we can't recover since the device connection failed...
+		status_cb("ERROR: Could not connect to device. Aborting.\n", 0);
 		return -1;
 	}
 
+if (IOS_5_1) {
+	/********************************************************/
+	/* 5.1: connect and move back dirs TODO: maybe do this on-device? */
+	/********************************************************/
+	lockdown = lockdown_open(device);
+	if (!lockdown) {
+		device_free(device);
+		status_cb("ERROR: Could not connect to lockdownd. Aborting.\n", 0);
+		return -1;
+	}
+
+	port = 0;
+	if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
+		lockdown_free(lockdown);
+		device_free(device);
+		status_cb("ERROR: Failed to start AFC service. Aborting.\n", 0);
+		return -1;
+	}
+	lockdown_free(lockdown);
+	lockdown = NULL;
+
+	afc_client_new(device->client, port, &afc);
+	if (!afc) {
+		status_cb("ERROR: Could not connect to AFC. Aborting.\n", 0);
+		goto leave;
+	}
+	debug("moving back files...\n");
+
+	status_cb("Moving back files...", 50);
+
+	// remove the link, we don't need it anymore
+	afc_remove_path(afc, "/Books/fakedir");
+
+	move_back_files_afc(afc);
+
+	afc_client_free(afc);
+	afc = NULL;
+}
+	/********************************************************/
+	/* wait for device to finish booting to springboard */
+	/********************************************************/
 	lockdown = lockdown_open(device);
 	if (!lockdown) {
 		device_free(device);
@@ -1040,6 +1167,44 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 
 	sleep(3);
 
+        char stage1_conf[1024];
+        char stage2_conf[1024];
+
+if (IOS_5_1) {
+	// TODO new iOS 5.1 stuff...
+	lockdown = lockdown_open(device);
+	if (!lockdown) {
+		device_free(device);
+		status_cb("ERROR: Could not connect to lockdownd. Aborting.\n", 0);
+		return -1;
+	}
+
+	port = 0;
+	if (lockdown_start_service(lockdown, "com.apple.afc", &port) != 0) {
+		lockdown_free(lockdown);
+		device_free(device);
+		status_cb("ERROR: Failed to start AFC service. Aborting.\n", 0);
+		return -1;
+	}
+	lockdown_free(lockdown);
+	lockdown = NULL;
+
+	afc_client_new(device->client, port, &afc);
+	if (!afc) {
+		status_cb("ERROR: Could not connect to AFC. Aborting.\n", 0);
+		goto leave;
+	}
+	debug("moving back files...\n");
+
+	move_back_files_afc(afc);
+
+	status_cb(NULL, 65);
+	afc_remove_path(afc, "/"AFCTMP);
+	if (afc_read_directory(afc, "/"AFCTMP, &list) == AFC_E_SUCCESS) {
+		fprintf(stderr, "WARNING: the folder /"AFCTMP" is still present in the user's Media folder. You have to check yourself for any leftovers and move them back if required.\n");
+	}
+
+} else {
         crashreport_t* crash = NULL;
         while(1)
         {
@@ -1096,9 +1261,6 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 
 	status_cb(NULL, 75);
 
-        char stage1_conf[1024];
-        char stage2_conf[1024];
-
         tmpnam(stage1_conf);
         tmpnam(stage2_conf);
 
@@ -1109,6 +1271,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	f = fopen(stage2_conf, "wb");
 	generate_rop(f, 1, build, product, pidlen, dscs);
 	fclose(f);
+} // !IOS_5_1
 
 	status_cb("Sending payload data, this may take a while... Do not touch your device yet!", 80);
 
@@ -1141,6 +1304,11 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
+if (IOS_5_1) {
+
+	// TODO iOS 5.1 payload data uploading
+
+} else {
 	// make sure directory exists
 	afc_make_directory(afc, "/corona");
 
@@ -1171,6 +1339,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	afc_upload_file(afc, tmpfn, "/corona");
 	sprintf(tmpfn, "data/%s/%s/corona/vnimage.payload", build, product);
 	afc_upload_file(afc, tmpfn, "/corona");
+} // !IOS_5_1
 
 	afc_client_free(afc);
 	afc = NULL;
@@ -1182,6 +1351,13 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	free(build);
 	build = NULL;
 
+if (IOS_5_1) {
+	// TODO iOS 5.1 postprocessing...
+
+
+
+	status_cb("Done, enjoy!", 100);
+} else {
 	/********************************************************/
 	/* add com.apple.ipsec.plist to backup */
 	/********************************************************/
@@ -1260,10 +1436,12 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	rmdir_recursive(backup_directory);
 
 	status_cb("Almost done – just unlock the screen if necessary, then tap the \"Absinthe\" icon to finish. (It might be on a different homescreen, so don't give up looking!)", 100);
+} // !IOS_5_1
 
 	goto leave;
 
 fix_all:
+	// NOTE: this is < iOS 5.1 only (doesn't get called from elsewhere)
 	/********************************************************/
 	/* Cleanup backup: remove VPN connection and webclip */
 	/********************************************************/
@@ -1412,36 +1590,7 @@ fix_all:
 
 	status_cb("Recovering files...", 65);
 
-	list = NULL;
-	if (afc_read_directory(afc, "/"AFCTMP, &list) != AFC_E_SUCCESS) {
-		error("Hmm... the folder '%s' does not exist or is not accessible...\n", AFCTMP);
-	}
-
-	i = 0;
-	while (list && list[i]) {
-		if (!strcmp(list[i], ".") || !strcmp(list[i], "..")) {
-			i++;
-			continue;
-		}
-
-		char* tmpname = (char*)malloc(1+strlen(list[i])+1);
-		strcpy(tmpname, "/");
-		strcat(tmpname, list[i]);
-		rmdir_recursive_afc(afc, tmpname, 1);
-
-		char* tmxname = (char*)malloc(1+strlen(AFCTMP)+1+strlen(list[i])+1);
-		strcpy(tmxname, "/"AFCTMP"/");
-		strcat(tmxname, list[i]);
-
-		debug("moving %s to %s\n", tmxname, tmpname);
-		afc_rename_path(afc, tmxname, tmpname);
-
-		free(tmxname);
-		free(tmpname);
-
-		i++;
-	}
-	free_dictionary(list);
+	move_back_files_afc(afc);
 
 	/********************************************************/
 	/* wait for device to finish booting to springboard */
@@ -1509,36 +1658,12 @@ fix:
 
 	status_cb(NULL, 90);
 
-	list = NULL;
-	if (afc_read_directory(afc, "/"AFCTMP, &list) != AFC_E_SUCCESS) {
-		//fprintf(stderr, "Uh, oh, the folder '%s' does not exist or is not accessible...\n", AFCTMP);
+	if (IOS_5_1) {
+		// remove the link
+		afc_remove_path(afc, "/Books/fakedir");
 	}
 
-	i = 0;
-	while (list && list[i]) {
-		if (!strcmp(list[i], ".") || !strcmp(list[i], "..")) {
-			i++;
-			continue;
-		}
-
-		char* tmpname = (char*)malloc(1+strlen(list[i])+1);
-		strcpy(tmpname, "/");
-		strcat(tmpname, list[i]);
-		rmdir_recursive_afc(afc, tmpname, 1);
-
-		char* tmxname = (char*)malloc(1+strlen(AFCTMP)+1+strlen(list[i])+1);
-		strcpy(tmxname, "/"AFCTMP"/");
-		strcat(tmxname, list[i]);
-
-		debug("moving %s to %s\n", tmxname, tmpname);
-		afc_rename_path(afc, tmxname, tmpname);
-
-		free(tmxname);
-		free(tmpname);
-
-		i++;
-	}
-	free_dictionary(list);
+	move_back_files_afc(afc);
 
 	status_cb(NULL, 95);
 	afc_remove_path(afc, "/"AFCTMP);

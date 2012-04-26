@@ -138,8 +138,10 @@ mkdir -p $CLIDEST/data/common/corona
 mkdir -p $GUIDEST/data/common/corona
 
 # common files
+cp data/common/overrides.plist $CLIDEST/data/common/
 cp data/common/webclip_icon*.png $CLIDEST/data/common/
 cp data/common/webclip_Info.plist $CLIDEST/data/common/
+cp data/common/overrides.plist $GUIDEST/data/common/
 cp data/common/webclip_icon*.png $GUIDEST/data/common/
 cp data/common/webclip_Info.plist $GUIDEST/data/common/
 

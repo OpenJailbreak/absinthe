@@ -5,7 +5,7 @@
 
 #include "AbsintheWorker.h"
 
-#define WND_TITLE "Chronic-Dev Absinthe"
+#define WND_TITLE "Chronic-Dev Absinthe 2.0"
 #define WND_WIDTH 480
 #define WND_HEIGHT 350
 
