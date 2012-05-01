@@ -2,7 +2,7 @@ AM_CFLAGS = $(GLOBAL_CFLAGS)
 AM_LDFLAGS = $(GLOBAL_LDFLAGS)
 AM_LDADD = $(GLOBAL_LIBS)
 
-bin_PROGRAMS = gizmo dyldrop pointingdb machoman mb2insert fsgen
+bin_PROGRAMS = gizmo dyldrop pointingdb machoman mb2insert fsgen decache
 
 gizmo_SOURCES = gizmo.c
 gizmo_CFLAGS = $(AM_CFLAGS) -I../src
@@ -62,3 +62,15 @@ fsgen_SOURCES = fsgen.c rop.c
 fsgen_CFLAGS = $(AM_CFLAGS) -I. -I../src
 fsgen_LDFLAGS = $(AM_LDFLAGS)
 fsgen_LDADD = $(AM_LDADD)
+
+decache_SOURCES = \
+				decache.c \
+				../src/file.c \
+				../src/common.c \
+				../src/dyldcache.c \
+				../src/dyldimage.c \
+				../src/dyldmap.c
+				
+decache_CFLAGS = $(AM_CFLAGS) -I. -I../src
+decache_LDFLAGS = $(AM_LDFLAGS)
+decache_LDADD = $(AM_LDADD)

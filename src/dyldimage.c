@@ -109,3 +109,10 @@ void dyldimage_info_debug(dyldimage_info_t* info) {
 		debug("\t\t\t    pad = 0x%08x\n", info->pad);
 	}
 }
+
+void dyldimage_save(dyldimage_t* image, const char* path) {
+	if(image != NULL && image->data != NULL && image->size > 0) {
+		printf("Writing dylib to %s\n", path);
+		file_write(path, image->data, image->size);
+	}
+}

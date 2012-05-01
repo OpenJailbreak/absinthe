@@ -49,6 +49,7 @@ typedef struct dyldimage_t {
  */
 dyldimage_t* dyldimage_create();
 dyldimage_t* dyldimage_parse(unsigned char* data, uint32_t offset);
+void dyldimage_save(dyldimage_t* image, const char* path);
 void dyldimage_free(dyldimage_t* image);
 void dyldimage_debug(dyldimage_t* image);
 

@@ -380,3 +380,19 @@ dyldmap_t* dyldcache_map_address(dyldcache_t* cache, uint64_t address) {
 	}
 	return NULL;
 }
+
+
+dyldimage_t* dyldcache_get_image(dyldcache_t* cache, const char* dylib) {
+	int i = 0;
+	dyldimage_t* image = NULL;
+	for(i = 0; i < cache->count; i++) {
+		image = cache->images[i];
+		if(image != NULL) {
+			printf("Found %s\n", image->name);
+			if(!strcmp(image->name, dylib)) {
+				return image;
+			}
+		}
+	}
+	return NULL;
+}
