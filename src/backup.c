@@ -251,6 +251,8 @@ int backup_update_file(backup_t* backup, backup_file_t* bfile)
 		}
 	} else if ((bfile->mbdb_record->mode) & 040000) {
 		// directory!
+	} else if ((bfile->mbdb_record->mode) & 020000) {
+		// symlink!
 	} else {
 		debug("%s: WARNING: file data not updated, no filename or data given\n", __func__);
 	}
