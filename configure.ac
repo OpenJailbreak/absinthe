@@ -70,7 +70,7 @@ case "$host_os" in
                 ACGUI_LDFLAGS+="-pthread -Wl,-Bsymbolic-functions -static-libstdc++"
                 ACGUI_LDADD+="$LIBSDIR/libwx_gtk2u_core-2.9.a \
 			$LIBSDIR/libwx_baseu-2.9.a \
-			-lpthread -lz -lm -lglib-2.0 -lgtk-x11-2.0"
+			-lpthread -lz -lm -lglib-2.0 -lgthread-2.0 -lgtk-x11-2.0"
 		;;
 		*)
 		SYSTYPE=linux
@@ -86,7 +86,7 @@ case "$host_os" in
 		ACGUI_LDFLAGS+="-pthread -Wl,-Bsymbolic-functions -L/lib32 -L/usr/lib32 -static-libstdc++"
 		ACGUI_LDADD+="$LIBSDIR/libwx_gtk2u_core-2.9.a \
 			$LIBSDIR/libwx_baseu-2.9.a \
-			-lpthread -lz -lm -lglib-2.0 -lgtk-x11-2.0"
+			-lpthread -lz -lm -lglib-2.0 -lgthread-2.0 -lgtk-x11-2.0"
 		;;
 		esac
 	;;
