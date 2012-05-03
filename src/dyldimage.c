@@ -116,3 +116,7 @@ void dyldimage_save(dyldimage_t* image, const char* path) {
 		file_write(path, image->data, image->size);
 	}
 }
+
+char* dyldimage_get_name(dyldimage_t* image) {
+	return image->name;
+}

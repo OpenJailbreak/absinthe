@@ -86,6 +86,8 @@ dyldcache_t* dyldcache_open(const char* path);
 dyldmap_t* dyldcache_map_image(dyldcache_t* cache, dyldimage_t* image);
 dyldmap_t* dyldcache_map_address(dyldcache_t* cache, uint64_t address);
 dyldimage_t* dyldcache_get_image(dyldcache_t* cache, const char* dylib);
+dyldimage_t* dyldcache_first_image(dyldcache_t* cache);
+dyldimage_t* dyldcache_next_image(dyldcache_t* cache, dyldimage_t* image);
 void dyldcache_debug(dyldcache_t* cache);
 void dyldcache_free(dyldcache_t* cache);
 

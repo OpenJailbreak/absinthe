@@ -396,3 +396,19 @@ dyldimage_t* dyldcache_get_image(dyldcache_t* cache, const char* dylib) {
 	}
 	return NULL;
 }
+
+dyldimage_t* dyldcache_first_image(dyldcache_t* cache) {
+	return cache->images[0];
+}
+
+dyldimage_t* dyldcache_next_image(dyldcache_t* cache, dyldimage_t* image) {
+	int i = 0;
+	dyldimage_t* next = NULL;
+	for(i = 0; i < cache->count; i++) {
+		if(cache->images[i] == image) {
+			next = cache->images[i+1];
+			break;
+		}
+	}
+	return next;
+}
