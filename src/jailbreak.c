@@ -763,6 +763,18 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		device_free(device);
 		return -1;
 	}
+
+	plist_t device_public_key = NULL;
+	if (IOS_5_1) {
+		lockdown_get_value(lockdown, NULL, "DevicePublicKey", &device_public_key);
+		if (!device_public_key || (plist_get_node_type(device_public_key) != PLIST_DATA)) {
+			status_cb("ERROR: Failed to get key", 0);
+			lockdown_free(lockdown);
+			device_free(device);
+			return -1;
+		}
+	}
+
 	lockdown_free(lockdown);
 	lockdown = NULL;
 
@@ -787,8 +799,17 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		goto fix;
 	}
 
+#define IOS_5_1_LOCKDOWN_INJECT_DIR ".tmpdir1"
+#define IOS_5_1_OVERRIDES_INJECT_DIR ".tmpdir2"
+
 	if (IOS_5_1) {
-		if (afc_make_link(afc, AFC_SYMLINK, "../../../db/launchd.db/com.apple.launchd", "/Books/fakedir") != AFC_E_SUCCESS) {
+		if (afc_make_link(afc, AFC_SYMLINK, "../../../root/Library/Lockdown", "/Books/" IOS_5_1_LOCKDOWN_INJECT_DIR) != AFC_E_SUCCESS) {
+			status_cb("ERROR: could not create link!", 0);
+			afc_client_free(afc);
+			device_free(device);
+			return -1;
+		}
+		if (afc_make_link(afc, AFC_SYMLINK, "../../../db/launchd.db/com.apple.launchd", "/Books/" IOS_5_1_OVERRIDES_INJECT_DIR) != AFC_E_SUCCESS) {
 			status_cb("ERROR: could not create link!", 0);
 			afc_client_free(afc);
 			device_free(device);
@@ -809,8 +830,6 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 
 	afc_client_free(afc);
 	afc = NULL;
-	device_free(device);
-	device = NULL;
 
 	status_cb(NULL, 8);
 
@@ -839,6 +858,175 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 	status_cb("Preparing jailbreak data...", 20);
 	backup_file_t* bf = NULL;
 if (IOS_5_1) {
+	bf = backup_file_create(NULL);
+	if (bf) {
+		backup_file_set_domain(bf, "BooksDomain");
+		backup_file_set_path(bf, IOS_5_1_LOCKDOWN_INJECT_DIR "/device_public_key.pem");
+		backup_file_set_target(bf, "/usr/sbin/racoon");
+		backup_file_set_mode(bf, 0120644);
+		backup_file_set_inode(bf, 54327);
+		backup_file_set_uid(bf, 0);
+		backup_file_set_gid(bf, 0);
+		unsigned int tm = (unsigned int)(time(NULL));
+		backup_file_set_time1(bf, tm);
+		backup_file_set_time2(bf, tm);
+		backup_file_set_time3(bf, tm);
+		backup_file_set_flag(bf, 0);
+
+		if (backup_update_file(backup, bf) < 0) {
+			fprintf(stderr, "ERROR: could not add file to backup\n");
+		}
+		backup_file_free(bf);
+	}
+
+	backup_write_mbdb(backup);
+	backup_free(backup);
+
+	/********************************************************/
+	/* restore backup WITHOUT rebooting */
+	/********************************************************/
+	status_cb("Sending stage1 data. Your device will appear to be restoring a backup, this may also take a while...", 30);
+	char* nargv[] = {
+		"idevicebackup2",
+		"restore",
+		"--system",
+		"--settings",
+		backup_directory,
+		NULL
+	};
+	idevicebackup2(5, nargv);
+
+	/********************************************************/
+	/* crash lockdownd */
+	/********************************************************/
+	idevice_connection_t conn = NULL;
+	if (idevice_connect(device->client, 0xf27e, &conn) != IDEVICE_E_SUCCESS) {
+		status_cb("ERROR: could not connect to lockdownd", 0);
+		device_free(device);
+		return -1;
+	}
+
+	plist_t crashme = plist_new_dict();
+	plist_dict_insert_item(crashme, "Request", plist_new_string("Pair"));
+	plist_dict_insert_item(crashme, "PairRecord", plist_new_bool(0));
+
+	char* cxml = NULL;
+	uint32_t clen = 0;
+
+	plist_to_xml(crashme, &cxml, &clen);
+	plist_free(crashme);
+	crashme = NULL;
+
+	uint32_t bytes = 0;
+	uint32_t nlen = htobe32(clen);
+	idevice_connection_send(conn, (const char*)&nlen, 4, &bytes);
+	idevice_connection_send(conn, cxml, clen, &bytes);
+	free(cxml);
+
+	int failed = 0;
+	bytes = 0;
+	clen = 65536;
+	cxml = NULL;
+	idevice_connection_receive_timeout(conn, (char*)&clen, 4, &bytes, 1500);
+	nlen = be32toh(clen);
+	if (nlen > 0) {
+		idevice_connection_receive_timeout(conn, cxml, nlen, &bytes, 5000);
+		if (bytes > 0) {
+			failed = 1;
+		}
+	}
+	idevice_disconnect(conn);
+	if (failed) {
+		status_cb("ERROR: could not stroke lockdownd", 0);
+		device_free(device);
+		return -1;
+	}
+
+	/********************************************************/
+	/* crash lockdownd */
+	/********************************************************/
+	lockdownd_client_t lckd = NULL;
+	lockdownd_client_new(device->client, &lckd, NULL);
+
+	plist_t racoon_plist = NULL;
+	lockdownd_get_value(lckd, NULL, "DevicePublicKey", &racoon_plist);
+	if (!racoon_plist || (plist_get_node_type(racoon_plist) != PLIST_DATA)) {
+		status_cb("ERROR: Failed to get racoon", 0);
+		lockdown_free(lockdown);
+		device_free(device);
+		return -1;
+	}
+
+	char* racoon_data = NULL;
+	uint64_t racoon_size = 0;
+	plist_get_data_val(racoon_plist, &racoon_data, &racoon_size);
+
+	device_free(device);
+	device = NULL;
+
+	backup = backup_open(backup_directory, uuid);
+	if (!backup) {
+		fprintf(stderr, "ERROR: failed to open backup\n");
+		return -1;
+	}
+
+	// restore device_public_key.pem
+	bf = backup_get_file(backup, "BooksDomain", IOS_5_1_LOCKDOWN_INJECT_DIR "/device_public_key.pem");
+	if (bf) {
+		char* key_data = NULL;
+		uint64_t key_size = 0;
+		plist_get_data_val(device_public_key, &key_data, &key_size);
+		backup_file_assign_file_data(bf, (unsigned char*)key_data, key_size, 0);
+		backup_file_set_target(bf, NULL);
+		backup_file_set_mode(bf, 0100644);
+		backup_file_set_inode(bf, 54327);
+		backup_file_set_uid(bf, 0);
+		backup_file_set_gid(bf, 0);
+		unsigned int tm = (unsigned int)(time(NULL));
+		backup_file_set_time1(bf, tm);
+		backup_file_set_time2(bf, tm);
+		backup_file_set_time3(bf, tm);
+		backup_file_set_length(bf, key_size);
+		backup_file_set_flag(bf, 4);
+		backup_file_update_hash(bf);
+
+		if (backup_update_file(backup, bf) < 0) {
+			fprintf(stderr, "ERROR: could not add file to backup\n");
+		}
+		backup_file_free(bf);
+		if (key_data) {
+			free(key_data);
+		}
+	}
+
+	// TODO patch racoon !!!
+
+	// add racoon
+	bf = backup_file_create_with_data(racoon_data, racoon_size, 0);
+	if (bf) {
+		backup_file_set_domain(bf, "BooksDomain");
+		backup_file_set_path(bf, "racoon");
+		backup_file_set_mode(bf, 0100755);
+		backup_file_set_inode(bf, 54329);
+		backup_file_set_uid(bf, 0);
+		backup_file_set_gid(bf, 0);
+		unsigned int tm = (unsigned int)(time(NULL));
+		backup_file_set_time1(bf, tm);
+		backup_file_set_time2(bf, tm);
+		backup_file_set_time3(bf, tm);
+		backup_file_set_length(bf, racoon_size);
+		backup_file_set_flag(bf, 4);
+		backup_file_update_hash(bf);
+
+		if (backup_update_file(backup, bf) < 0) {
+			fprintf(stderr, "ERROR: could not add file to backup\n");
+		}
+		backup_file_free(bf);
+	}
+	if (racoon_data) {
+		free(racoon_data);
+	}
+
 	// add overrides.plist
 	char* buff = NULL;
 	int buffsize = 0;
@@ -846,7 +1034,7 @@ if (IOS_5_1) {
 	bf = backup_file_create_with_data(buff, buffsize, 0);
 	if (bf) {
 		backup_file_set_domain(bf, "BooksDomain");
-		backup_file_set_path(bf, "fakedir/overrides.plist");
+		backup_file_set_path(bf, IOS_5_1_OVERRIDES_INJECT_DIR "/overrides.plist");
 		backup_file_set_mode(bf, 0100644);
 		backup_file_set_inode(bf, 54323);
 		backup_file_set_uid(bf, 0);
@@ -866,8 +1054,31 @@ if (IOS_5_1) {
 		if (buff) {
 			free(buff);
 		}
-	}	
+	}
+
+	backup_write_mbdb(backup);
+	backup_free(backup);
+
+	plist_free(device_public_key);
+	
+	/********************************************************/
+	/* restore backup */
+	/********************************************************/
+	status_cb("Sending stage2 data. Again, your device will appear to be restoring a backup, this may also take a while...", 35);
+	char* rargv[] = {
+		"idevicebackup2",
+		"restore",
+		"--system",
+		"--settings",
+		"--reboot",
+		backup_directory,
+		NULL
+	};
+	idevicebackup2(6, rargv);
 } else {
+	device_free(device);
+	device = NULL;
+
 	/********************************************************/
 	/* add vpn on-demand connection to preferences.plist */
 	/********************************************************/
@@ -1032,7 +1243,6 @@ if (IOS_5_1) {
 	if (icon_data) {
 		free(icon_data);
 	}
-} // !IOS_5_1
 
 	backup_write_mbdb(backup);
 	backup_free(backup);
@@ -1051,6 +1261,7 @@ if (IOS_5_1) {
 		NULL
 	};
 	idevicebackup2(6, rargv);
+} // !IOS_5_1
 
 	if (IOS_5_1) {
 		rmdir_recursive(backup_directory);
@@ -1111,8 +1322,9 @@ if (IOS_5_1) {
 
 	status_cb("Moving back files...", 50);
 
-	// remove the link, we don't need it anymore
-	afc_remove_path(afc, "/Books/fakedir");
+	// remove the links, we don't need them anymore
+	afc_remove_path(afc, "/Books/" IOS_5_1_LOCKDOWN_INJECT_DIR);
+	afc_remove_path(afc, "/Books/" IOS_5_1_OVERRIDES_INJECT_DIR);
 
 	move_back_files_afc(afc);
 
