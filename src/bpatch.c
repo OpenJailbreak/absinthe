@@ -35,6 +35,14 @@ bpatch_t* bpatch_create() {
 
 bpatch_t* bpatch_open(const char* path) {
 	bpatch_t* bpatch = bpatch_create();
+	if(bpatch != NULL) {
+		bpatch->path = strdup(path);
+		file_read(path, &bpatch->data, &bpatch->size);
+		if(bpatch->data == NULL || bpatch->size <= 0) {
+			bpatch_free(bpatch);
+			return NULL;
+		}
+	}
 	return bpatch;
 }
 
@@ -44,6 +52,15 @@ int bpatch_apply(bpatch_t* patch, const char* path) {
 
 void bpatch_free(bpatch_t* bpatch) {
 	if(bpatch) {
+		if(bpatch->data) {
+			free(bpatch->data);
+			bpatch->size = 0;
+			bpatch->data = NULL;
+		}
+		if(bpatch->path) {
+			free(bpatch->path);
+			bpatch->path = NULL;
+		}
 		free(bpatch);
 	}
 }

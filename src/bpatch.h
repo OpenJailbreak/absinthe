@@ -23,7 +23,9 @@
 #include <bzlib.h>
 
 typedef struct bpatch_t {
+	char* path;
 	bz_stream stream;
+	unsigned int size;
 	unsigned int offset;
 	unsigned char* data;
 	unsigned char* input;

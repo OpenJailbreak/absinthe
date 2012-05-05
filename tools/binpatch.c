@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
 		} else {
 			// Unable to open patch file
 			//  is the path correct? is the format correct?
-			printf("Unable to open patch file\n");
+			printf("Unable to open patch file %s\n", patch_path);
 			err = -1;
 		}
 
