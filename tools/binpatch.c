@@ -32,7 +32,10 @@ int main(int argc, char* argv[]) {
 
 			// Successfully opened path
 			//  apply it to our target file
-			bpatch_apply(patch, target_path);
+			if(bpatch_apply(patch, target_path) != 0) {
+				printf("Failed to patch target\n");
+				err = -1;
+			}
 
 			// We don't need this any longer
 			bpatch_free(patch);

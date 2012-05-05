@@ -1,5 +1,5 @@
 /**
-  * GreenPois0n Apparition - bpatch.h
+  * GreenPois0n Absinthe - stream.h
   * Copyright (C) 2010 Chronic-Dev Team
   * Copyright (C) 2010 Joshua Hill
   *
@@ -17,27 +17,29 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef BPATCH_H_
-#define BPATCH_H_
+#ifndef STREAM_H_
+#define STREAM_H_
 
-#include <bzlib.h>
+#include <stdint.h>
 
-typedef struct bpatch_t {
+typedef struct stream_t {
+	FILE* desc;
 	char* path;
-	bz_stream* stream;
-	unsigned int size;
-	unsigned int offset;
+	uint64_t size;
+	uint64_t offset;
 	unsigned char* data;
-	unsigned char* input;
-	unsigned char* output;
-} bpatch_t;
+} stream_t;
 
-bpatch_t* bpatch_open(const char* path);
-int bpatch_apply(bpatch_t* patch, const char* path);
-void bpatch_free(bpatch_t* bpatch);
+stream_t* stream_create();
+stream_t* stream_open(const char* path);
 
-int bpatch(const char* in, const char* out, const char* patch);
-unsigned int bpatch_read(bpatch_t* stream, int *bzerr, unsigned char* out, unsigned int len);
+void stream_close(stream_t* stream);
+void stream_free(stream_t* stream);
 
+unsigned int stream_read(stream_t* stream, unsigned char* data, unsigned int size);
+unsigned int stream_write(stream_t* stream, unsigned char* data, unsigned int size);
 
-#endif /* BPATCH_H_ */
+long stream_tell(stream_t* stream);
+void stream_seek(stream_t* stream, long offset);
+
+#endif
