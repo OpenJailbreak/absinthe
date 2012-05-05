@@ -2,7 +2,7 @@ AM_CFLAGS = $(GLOBAL_CFLAGS)
 AM_LDFLAGS = $(GLOBAL_LDFLAGS)
 AM_LDADD = $(GLOBAL_LIBS)
 
-bin_PROGRAMS = gizmo dyldrop pointingdb machoman mb2insert fsgen decache
+bin_PROGRAMS = gizmo dyldrop pointingdb machoman mb2insert fsgen decache binpatch
 
 gizmo_SOURCES = gizmo.c
 gizmo_CFLAGS = $(AM_CFLAGS) -I../src
@@ -74,3 +74,13 @@ decache_SOURCES = \
 decache_CFLAGS = $(AM_CFLAGS) -I. -I../src
 decache_LDFLAGS = $(AM_LDFLAGS)
 decache_LDADD = $(AM_LDADD)
+
+binpatch_SOURCES = \
+				binpatch.c \
+				../src/file.c \
+				../src/common.c \
+				../src/bpatch.c
+				
+binpatch_CFLAGS = $(AM_CFLAGS) -I. -I../src
+binpatch_LDFLAGS = $(AM_LDFLAGS)
+binpatch_LDADD = $(AM_LDADD)
