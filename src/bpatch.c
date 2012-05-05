@@ -26,7 +26,7 @@
 #include "bpatch.h"
 
 bpatch_t* bpatch_create() {
-	bpatch_t* bpatch = NULL;
+	bpatch_t* bpatch = (bpatch_t*) malloc(sizeof(bpatch_t));
 	if(bpatch) {
 		memset(bpatch, '\0', sizeof(bpatch_t));
 	}
