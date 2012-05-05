@@ -34,7 +34,7 @@ absinthe_SOURCES = \
 	idevicebackup2.c \
 	fsgen.c \
 	bpatch.c \
-	stream.c
+	bfile.c
 
 absinthe_CFLAGS = $(AM_CFLAGS)
 absinthe_LDFLAGS = $(AM_LDFLAGS)

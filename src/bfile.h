@@ -1,5 +1,5 @@
 /**
-  * GreenPois0n Absinthe - stream.h
+  * GreenPois0n Absinthe - bfile.h
   * Copyright (C) 2010 Chronic-Dev Team
   * Copyright (C) 2010 Joshua Hill
   *
@@ -17,29 +17,29 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef STREAM_H_
-#define STREAM_H_
+#ifndef bfile_H_
+#define bfile_H_
 
 #include <stdint.h>
 
-typedef struct stream_t {
+typedef struct bfile_t {
 	FILE* desc;
 	char* path;
 	uint64_t size;
 	uint64_t offset;
 	unsigned char* data;
-} stream_t;
+} bfile_t;
 
-stream_t* stream_create();
-stream_t* stream_open(const char* path);
+bfile_t* bfile_create();
+bfile_t* bfile_open(const char* path);
 
-void stream_close(stream_t* stream);
-void stream_free(stream_t* stream);
+void bfile_close(bfile_t* bfile);
+void bfile_free(bfile_t* bfile);
 
-unsigned int stream_read(stream_t* stream, unsigned char* data, unsigned int size);
-unsigned int stream_write(stream_t* stream, unsigned char* data, unsigned int size);
+unsigned int bfile_read(bfile_t* bfile, unsigned char* data, unsigned int size);
+unsigned int bfile_write(bfile_t* bfile, unsigned char* data, unsigned int size);
 
-long stream_tell(stream_t* stream);
-void stream_seek(stream_t* stream, long offset);
+long bfile_tell(bfile_t* bfile);
+void bfile_seek(bfile_t* bfile, long offset);
 
 #endif

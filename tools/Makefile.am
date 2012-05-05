@@ -78,8 +78,8 @@ decache_LDADD = $(AM_LDADD)
 binpatch_SOURCES = \
 				binpatch.c \
 				../src/file.c \
-				../src/stream.c \
 				../src/common.c \
+				../src/bfile.c \
 				../src/bpatch.c
 				
 binpatch_CFLAGS = $(AM_CFLAGS) -I. -I../src
