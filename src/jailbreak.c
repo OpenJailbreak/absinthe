@@ -77,7 +77,7 @@ int jb_device_is_supported(const char* product, const char* build)
 
 int jb_check_consistency(const char* product, const char* build)
 {
-	if (strcmp(build, "9B176") == 0) {
+	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0)) {
 		// FIXME TODO fix me!
 		return 0;
 	}
@@ -686,7 +686,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb) {
 		return -1;
 	}
 
-	int IOS_5_1 = (strcmp(build, "9B176") == 0);
+	int IOS_5_1 = ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0));
 
 	// get libcopyfile_vmaddr
 	uint32_t libcopyfile_vmaddr = 0;
