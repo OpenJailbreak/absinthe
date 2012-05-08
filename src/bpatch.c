@@ -213,7 +213,7 @@ int bpatch_apply(bpatch_t* patch, const char* path) {
 				toRead = total;
 
 			memset(writeBuffer, 0, toRead);
-			lenread = bzRead(&dbz2err, dpfbz2, writeBuffer, toRead);
+			lenread = BZ2_bzRead(&dbz2err, dpfbz2, writeBuffer, toRead);
 			if ((lenread < toRead) ||
 			    ((dbz2err != BZ_OK) && (dbz2err != BZ_STREAM_END)))
 				return -6;
@@ -253,7 +253,7 @@ int bpatch_apply(bpatch_t* patch, const char* path) {
 				toRead = total;
 
 			/* Read extra string */
-			lenread = bzRead(&ebz2err, epfbz2, writeBuffer, toRead);
+			lenread = BZ2_bzRead(&ebz2err, epfbz2, writeBuffer, toRead);
 			if ((lenread < toRead) ||
 			    ((ebz2err != BZ_OK) && (ebz2err != BZ_STREAM_END)))
 				return -8;

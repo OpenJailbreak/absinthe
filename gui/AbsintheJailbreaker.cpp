@@ -1,3 +1,12 @@
+#include <string.h>
+#include <stdlib.h>
+
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
 #include "AbsintheJailbreaker.h"
 #include "jailbreak.h"
 
@@ -9,7 +18,7 @@ static void status_cb(const char* message, int progress)
 }
 
 AbsintheJailbreaker::AbsintheJailbreaker(AbsintheWorker* worker)
-	: wxThread(wxTHREAD_JOINABLE), worker(worker)
+	: worker(worker)
 {
 	self = this;
 }
@@ -19,7 +28,7 @@ void AbsintheJailbreaker::statusCallback(const char* message, int progress)
 	worker->processStatus(message, progress);
 }
 
-wxThread::ExitCode AbsintheJailbreaker::Entry(void)
+void* AbsintheJailbreaker::Entry(void* data)
 {
 	char* uuid = strdup(worker->getUUID());
 	jailbreak(uuid, status_cb);
@@ -29,4 +38,18 @@ wxThread::ExitCode AbsintheJailbreaker::Entry(void)
 
 	worker->processFinished(error);
 	return 0;
+}
+
+static void* thread_func(void* data)
+{
+	return self->Entry(data);
+}
+
+void AbsintheJailbreaker::Start(void)
+{
+#ifdef WIN32
+	this->thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)thread_func, NULL, 0, NULL);
+#else
+	pthread_create(&this->thread, NULL, thread_func, NULL);
+#endif
 }

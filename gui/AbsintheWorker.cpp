@@ -1,4 +1,6 @@
 #include <cstdio>
+#include <stdlib.h>
+#include <string.h>
 #include "AbsintheWorker.h"
 #include "AbsintheJailbreaker.h"
 #include "iTunesKiller.h"
@@ -33,20 +35,14 @@ static void device_event_cb(const idevice_event_t* event, void* userdata)
 	jb_device_event_cb(event, (void*)event->uuid);
 }
 
-AbsintheWorker::AbsintheWorker(void* main)
+AbsintheWorker::AbsintheWorker(AbsintheMainWnd* main)
 	: mainWnd(main), device_count(0)
 {
 	self = this;
 
 	this->current_uuid = NULL;
 
-	int num = 0;
-	char **devices = NULL;
-	idevice_get_device_list(&devices, &num);
-	idevice_device_list_free(devices);
-	if (num == 0) {
-		this->checkDevice();
-	}
+	this->checkDevice();
 
 	idevice_event_subscribe(&device_event_cb, NULL);
 }
@@ -89,19 +85,19 @@ void AbsintheWorker::DeviceEventCB(const idevice_event_t *event, void *user_data
 void AbsintheWorker::checkDevice()
 {
 	AbsintheMainWnd* mainwnd = (AbsintheMainWnd*)this->mainWnd;
+	char str[256];
 
 	this->setUUID(NULL);
 
 	if (this->device_count == 0) {
 		mainwnd->setButtonEnabled(0);
 		mainwnd->setProgress(0);
-		mainwnd->setStatusText(wxT("Plug in your iPhone 4S or iPad 2 to begin."));
+		mainwnd->setStatusText("Plug in your iPhone 4S or iPad 2 to begin.");
 	} else if (this->device_count == 1) {
 		idevice_t dev = NULL;
 		idevice_error_t ierr = idevice_new(&dev, NULL);
 		if (ierr != IDEVICE_E_SUCCESS) {
-			wxString str;
-			str.Printf(wxT("Error detecting device type (idevice error %d)"), ierr);
+			sprintf(str, "Error detecting device type (idevice error %d)", ierr);
 			mainwnd->setStatusText(str);
 			return;
 		}
@@ -111,8 +107,7 @@ void AbsintheWorker::checkDevice()
 		if (lerr == LOCKDOWN_E_PASSWORD_PROTECTED) {
 			lockdownd_client_free(client);
 			idevice_free(dev);
-			wxString str;
-			str.Printf(wxT("ERROR: Device has a passcode set! If a passcode is set, the jailbreak procedure will most likely fail. Unplug device, go to Settings and DISABLE THE PASSCODE, then plug it back in."));
+			sprintf(str, "ERROR: Device has a passcode set! If a passcode is set, the jailbreak procedure will most likely fail. Unplug device, go to Settings and DISABLE THE PASSCODE, then plug it back in.");
 			mainwnd->setStatusText(str);
 			return;
 		} else if (lerr == LOCKDOWN_E_INVALID_HOST_ID) {
@@ -127,14 +122,12 @@ void AbsintheWorker::checkDevice()
 			}
 			lockdownd_client_free(client);
 			idevice_free(dev);
-			wxString str;
-			str.Printf(wxT("ERROR: Device detection failed due an internal error. Please unplug device and plug it back in."));
+			sprintf(str, "ERROR: Device detection failed due an internal error. Please unplug device and plug it back in.");
 			mainwnd->setStatusText(str);
 			return;
 		} else if (lerr != LOCKDOWN_E_SUCCESS) {
 			idevice_free(dev);
-			wxString str;
-			str.Printf(wxT("Error detecting device (lockdown error %d)"), lerr);
+			sprintf(str, "Error detecting device (lockdown error %d)", lerr);
 			mainwnd->setStatusText(str);
 			return;
 		}
@@ -153,8 +146,7 @@ void AbsintheWorker::checkDevice()
 		if ((lerr != LOCKDOWN_E_SUCCESS) || !productType) {
 			lockdownd_client_free(client);
 			idevice_free(dev);
-			wxString str;
-			str.Printf(wxT("Error getting product type (lockdown error %d)"), lerr);
+			sprintf(str, "Error getting product type (lockdown error %d)", lerr);
 			mainwnd->setStatusText(str);
 			return;
 		}
@@ -169,8 +161,7 @@ void AbsintheWorker::checkDevice()
 			free(productType);
 			lockdownd_client_free(client);
 			idevice_free(dev);
-			wxString str;
-			str.Printf(wxT("Error getting product version (lockdownd error %d)"), lerr);
+			sprintf(str, "Error getting product version (lockdownd error %d)", lerr);
 			mainwnd->setStatusText(str);
 			return;
 		}
@@ -186,14 +177,13 @@ void AbsintheWorker::checkDevice()
 			free(productVersion);
 			lockdownd_client_free(client);
 			idevice_free(dev);
-			wxString str;
-			str.Printf(wxT("Error getting build version (lockdownd error %d)"), lerr);
+			sprintf(str, "Error getting build version (lockdownd error %d)", lerr);
 			mainwnd->setStatusText(str);
 			return;
 		}
 
 		if (!jb_device_is_supported(productType, buildVersion)) {
-			mainwnd->setStatusText(wxT("Sorry, the attached device is not supported."));
+			mainwnd->setStatusText("Sorry, the attached device is not supported.");
 			free(productType);
 			free(productVersion);
 			free(buildVersion);
@@ -204,7 +194,7 @@ void AbsintheWorker::checkDevice()
 		if (cc == 0) {
 			// Consistency check passed
 		} else if (cc == -1) {
-			mainwnd->setStatusText(wxT("ERROR: Consistency check failed: attached device not supported"));
+			mainwnd->setStatusText("ERROR: Consistency check failed: attached device not supported");
 			free(productType);
 			free(productVersion);
 			free(buildVersion);
@@ -212,7 +202,7 @@ void AbsintheWorker::checkDevice()
 			idevice_free(dev);
 			return;
 		} else if (cc == -2) {
-			mainwnd->setStatusText(wxT("ERROR: Consistency check failed: could not find required files"));
+			mainwnd->setStatusText("ERROR: Consistency check failed: could not find required files");
 			free(productType);
 			free(productVersion);
 			free(buildVersion);
@@ -220,7 +210,7 @@ void AbsintheWorker::checkDevice()
 			idevice_free(dev);
 			return;
 		} else {
-			mainwnd->setStatusText(wxT("ERROR: Consistency check failed: unknown error"));
+			mainwnd->setStatusText("ERROR: Consistency check failed: unknown error");
 			free(productType);
 			free(productVersion);
 			free(buildVersion);
@@ -236,15 +226,13 @@ void AbsintheWorker::checkDevice()
 			plist_get_bool_val(node, &pcenabled);
 			plist_free(node);
 			if (pcenabled) {
-			        wxString str;
-				str.Printf(wxT("ERROR: Device has a passcode set! If a passcode is set, the jailbreak procedure will most likely fail. Unplug device, go to Settings and DISABLE THE PASSCODE, then plug it back in."));
+				sprintf(str, "ERROR: Device has a passcode set! If a passcode is set, the jailbreak procedure will most likely fail. Unplug device, go to Settings and DISABLE THE PASSCODE, then plug it back in.");
 				mainwnd->setStatusText(str);
 				return;
 			}
 		}
 
-		wxString str;
-		str.Printf(wxT("%s with iOS %s (%s) detected. Click the button to begin."), wxString(getDeviceName(productType), wxConvUTF8).c_str(), wxString(productVersion, wxConvUTF8).c_str(), wxString(buildVersion, wxConvUTF8).c_str());
+		sprintf(str, "%s with iOS %s (%s) detected. Click the button to begin.", getDeviceName(productType), productVersion, buildVersion);
 		mainwnd->setStatusText(str);
 
 		int ready_to_go = 1;
@@ -258,7 +246,7 @@ void AbsintheWorker::checkDevice()
 			if (as) {
 				if (strcmp(as, "Unactivated") == 0) {
 					ready_to_go = 0;
-					mainwnd->msgBox(wxT("The attached device is not activated. You need to activate it before it can be used with Absinthe."), wxT("Error"), wxOK | wxICON_ERROR);
+					mainwnd->msgBox("The attached device is not activated. You need to activate it before it can be used with Absinthe.", "Error", mb_OK | mb_ICON_ERROR);
 				}
 				free(as);
 			}
@@ -274,7 +262,7 @@ void AbsintheWorker::checkDevice()
 			plist_free(pl);
 			if (c) {
 				ready_to_go = 0;
-				mainwnd->msgBox(wxT("The attached device has a backup password set. You need to disable the backup password in iTunes before you can continue.\nStart iTunes, remove the backup password and start this Program again."), wxT("Error"), wxOK | wxICON_ERROR);
+				mainwnd->msgBox("The attached device has a backup password set. You need to disable the backup password in iTunes before you can continue.\nStart iTunes, remove the backup password and start this Program again.", "Error", mb_OK | mb_ICON_ERROR);
 			}
 		}
 
@@ -294,7 +282,7 @@ void AbsintheWorker::checkDevice()
 		free(buildVersion);
 	} else {
 		mainwnd->setButtonEnabled(0);
-		mainwnd->setStatusText(wxT("Please attach only one device."));
+		mainwnd->setStatusText("Please attach only one device.");
 	}
 }
 
@@ -307,21 +295,18 @@ void AbsintheWorker::processStart(void)
 
 #if defined(__APPLE__) || defined(WIN32)
 	iTunesKiller* ik = new iTunesKiller(&detection_blocked);
-	ik->Create();
-	ik->Run();
+	ik->Start();
 #endif
 
 	AbsintheJailbreaker* jb = new AbsintheJailbreaker(this);
-	jb->Create();
-	jb->Run();
+	jb->Start();
 }
 
 void AbsintheWorker::processStatus(const char* msg, int progress)
 {
 	AbsintheMainWnd* mainwnd = (AbsintheMainWnd*)this->mainWnd;
 	if (msg) {
-		wxString str = wxString(msg, wxConvUTF8);
-		mainwnd->setStatusText(str);
+		mainwnd->setStatusText(msg);
 	}
 	mainwnd->setProgress(progress);
 }
@@ -332,16 +317,4 @@ void AbsintheWorker::processFinished(const char* error)
 
 	detection_blocked = 0;
 	mainwnd->closeBlocked = 0;
-
-/*
-	if (error && strcmp(error, "none")) {
-		wxString str = wxString(error, wxConvUTF8);
-		mainwnd->setStatusText(str);
-		mainwnd->setButtonEnabled(1);
-	} else if (error) {
-		mainwnd->setStatusText(wxT("No crash reports found - try again at a later time.\nYou can unplug your device now."));
-	} else {
-		mainwnd->setStatusText(wxT("SUCCESS\nThanks for your submission! You can unplug your device now."));
-	}
-*/
 }

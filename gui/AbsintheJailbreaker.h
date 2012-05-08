@@ -1,18 +1,29 @@
 #ifndef __ABSINTHEJAILBREAKER_H 
 #define __ABSINTHEJAILBREAKER_H
 
-#include <wx/wx.h>
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
 
 #include "AbsintheWorker.h"
 
-class AbsintheJailbreaker : public wxThread
+class AbsintheJailbreaker
 {
 private:
 	AbsintheWorker* worker;
+#ifdef WIN32
+	HANDLE thread;
+#else
+	pthread_t thread;
+#endif
+
 public:
 	AbsintheJailbreaker(AbsintheWorker* worker);
+	void Start(void);
 	void statusCallback(const char* message, int progress);
-	wxThread::ExitCode Entry(void);
+	void* Entry(void* data);
 };
 
 #endif /* __ABSINTHEJAILBREAKER_H */

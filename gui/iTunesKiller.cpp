@@ -1,4 +1,5 @@
 #if defined(__APPLE__) || defined(WIN32)
+#include <stdio.h>
 #include "iTunesKiller.h"
 
 #include "debug.h"
@@ -86,13 +87,16 @@ static int GetBSDProcessList(kinfo_proc **procList, size_t *procCount) /*{{{*/
 #define sleep(x) Sleep(x*1000)
 #endif
 
+static iTunesKiller* self;
+
 iTunesKiller::iTunesKiller(int* watchdog)
-	: wxThread(wxTHREAD_JOINABLE), watchit(watchdog)
+	: watchit(watchdog)
 {
+	self = this;
 	debug("ITK:init\n");
 }
 
-wxThread::ExitCode iTunesKiller::Entry(void)
+void* iTunesKiller::Entry(void* data)
 {
 #if defined(WIN32)
 	PROCESSENTRY32 pe;
@@ -122,7 +126,7 @@ wxThread::ExitCode iTunesKiller::Entry(void)
 
 		BOOL i = Process32First(hSnapshot, &pe);
 		while (i) {
-			if (!_tcscmp(pe.szExeFile, _T("iTunesHelper.exe")) || !_tcscmp(pe.szExeFile, _T("iTunes.exe"))) {
+			if (!strcmp(pe.szExeFile, "iTunesHelper.exe") || !strcmp(pe.szExeFile, "iTunes.exe")) {
 				HANDLE p = OpenProcess(PROCESS_ALL_ACCESS, 0, pe.th32ProcessID);
 				if (p != INVALID_HANDLE_VALUE) {
 					TerminateProcess(p, 0);
@@ -137,5 +141,19 @@ wxThread::ExitCode iTunesKiller::Entry(void)
 	}
 	debug("ITK:Exiting.\n");
 	return 0;
+}
+
+static void* thread_func(void* data)
+{
+	return self->Entry(data);
+}
+
+void iTunesKiller::Start(void)
+{
+#ifdef WIN32
+	this->thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)thread_func, NULL, 0, NULL);
+#else
+	pthread_create(&this->thread, NULL, thread_func, NULL);
+#endif
 }
 #endif
