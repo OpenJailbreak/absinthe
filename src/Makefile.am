@@ -33,8 +33,7 @@ absinthe_SOURCES = \
 	architecture.c \
 	idevicebackup2.c \
 	fsgen.c \
-	bpatch.c \
-	bfile.c
+	bpatch.c 
 
 absinthe_CFLAGS = $(AM_CFLAGS)
 absinthe_LDFLAGS = $(AM_LDFLAGS)

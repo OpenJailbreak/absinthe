@@ -20,9 +20,10 @@
 #ifndef BPATCH_H_
 #define BPATCH_H_
 
+#include <stdint.h>
 #include <bzlib.h>
 
-#include "bfile.h"
+#include "boolean.h"
 
 /*
 	File format:
@@ -38,25 +39,43 @@
 	extra block; seek forwards in oldfile by z bytes".
 	*/
 
+
+typedef struct bpatch_header_t {
+	uint8_t magic[8];
+	uint64_t ctrllen;
+	uint64_t datalen;
+	uint64_t filelen;
+} bpatch_header_t;
+
 typedef struct bpatch_t {
 	char* path;
-	bfile_t* file;
+	uint8_t* data;
+	uint8_t* extra;
+	uint8_t* control;
+	off_t data_size;
+	off_t extra_size;
+	off_t control_size;
 	bz_stream* stream;
-	unsigned int size;
-	unsigned int offset;
-	unsigned char* data;
-	unsigned char* input;
-	unsigned char* output;
+	bpatch_header_t* header;
 } bpatch_t;
+
+int bpatch(const char* in, const char* out, const char* patch);
 
 bpatch_t* bpatch_create();
 bpatch_t* bpatch_open(const char* path);
 bpatch_t* bpatch_load(unsigned char* data, unsigned int size);
 int bpatch_apply(bpatch_t* bpatch, const char* path);
 void bpatch_free(bpatch_t* bpatch);
+void bpatch_debug(bpatch_t* bpatch);
 
-int bpatch(const char* in, const char* out, const char* patch);
-unsigned int bpatch_read(bpatch_t* stream, int *bzerr, unsigned char* out, unsigned int len);
+unsigned int bpatch_read(bpatch_t* bpatch, unsigned char* data, unsigned int size);
 
+/*
+ * Binary Patch Header
+ */
+bpatch_header_t* bpatch_header_create();
+bpatch_header_t* bpatch_header_load(unsigned char* data, unsigned int size);
+void bpatch_header_free(bpatch_header_t* header);
+void bpatch_header_debug(bpatch_header_t* header);
 
 #endif /* BPATCH_H_ */

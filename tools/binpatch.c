@@ -29,6 +29,8 @@ int main(int argc, char* argv[]) {
 		// Open up handle to the patch
 		patch = bpatch_open(patch_path);
 		if(patch != NULL) {
+			// Debugger
+			bpatch_debug(patch);
 
 			// Successfully opened path
 			//  apply it to our target file

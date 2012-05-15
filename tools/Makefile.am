@@ -79,7 +79,6 @@ binpatch_SOURCES = \
 				binpatch.c \
 				../src/file.c \
 				../src/common.c \
-				../src/bfile.c \
 				../src/bpatch.c
 				
 binpatch_CFLAGS = $(AM_CFLAGS)
