@@ -31,8 +31,10 @@ int AbsintheMainWnd::msgBox(const char* message, const char* caption, int style)
 
 	GtkWidget* msgbox = gtk_message_dialog_new(GTK_WINDOW(this->mainwnd), GTK_DIALOG_MODAL, mtype, btype, "%s", caption);
 	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(msgbox), "%s", message);
+	gdk_threads_enter();
 	int answer = gtk_dialog_run(GTK_DIALOG(msgbox));
 	gtk_widget_destroy(msgbox);
+	gdk_threads_leave();
 	switch (answer) {
 	case GTK_RESPONSE_OK:
 		return mb_OK;
@@ -49,17 +51,23 @@ int AbsintheMainWnd::msgBox(const char* message, const char* caption, int style)
 
 void AbsintheMainWnd::setButtonEnabled(int enabled)
 {
+	gdk_threads_enter();
 	gtk_widget_set_sensitive(this->btnStart, enabled);
+	gdk_threads_leave();
 }
 
 void AbsintheMainWnd::setStatusText(const char* text)
 {
+	gdk_threads_enter();
 	gtk_label_set_text(GTK_LABEL(this->lbStatus), (gchar*)text);
+	gdk_threads_leave();
 }
 
 void AbsintheMainWnd::setProgress(int percentage)
-{
+{	
+	gdk_threads_enter();
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(this->progressBar), (double)percentage / 100.0f);
+	gdk_threads_leave();
 }
 
 void AbsintheMainWnd::handleStartClicked(void* data)
@@ -121,7 +129,10 @@ static void destroy_event(GtkWidget* widget, gpointer data)
 
 AbsintheMainWnd::AbsintheMainWnd(int* pargc, char*** pargv)
 {
+	gdk_threads_init();
+
 	gtk_init(pargc, pargv);
+
 	mainwnd = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_keep_above(GTK_WINDOW(mainwnd), 1);
 	gtk_window_set_resizable(GTK_WINDOW(mainwnd), 0);
