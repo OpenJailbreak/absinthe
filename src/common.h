@@ -35,5 +35,6 @@
 int mkdir_with_parents(const char *dir, int mode);
 char* build_path(const char* elem, ...);
 char* prot2str(uint32_t prot);
+void hexdump(unsigned char* buf, unsigned int len);
 
 #endif /* COMMON_H */

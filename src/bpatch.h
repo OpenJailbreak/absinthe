@@ -24,6 +24,20 @@
 
 #include "bfile.h"
 
+/*
+	File format:
+		0	8	"BSDIFF40" (bzip2) or "BSDIFN40" (raw)
+		8	8	X
+		16	8	Y
+		24	8	sizeof(newfile)
+		32	X	bzip2(control block)
+		32+X	Y	bzip2(diff block)
+		32+X+Y	???	bzip2(extra block)
+	with control block a set of triples (x,y,z) meaning "add x bytes
+	from oldfile to x bytes from the diff block; copy y bytes from the
+	extra block; seek forwards in oldfile by z bytes".
+	*/
+
 typedef struct bpatch_t {
 	char* path;
 	bfile_t* file;
@@ -35,8 +49,10 @@ typedef struct bpatch_t {
 	unsigned char* output;
 } bpatch_t;
 
+bpatch_t* bpatch_create();
 bpatch_t* bpatch_open(const char* path);
-int bpatch_apply(bpatch_t* patch, const char* path);
+bpatch_t* bpatch_load(unsigned char* data, unsigned int size);
+int bpatch_apply(bpatch_t* bpatch, const char* path);
 void bpatch_free(bpatch_t* bpatch);
 
 int bpatch(const char* in, const char* out, const char* patch);

@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "bfile.h"
+#include "common.h"
 
 #define BUFSIZE 4096
 
@@ -35,7 +36,8 @@ bfile_t* bfile_create() {
 
 bfile_t* bfile_open(const char* path) {
 	uint64_t got = 0;
-	uint8_t buffer[4096];
+	uint8_t buffer[BUFSIZE+1];
+	memset(buffer, '\0', BUFSIZE+1);
 
 	bfile_t* bfile = bfile_create();
 	if (bfile) {
@@ -57,7 +59,7 @@ bfile_t* bfile_open(const char* path) {
 		fseek(bfile->desc, 0, SEEK_SET);
 
 		bfile->offset = 0;
-		bfile->data = (unsigned char*) malloc(bfile->size);
+		bfile->data = (unsigned char*) malloc(bfile->size+1);
 		if (bfile->data == NULL) {
 			fprintf(stderr, "Unable to allocate memory for bfile\n");
 			bfile_free(bfile);
@@ -69,13 +71,13 @@ bfile_t* bfile_open(const char* path) {
 			memset(buffer, '\0', BUFSIZE);
 			got = fread(buffer, 1, BUFSIZE, bfile->desc);
 			if (got > 0) {
+				memcpy(&bfile->data[offset], buffer, got);
 				offset += got;
-				memcpy(&(bfile->data[offset]), buffer, got);
 			} else {
 				break;
 			}
 		}
-		fprintf(stderr, "Read in %llu of %llu bytes from %s\n", bfile->offset, bfile->size, bfile->path);
+		fprintf(stderr, "Read in %llu of %llu bytes from %s\n", got, bfile->size, bfile->path);
 		// We have the data stored in memory now, so we don't need to keep this open anymore
 		//fseek(bfile->desc, 0, SEEK_SET);
 		bfile_close(bfile);
@@ -120,8 +122,10 @@ unsigned int bfile_read(bfile_t* bfile, unsigned char* data, unsigned int size) 
 	} else {
 		len = size;
 	}
+
 	memcpy(data, &bfile->data[bfile->offset], len);
-	return size;
+	bfile->offset += len;
+	return len;
 }
 
 unsigned int bfile_write(bfile_t* bfile, unsigned char* data, unsigned int size) {
@@ -131,8 +135,10 @@ unsigned int bfile_write(bfile_t* bfile, unsigned char* data, unsigned int size)
 	} else {
 		len = size;
 	}
+
 	memcpy(&bfile->data[bfile->offset], data, len);
-	return size;
+	bfile->offset += len;
+	return len;
 }
 
 long bfile_tell(bfile_t* bfile) {

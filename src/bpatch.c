@@ -25,8 +25,10 @@
 
 #include "bfile.h"
 #include "bpatch.h"
+#include "debug.h"
+#include "common.h"
 
-#define BUFFERSIZE 1024
+#define BUFSIZE 4096
 
 static off_t offtin(unsigned char *buf) {
 	off_t y;
@@ -45,6 +47,91 @@ static off_t offtin(unsigned char *buf) {
 	return y;
 }
 
+bpatch_t* bpatch_create() {
+	bpatch_t* bpatch = (bpatch_t*) malloc(sizeof(bpatch_t));
+	if(bpatch) {
+		memset(bpatch, '\0', sizeof(bpatch_t));
+	}
+	bpatch->input = (unsigned char*) malloc(BUFSIZE);
+	if(bpatch->input != NULL) {
+		memset(bpatch->input, '\0',  BUFSIZE);
+	}
+	bpatch->output = (unsigned char*) malloc(BUFSIZE);
+	if(bpatch->output != NULL) {
+		memset(bpatch->output, '\0',  BUFSIZE);
+	}
+	return bpatch;
+}
+
+bpatch_t* bpatch_open(const char* path) {
+	bpatch_t* bpatch = bpatch_create();
+	if(bpatch != NULL) {
+		bpatch->path = strdup(path);
+		if(bpatch->path == NULL) {
+			bpatch_free(bpatch);
+			return NULL;
+		}
+
+		bpatch->file = bfile_open(bpatch->path);
+		if(bpatch->file == NULL) {
+			error("Unable to open binary patch file\n");
+			bpatch_free(bpatch);
+			return NULL;
+		}
+
+	}
+
+	return bpatch;
+}
+
+void bpatch_free(bpatch_t* bpatch) {
+	if(bpatch) {
+		if(bpatch->stream) {
+			BZ2_bzDecompressEnd(bpatch->stream);
+			bpatch->stream = NULL;
+		}
+		if(bpatch->file) {
+			bfile_free(bpatch->file);
+			bpatch->file = NULL;
+		}
+		if(bpatch->path) {
+			free(bpatch->path);
+			bpatch->path = NULL;
+		}
+		if(bpatch->input) {
+			free(bpatch->input);
+			bpatch->input = NULL;
+		}
+		if(bpatch->output) {
+			free(bpatch->output);
+			bpatch->output = NULL;
+		}
+		free(bpatch);
+	}
+}
+
+bpatch_t* bpatch_load(unsigned char* data, unsigned int size) {
+	/*
+bpatch_t* stream;
+stream = (bpatch_t*) malloc(sizeof(bpatch_t));
+stream->file = file;
+stream->offset = offset;
+stream->bufferLen = bufferLen;
+
+memset(&(stream->bz2), 0, sizeof(bz_stream));
+BZ2_bzDecompressInit(&(stream->bz2), 0, FALSE);
+
+stream->bz2.next_in = (char*) stream->inBuffer;
+stream->bz2.avail_in = 0;
+stream->bz2.next_out = (char*) stream->outBuffer;
+stream->bz2->avail_out = bufferLen;
+
+stream->ended = FALSE;
+return stream;
+	 */
+	return NULL;
+}
+
 unsigned int bpatch_read(bpatch_t* bpatch, int *bzerr, unsigned char* out, unsigned int len) {
 	int ended = 0;
 	unsigned int toRead;
@@ -59,7 +146,7 @@ unsigned int bpatch_read(bpatch_t* bpatch, int *bzerr, unsigned char* out, unsig
 		if(!ended) {
 			memmove(bpatch->input, bpatch->stream->next_in, bpatch->stream->avail_in);
 			bfile_seek(bpatch->file, bpatch->offset);
-			haveRead = bfile_read(bpatch->file, bpatch->input + bpatch->stream.avail_in, bpatch->size - bpatch->stream.avail_in);
+			haveRead = bfile_read(bpatch->file, bpatch->input + bpatch->stream->avail_in, bpatch->size - bpatch->stream->avail_in);
 			bpatch->offset += haveRead;
 			bpatch->stream->avail_in += haveRead;
 			bpatch->stream->next_in = (char*) bpatch->input;
@@ -76,7 +163,7 @@ unsigned int bpatch_read(bpatch_t* bpatch, int *bzerr, unsigned char* out, unsig
 		}
 
 		if(total > (bpatch->size - bpatch->stream->avail_out)) {
-			toRead = bpatch->size - bpatch->stream.avail_out;
+			toRead = bpatch->size - bpatch->stream->avail_out;
 		} else {
 			toRead = total;
 		}
@@ -100,53 +187,9 @@ int bpatch(const char* in, const char* out, const char* patch) {
 	return 0;
 }
 
-bpatch_t* bpatch_create() {
-	bpatch_t* bpatch = (bpatch_t*) malloc(sizeof(bpatch_t));
-	if(bpatch) {
-		memset(bpatch, '\0', sizeof(bpatch_t));
-	}
-	return bpatch;
-}
 
-bpatch_t* bpatch_open(const char* path) {
-	bpatch_t* bpatch = bpatch_create();
-	if(bpatch != NULL) {
-		bpatch->path = strdup(path);
-		if(bpatch->path == NULL) {
-			bpatch_free(bpatch);
-			return NULL;
-		}
 
-		file_read(path, &bpatch->data, &bpatch->size);
-		if(bpatch->data == NULL || bpatch->size <= 0) {
-			bpatch_free(bpatch);
-			return NULL;
-		}
-		/*
-	bpatch_t* stream;
-	stream = (bpatch_t*) malloc(sizeof(bpatch_t));
-	stream->file = file;
-	stream->offset = offset;
-	stream->bufferLen = bufferLen;
-	stream->inBuffer = (unsigned char*) malloc(bufferLen);
-	stream->outBuffer = (unsigned char*) malloc(bufferLen);
-	memset(&(stream->bz2), 0, sizeof(bz_stream));
-	BZ2_bzDecompressInit(&(stream->bz2), 0, FALSE);
-
-	stream->bz2.next_in = (char*) stream->inBuffer;
-	stream->bz2.avail_in = 0;
-	stream->bz2.next_out = (char*) stream->outBuffer;
-	stream->bz2.avail_out = bufferLen;
-
-	stream->ended = FALSE;
-	return stream;
-		 */
-	}
-
-	return bpatch;
-}
-
-int bpatch_apply(bpatch_t* patch, const char* path) {
+int bpatch_apply(bpatch_t* bpatch, const char* path) {
 	unsigned char header[32], buf[8];
 	off_t oldsize, newsize;
 	off_t bzctrllen, bzdatalen;
@@ -161,23 +204,27 @@ int bpatch_apply(bpatch_t* patch, const char* path) {
 	bpatch_t* epfbz2;
 
 	/* Read header */
-	/*
-	if (patch->read(patch, header, 32) < 32) {
+	if (bfile_read(bpatch->file, header, 32) < 32) {
+		error("Unable to read in patch header\n");
 		return -1;
 	}
-	*/
+
 
 	/* Check for appropriate magic */
-	if (memcmp(header, "BSDIFF40", 8) != 0)
-		return -2;
+	if (memcmp(header, "BSDIFF40", 8) != 0) {
+		error("Unable to find patch magic in header 0x%08x\n", *((unsigned int*)&header));
+		return -1;
+	}
 
 	/* Read lengths from header */
 	bzctrllen = offtin(header + 8);
 	bzdatalen = offtin(header + 16);
 	newsize = offtin(header + 24);
 
-	if((bzctrllen < 0) || (bzdatalen < 0) || (newsize < 0))
-		return -3;
+	if((bzctrllen < 0) || (bzdatalen < 0) || (newsize < 0)) {
+		error("Unable to read lengths in from binary patch header\n");
+		return -1;
+	}
 
 	//cpfbz2 = openbpatch_t(patch, 32, 1024);
 	//dpfbz2 = openbpatch_t(patch, 32 + bzctrllen, 1024);
@@ -187,29 +234,33 @@ int bpatch_apply(bpatch_t* patch, const char* path) {
 
 	oldpos = 0;
 	newpos = 0;
-	unsigned char* writeBuffer = (unsigned char*) malloc(BUFFERSIZE);
-	unsigned char* readBuffer = (unsigned char*) malloc(BUFFERSIZE);
+	unsigned char* writeBuffer = (unsigned char*) malloc(BUFSIZE);
+	unsigned char* readBuffer = (unsigned char*) malloc(BUFSIZE);
 
 	while(newpos < newsize) {
 		/* Read control data */
 		for(i=0;i<=2;i++) {
 			//lenread = bpatch_read(&cbz2err, cpfbz2, buf, 8);
 			if ((lenread < 8) || ((cbz2err != BZ_OK) &&
-			    (cbz2err != BZ_STREAM_END)))
-				return -4;
+			    (cbz2err != BZ_STREAM_END))) {
+				error("Unable to read in control data from binary patch\n");
+					return -1;
+			}
 			ctrl[i] = offtin(buf);
 		};
 
 		/* Sanity-check */
-		if((newpos + ctrl[0]) > newsize)
-			return -5;
+		if((newpos + ctrl[0]) > newsize) {
+			error("Unable to pass binary patch initial sanity check\n");
+			return -1;
+		}
 
 		/* Read diff string */
 		unsigned int toRead;
 		unsigned int total = ctrl[0];
 		while(total > 0) {
-			if(total > BUFFERSIZE)
-				toRead = BUFFERSIZE;
+			if(total > BUFSIZE)
+				toRead = BUFSIZE;
 			else
 				toRead = total;
 
@@ -217,7 +268,7 @@ int bpatch_apply(bpatch_t* patch, const char* path) {
 			lenread = BZ2_bzRead(&dbz2err, dpfbz2, writeBuffer, toRead);
 			if ((lenread < toRead) ||
 			    ((dbz2err != BZ_OK) && (dbz2err != BZ_STREAM_END)))
-				return -6;
+				return -1;
 
 			/* Add old data to diff string */
 			//in->seek(in, oldpos);
@@ -242,22 +293,26 @@ int bpatch_apply(bpatch_t* patch, const char* path) {
 		}
 
 		/* Sanity-check */
-		if((newpos + ctrl[1]) > newsize)
-			return -7;
+		if((newpos + ctrl[1]) > newsize) {
+			error("Unable to pass binary patch sanity check\n");
+			return -1;
+		}
 
 		total = ctrl[1];
 
 		while(total > 0){
-			if(total > BUFFERSIZE)
-				toRead = BUFFERSIZE;
+			if(total > BUFSIZE)
+				toRead = BUFSIZE;
 			else
 				toRead = total;
 
 			/* Read extra string */
 			lenread = BZ2_bzRead(&ebz2err, epfbz2, writeBuffer, toRead);
 			if ((lenread < toRead) ||
-			    ((ebz2err != BZ_OK) && (ebz2err != BZ_STREAM_END)))
-				return -8;
+			    ((ebz2err != BZ_OK) && (ebz2err != BZ_STREAM_END))) {
+				error("Unable to read in extra string from binary patch\n");
+				return -1;
+			}
 
 			//out->seek(out, newpos);
 			//out->write(out, writeBuffer, toRead);
@@ -284,23 +339,3 @@ int bpatch_apply(bpatch_t* patch, const char* path) {
 	return 0;
 }
 
-
-
-void bpatch_free(bpatch_t* bpatch) {
-	if(bpatch) {
-		if(bpatch->stream) {
-			BZ2_bzDecompressEnd(bpatch->stream);
-			bpatch->stream = NULL;
-		}
-		if(bpatch->data) {
-			free(bpatch->data);
-			bpatch->size = 0;
-			bpatch->data = NULL;
-		}
-		if(bpatch->path) {
-			free(bpatch->path);
-			bpatch->path = NULL;
-		}
-		free(bpatch);
-	}
-}
