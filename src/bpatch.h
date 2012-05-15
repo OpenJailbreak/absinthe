@@ -22,8 +22,11 @@
 
 #include <bzlib.h>
 
+#include "bfile.h"
+
 typedef struct bpatch_t {
 	char* path;
+	bfile_t* file;
 	bz_stream* stream;
 	unsigned int size;
 	unsigned int offset;

@@ -23,6 +23,7 @@
 
 #include <bzlib.h>
 
+#include "bfile.h"
 #include "bpatch.h"
 
 #define BUFFERSIZE 1024
@@ -57,8 +58,8 @@ unsigned int bpatch_read(bpatch_t* bpatch, int *bzerr, unsigned char* out, unsig
 	while(total > 0) {
 		if(!ended) {
 			memmove(bpatch->input, bpatch->stream->next_in, bpatch->stream->avail_in);
-			//bpatch->file->seek(bpatch->file, bpatch->offset);
-			//haveRead = bpatch->file->read(bpatch->file, bpatch->input + bpatch->stream.avail_in, bpatch->bufferLen - bpatch->stream.avail_in);
+			bfile_seek(bpatch->file, bpatch->offset);
+			haveRead = bfile_read(bpatch->file, bpatch->input + bpatch->stream.avail_in, bpatch->size - bpatch->stream.avail_in);
 			bpatch->offset += haveRead;
 			bpatch->stream->avail_in += haveRead;
 			bpatch->stream->next_in = (char*) bpatch->input;
@@ -75,13 +76,13 @@ unsigned int bpatch_read(bpatch_t* bpatch, int *bzerr, unsigned char* out, unsig
 		}
 
 		if(total > (bpatch->size - bpatch->stream->avail_out)) {
-			//toRead = bpatch->bufferLen - bpatch->stream.avail_out;
+			toRead = bpatch->size - bpatch->stream.avail_out;
 		} else {
 			toRead = total;
 		}
 
 		memcpy(out, bpatch->output, toRead);
-		//memmove(bpatch->output, bpatch->output + toRead, bpatch->bufferLen - toRead);
+		memmove(bpatch->output, bpatch->output + toRead, bpatch->size - toRead);
 		bpatch->stream->next_out -= toRead;
 		bpatch->stream->avail_out += toRead;
 		out += toRead;
