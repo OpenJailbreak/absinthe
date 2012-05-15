@@ -51,23 +51,17 @@ int AbsintheMainWnd::msgBox(const char* message, const char* caption, int style)
 
 void AbsintheMainWnd::setButtonEnabled(int enabled)
 {
-	gdk_threads_enter();
 	gtk_widget_set_sensitive(this->btnStart, enabled);
-	gdk_threads_leave();
 }
 
 void AbsintheMainWnd::setStatusText(const char* text)
 {
-	gdk_threads_enter();
 	gtk_label_set_text(GTK_LABEL(this->lbStatus), (gchar*)text);
-	gdk_threads_leave();
 }
 
 void AbsintheMainWnd::setProgress(int percentage)
 {	
-	gdk_threads_enter();
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(this->progressBar), (double)percentage / 100.0f);
-	gdk_threads_leave();
 }
 
 void AbsintheMainWnd::handleStartClicked(void* data)
@@ -222,5 +216,7 @@ AbsintheMainWnd::AbsintheMainWnd(int* pargc, char*** pargv)
 
 void AbsintheMainWnd::run(void)
 {
+	gdk_threads_enter();
 	gtk_main();
+	gdk_threads_leave();
 }
