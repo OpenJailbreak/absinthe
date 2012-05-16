@@ -31,27 +31,20 @@
 
 #define BUFSIZE 512000
 
-static int64_t offtin(uint8_t* buf) {
-	int64_t y;
+static off_t offtin(uint8_t* buf)
+{
+	off_t y;
 
-	y = buf[7] & 0x7F;
-	y <<= 8;
-	y += buf[6];
-	y <<= 8;
-	y += buf[5];
-	y <<= 8;
-	y += buf[4];
-	y <<= 8;
-	y += buf[3];
-	y <<= 8;
-	y += buf[2];
-	y <<= 8;
-	y += buf[1];
-	y <<= 8;
-	y += buf[0];
+	y=buf[7]&0x7F;
+	y=y*256;y+=buf[6];
+	y=y*256;y+=buf[5];
+	y=y*256;y+=buf[4];
+	y=y*256;y+=buf[3];
+	y=y*256;y+=buf[2];
+	y=y*256;y+=buf[1];
+	y=y*256;y+=buf[0];
 
-	if (buf[7] & 0x80)
-		y = -y;
+	if(buf[7]&0x80) y=-y;
 
 	return y;
 }
@@ -65,7 +58,7 @@ bpatch_t* bpatch_create() {
 }
 
 bpatch_t* bpatch_open(const char* path) {
-	uint32_t size = 0;
+	uint64_t size = 0;
 	uint8_t* data = NULL;
 	file_read(path, &data, &size);
 	if (data == NULL || size <= 0) {
@@ -99,14 +92,14 @@ void bpatch_free(bpatch_t* bpatch) {
 }
 
 
-bpatch_t* bpatch_load(uint8_t* data, uint64_t size) {
+bpatch_t* bpatch_load(uint8_t* data, int64_t size) {
 	int err = 0;
 	uint8_t* buf = NULL;
 	int64_t offset = 0;
-	uint64_t buf_size = 0;
-	uint64_t data_size = 0;
-	uint64_t extra_size = 0;
-	uint64_t control_size = 0;
+	int64_t buf_size = 0;
+	int64_t data_size = 0;
+	int64_t extra_size = 0;
+	int64_t control_size = 0;
 
 	bpatch_t* bpatch = bpatch_create();
 	if (bpatch != NULL) {
@@ -124,12 +117,14 @@ bpatch_t* bpatch_load(uint8_t* data, uint64_t size) {
 			return NULL;
 		}
 
+
+
 		//////////////////////////
 		// Load in control block
-		buf_size = BUFSIZE;
+		control_size = BUFSIZE;
 		memset(buf, '\0', BUFSIZE);
-		err = bpatch_decompress(bpatch, &data[offset], bpatch->header->ctrllen, buf, &buf_size);
-		if (err < 0 || buf_size <= 0) {
+		err = bpatch_decompress(&data[offset], bpatch->header->ctrllen, buf, &control_size);
+		if (err < 0 || control_size <= 0) {
 			error("Unable to decompress control block\n");
 			bpatch_free(bpatch);
 			return NULL;
@@ -143,23 +138,25 @@ bpatch_t* bpatch_load(uint8_t* data, uint64_t size) {
 		}
 
 		// Allocate memory for our decompressed control block
-		bpatch->control_size = buf_size;
-		bpatch->control = (uint8_t*) malloc(buf_size + 1);
+		bpatch->control_size = control_size;
+		bpatch->control = (uint8_t*) malloc(control_size + 1);
 		if(bpatch->control == NULL) {
 			error("Unable to allocate control block\n");
 			bpatch_free(bpatch);
 			return NULL;
 		}
-		memset(bpatch->control, '\0', buf_size);
-		memcpy(bpatch->control, buf, buf_size);
+		memset(bpatch->control, '\0', control_size);
+		memcpy(bpatch->control, buf, control_size);
 		offset += bpatch->header->ctrllen;
+
+
 
 		//////////////////////////
 		// Load in diff block
-		buf_size = BUFSIZE;
+		data_size = BUFSIZE;
 		memset(buf, '\0', BUFSIZE);
-		err = bpatch_decompress(bpatch, &data[offset], bpatch->header->datalen, buf, &buf_size);
-		if (err < 0 || buf_size <= 0) {
+		err = bpatch_decompress(&data[offset], bpatch->header->datalen, buf, &data_size);
+		if (err < 0 || data_size <= 0) {
 			error("Unable to decompress diff block\n");
 			bpatch_free(bpatch);
 			return NULL;
@@ -176,19 +173,21 @@ bpatch_t* bpatch_load(uint8_t* data, uint64_t size) {
 		memcpy(bpatch->data, buf, data_size);
 		offset += bpatch->header->datalen;
 
+
+
 		////////////////////////
 		// Load in extra block
-		buf_size = BUFSIZE;
+		extra_size = BUFSIZE;
 		memset(buf, '\0', BUFSIZE);
-		err = bpatch_decompress(bpatch, &data[offset], (size - offset), buf, &buf_size);
-		if (err < 0 || buf_size <= 0) {
+		err = bpatch_decompress(&data[offset], (size - offset), buf, &extra_size);
+		if (err < 0 || extra_size <= 0) {
 			error("Unable to decompress extra block\n");
 			bpatch_free(bpatch);
 			return NULL;
 		}
 
-		bpatch->extra_size = buf_size;
-		bpatch->extra = malloc(bpatch->extra_size);
+		bpatch->extra_size = extra_size;
+		bpatch->extra = malloc(extra_size + 1);
 		if(bpatch->extra == NULL) {
 			error("Unable to allocate memory for extra block\n");
 			bpatch_free(bpatch);
@@ -272,63 +271,56 @@ int bpatch_apply(bpatch_t* bpatch, const char* path) {
 		}
 		memset(target_data, '\0', target_size);
 
-		int64_t ctrl_start = *((int64_t*)&ctrl_data);
-		int64_t ctrl_end = ctrl_start + ctrl_size;
-		int64_t ctrl_position = ctrl_start + ctrl_offset;
-		while (ctrl_position < ctrl_end) {
+		int8_t* ctrl_start = ctrl_data;
+		int8_t* ctrl_end = ctrl_start + ctrl_size;
+		int8_t* ctrl_position = ctrl_start + ctrl_size;
+		while (ctrl_start + ctrl_offset < ctrl_start + ctrl_size) {
 			// Loop 3 times to read in X, Y, and Z values from the control vector
 			for (i = 0; i <= 2; i++) {
-				ctrl[i] = offtin(bpatch->control + ctrl_offset);
+				ctrl[i] = offtin(&bpatch->control[ctrl_offset]);
 				ctrl_offset += 8;
 			}
 			x = ctrl[0]; y = ctrl[1]; z = ctrl[2];
 			debug("x = %qd, y = %qd, z = %qd\n", x, y, z);
 
 
-			for(i = 0; i <= x; i++) {
-				if(source_data + i >= 0 && source_data[source_offset+i] < source_size) {
-					uint8_t value1 = source_data[source_offset+i];
-					uint8_t value2 = bpatch->data[data_offset+i];
-					target_data[target_offset+i] = value1 + value2;
-				}
-			}
-			hexdump(&target_data[target_offset], 0x200);
+			//if(source_offset + x > source_size) {
+			//	error("Fail sanitary check\n");
+			//	return -1;
+			//}
 
-			memcpy(&target_data[target_offset], &source_data[source_offset], x);
-			debug("0x%qx:\tCopying %qd bytes from old file to new file\n", target_offset, x);
-			hexdump(&target_data[target_offset], 0x200);
+			for(i = 0; i < x; i++) {
+				uint8_t value1 = source_data[source_offset+i];
+				uint8_t value2 = bpatch->data[data_offset+i];
+				//if(value2 > 0) {
+					target_data[target_offset+i] = (value1 + value2) & 0xFF;
+					//debug("Found actual 0x%x at offset %qd\n", value2, x);
+				//}
+			}
+
+			data_offset += x;
 			target_offset += x;
 			source_offset += x;
-			//data_offset += x;
 
-
-			//hexdump(&target_data[new_offset], 0x200);
-			//for(i = 0; i < y; i++) {
-			//	new_data[new_offset+i] = bpatch->extra[extra_offset+i];
-			//}
-			//hexdump(&target_data[new_offset], 0x200);
-
-				//memcpy(&target_data[target_offset], bpatch->extra, y);
-				//debug("0x%qx:\tCopying %qd bytes from extra block into new file\n", target_offset, y);
-				//target_offset += y;
-				//data_offset += y;
-				//extra_offset += y;
-				//hexdump()
-
-			if(z != 0) {
-				debug("0x%qx:\tSeeking to offset 0x%qx in the old file\n", target_offset, source_offset+z);
-				hexdump(&target_data[target_offset], 0x200);
-				source_offset += z;
+			//hexdump(&target_data[target_offset], 0x200);
+			for(i = 0; i < y; i++) {
+				//target_data[target_offset+i] = bpatch->extra[extra_offset+i];
 			}
+			//hexdump(&target_data[target_offset], 0x200);
+
+			//extra_offset += y;
+			target_offset += y;
+			source_offset += z;
 
 			// Prime loop for the next control vector thingy
-			ctrl_position = ctrl_start + ctrl_offset;
+			//ctrl_position = ctrl_start + ctrl_offset;
 		}
 
 		// CleanUp
-		free(source_data);
 		file_write("racoon.pwn", target_data, target_size);
 	}
+
+	free(source_data);
 	return 0;
 }
 
@@ -344,7 +336,7 @@ bpatch_header_t* bpatch_header_create() {
 	return header;
 }
 
-bpatch_header_t* bpatch_header_load(uint8_t* data, uint64_t size) {
+bpatch_header_t* bpatch_header_load(uint8_t* data, int64_t size) {
 	bpatch_header_t* header = bpatch_header_create();
 	if (header != NULL) {
 		if (memcmp(data, "BSDIFF40", 8) != 0) {
@@ -384,15 +376,16 @@ void bpatch_header_debug(bpatch_header_t* header) {
 	debug("\n");
 }
 
-unsigned int bpatch_decompress(bpatch_t* bpatch, uint8_t* input, uint64_t in_size, uint8_t* output, uint64_t* out_size) {
+unsigned int bpatch_decompress(char* input, unsigned int in_size, char* output, unsigned int* out_size) {
 	int err = 0;
 	char* dest = input;
 	char* source = output;
-	uint64_t was = *out_size;
-	unsigned int got = BUFSIZE;
+	unsigned int was = *out_size;
 	unsigned int size = in_size;
+	unsigned int got = BUFSIZE;
 
-	err = BZ2_bzBuffToBuffDecompress(output, &got, input, in_size, 0, 0);
+	err = BZ2_bzBuffToBuffDecompress(output, out_size, input, in_size, 0, 0);
+	got = *out_size;
 	if (err != BZ_OK) {
 		debug("Unable to decompress buffer %d\n", err);
 		got = 0;
@@ -400,7 +393,7 @@ unsigned int bpatch_decompress(bpatch_t* bpatch, uint8_t* input, uint64_t in_siz
 
 	if(got != 0) {
 		if (got < was) {
-			debug("bingo!!\n");
+			//debug("bingo!!\n");
 
 		} else {
 			error("Unable to fill up decompression buffer\n");
@@ -408,6 +401,5 @@ unsigned int bpatch_decompress(bpatch_t* bpatch, uint8_t* input, uint64_t in_siz
 		}
 	}
 	*out_size = got;
-
 	return got;
 }
