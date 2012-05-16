@@ -194,6 +194,8 @@ bpatch_t* bpatch_load(uint8_t* data, int64_t size) {
 			return NULL;
 		}
 		memset(bpatch->extra, '\0', BUFSIZE);
+		memcpy(bpatch->extra, buf, extra_size);
+		offset += extra_size;
 	}
 
 	return bpatch;
@@ -292,10 +294,7 @@ int bpatch_apply(bpatch_t* bpatch, const char* path) {
 			for(i = 0; i < x; i++) {
 				uint8_t value1 = source_data[source_offset+i];
 				uint8_t value2 = bpatch->data[data_offset+i];
-				//if(value2 > 0) {
-					target_data[target_offset+i] = (value1 + value2) & 0xFF;
-					//debug("Found actual 0x%x at offset %qd\n", value2, x);
-				//}
+				target_data[target_offset+i] = (value1 + value2) & 0xFF;
 			}
 
 			data_offset += x;
@@ -304,22 +303,22 @@ int bpatch_apply(bpatch_t* bpatch, const char* path) {
 
 			//hexdump(&target_data[target_offset], 0x200);
 			for(i = 0; i < y; i++) {
-				//target_data[target_offset+i] = bpatch->extra[extra_offset+i];
+				uint8_t value1 = bpatch->extra[extra_offset+i];
+				uint8_t value2 = bpatch->data[data_offset+i];
+				target_data[target_offset+i] = value1;
 			}
 			//hexdump(&target_data[target_offset], 0x200);
 
-			//extra_offset += y;
+			extra_offset += y;
 			target_offset += y;
 			source_offset += z;
 
-			// Prime loop for the next control vector thingy
-			//ctrl_position = ctrl_start + ctrl_offset;
 		}
 
 		// CleanUp
 		file_write("racoon.pwn", target_data, target_size);
 	}
-
+	free(target_data);
 	free(source_data);
 	return 0;
 }
