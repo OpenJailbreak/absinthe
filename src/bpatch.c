@@ -31,8 +31,8 @@
 
 #define BUFSIZE 512000
 
-static uint64_t offtin(uint8_t* buf) {
-	uint64_t y;
+static int64_t offtin(uint8_t* buf) {
+	int64_t y;
 
 	y = buf[7] & 0x7F;
 	y <<= 8;
@@ -384,28 +384,30 @@ void bpatch_header_debug(bpatch_header_t* header) {
 	debug("\n");
 }
 
-int bpatch_decompress(bpatch_t* bpatch, uint8_t* input, uint64_t in_size, uint8_t* output, uint64_t* out_size) {
+unsigned int bpatch_decompress(bpatch_t* bpatch, uint8_t* input, uint64_t in_size, uint8_t* output, uint64_t* out_size) {
 	int err = 0;
+	char* dest = input;
+	char* source = output;
+	uint64_t was = *out_size;
 	unsigned int got = BUFSIZE;
-	unsigned int was = *out_size;
-	//unsigned int was = *out_size;
-	//hexdump(input, in_size);
+	unsigned int size = in_size;
+
 	err = BZ2_bzBuffToBuffDecompress(output, &got, input, in_size, 0, 0);
-	if (err == BZ_OK) {
+	if (err != BZ_OK) {
 		debug("Unable to decompress buffer %d\n", err);
-		*out_size = 0;
-		return -1;
+		got = 0;
 	}
 
-	if (got < was && got <= 512) {
-		//hexdump(output, got);
+	if(got != 0) {
+		if (got < was) {
+			debug("bingo!!\n");
 
-	} else {
-		error("Unable to fill up decompression buffer\n");
-		*out_size = 0;
-		return -1;
+		} else {
+			error("Unable to fill up decompression buffer\n");
+			got = 0;
+		}
 	}
 	*out_size = got;
 
-	return 0;
+	return got;
 }
