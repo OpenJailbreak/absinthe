@@ -42,9 +42,9 @@
 
 typedef struct bpatch_header_t {
 	uint8_t magic[8];
-	uint64_t ctrllen;
-	uint64_t datalen;
-	uint64_t filelen;
+	int64_t ctrllen;
+	int64_t datalen;
+	int64_t filelen;
 } bpatch_header_t;
 
 typedef struct bpatch_t {
@@ -52,10 +52,12 @@ typedef struct bpatch_t {
 	uint8_t* data;
 	uint8_t* extra;
 	uint8_t* control;
-	off_t data_size;
-	off_t extra_size;
-	off_t control_size;
-	bz_stream* stream;
+	uint64_t data_size;
+	uint64_t extra_size;
+	uint64_t control_size;
+	int64_t data_offset;
+	int64_t extra_offset;
+	int64_t control_offset;
 	bpatch_header_t* header;
 } bpatch_t;
 
@@ -63,24 +65,19 @@ int bpatch(const char* in, const char* out, const char* patch);
 
 bpatch_t* bpatch_create();
 bpatch_t* bpatch_open(const char* path);
-bpatch_t* bpatch_load(unsigned char* data, unsigned int size);
+bpatch_t* bpatch_load(uint8_t* data, uint64_t size);
 int bpatch_apply(bpatch_t* bpatch, const char* path);
 void bpatch_free(bpatch_t* bpatch);
 void bpatch_debug(bpatch_t* bpatch);
-
-unsigned int bpatch_read(bpatch_t* bpatch, unsigned char* data, unsigned int size);
 
 /*
  * Binary Patch Header
  */
 bpatch_header_t* bpatch_header_create();
-bpatch_header_t* bpatch_header_load(unsigned char* data, unsigned int size);
+bpatch_header_t* bpatch_header_load(uint8_t* data, uint64_t size);
 void bpatch_header_free(bpatch_header_t* header);
 void bpatch_header_debug(bpatch_header_t* header);
 
-//int bzip_decompress(unsigned char* input, unsigned int in_size, unsigned char* output, unsigned int out_size);
-
-//int bpatch_control_decompress(unsigned char* input, unsigned int in_size, unsigned char** output, unsigned int* out_size);
-int bpatch_decompress(bpatch_t* bpatch, char* input, unsigned int in_size, char* output, unsigned int* out_size);
+int bpatch_decompress(bpatch_t* bpatch, uint8_t* input, uint64_t in_size, uint8_t* output, uint64_t* out_size);
 
 #endif /* BPATCH_H_ */

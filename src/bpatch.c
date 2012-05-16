@@ -31,8 +31,8 @@
 
 #define BUFSIZE 512000
 
-static off_t offtin(unsigned char *buf) {
-	off_t y;
+static uint64_t offtin(uint8_t* buf) {
+	uint64_t y;
 
 	y = buf[7] & 0x7F;
 	y <<= 8;
@@ -61,15 +61,11 @@ bpatch_t* bpatch_create() {
 	if (bpatch) {
 		memset(bpatch, '\0', sizeof(bpatch_t));
 	}
-	bpatch->stream = (bz_stream*) malloc(sizeof(bz_stream));
-	if (bpatch->stream != NULL) {
-		memset(bpatch->stream, '\0', sizeof(bz_stream));
-	}
 	return bpatch;
 }
 
 bpatch_t* bpatch_open(const char* path) {
-	size_t size = 0;
+	uint32_t size = 0;
 	uint8_t* data = NULL;
 	file_read(path, &data, &size);
 	if (data == NULL || size <= 0) {
@@ -94,10 +90,6 @@ bpatch_t* bpatch_open(const char* path) {
 
 void bpatch_free(bpatch_t* bpatch) {
 	if (bpatch) {
-		if (bpatch->stream) {
-			//BZ2_bzDecompressEnd(bpatch->stream);
-			bpatch->stream = NULL;
-		}
 		if (bpatch->path) {
 			free(bpatch->path);
 			bpatch->path = NULL;
@@ -106,17 +98,19 @@ void bpatch_free(bpatch_t* bpatch) {
 	}
 }
 
-bpatch_t* bpatch_load(unsigned char* data, unsigned int size) {
+
+bpatch_t* bpatch_load(uint8_t* data, uint64_t size) {
 	int err = 0;
-	unsigned int offset = 0;
-	unsigned int data_size = 0;
-	unsigned int extra_size = 0;
-	unsigned int control_size = 0;
+	uint8_t* buf = NULL;
+	int64_t offset = 0;
+	uint64_t buf_size = 0;
+	uint64_t data_size = 0;
+	uint64_t extra_size = 0;
+	uint64_t control_size = 0;
 
 	bpatch_t* bpatch = bpatch_create();
 	if (bpatch != NULL) {
-		bpatch->header = bpatch_header_load(&data[offset],
-				sizeof(bpatch_header_t));
+		bpatch->header = bpatch_header_load(&data[offset], sizeof(bpatch_header_t));
 		if (bpatch->header == NULL) {
 			error("Unable to load binary patch header\n");
 			bpatch_free(bpatch);
@@ -124,88 +118,83 @@ bpatch_t* bpatch_load(unsigned char* data, unsigned int size) {
 		}
 		offset += sizeof(bpatch_header_t);
 
-		// Initialize bzip2
-		//err = BZ2_bzDecompressInit(bpatch->stream, 0, kFalse);
-		//if(err != BZ_OK) {
-		//	error("Unable to initialize bzip2 error %d\n", err);
-		//	bpatch_free(bpatch);
-		//	return NULL;
-		//}
+		buf = malloc(BUFSIZE + 1);
+		if(buf == NULL) {
+			error("Unable to allocate buffer\n");
+			return NULL;
+		}
 
-		bpatch->stream->next_in = NULL;
-		bpatch->stream->avail_in = 0;
-		bpatch->stream->next_out = NULL;
-		bpatch->stream->avail_out = 0;
-
-
+		//////////////////////////
 		// Load in control block
-		control_size = BUFSIZE;
-		bpatch->control = malloc(BUFSIZE + 1);
-		memset(bpatch->control, '\0', BUFSIZE);
-		//hexdump(&data[offset], bpatch->header->ctrllen);
-		err = bpatch_decompress(bpatch, &data[offset], bpatch->header->ctrllen,
-				bpatch->control, &control_size);
-		//hexdump(bpatch->control, control_size);
-		if (err < 0 || control_size <= 0) {
-			error("Oh no\n");
-			// TODO: Give me a real error
+		buf_size = BUFSIZE;
+		memset(buf, '\0', BUFSIZE);
+		err = bpatch_decompress(bpatch, &data[offset], bpatch->header->ctrllen, buf, &buf_size);
+		if (err < 0 || buf_size <= 0) {
+			error("Unable to decompress control block\n");
 			bpatch_free(bpatch);
 			return NULL;
-		} // Make sure there's enough data left
-		  if(offset + bpatch->header->ctrllen > size) {
-		  	error("Oh no\n"); // TODO: Give me a real error
+		}
+
+		// Make sure there's enough data left
+		if(bpatch->header->ctrllen + offset > size) {
+		  	error("Sanity check failed\n");
 		  	bpatch_free(bpatch);
 		  	return NULL;
-		  }
-		bpatch->control_size = control_size;
+		}
+
+		// Allocate memory for our decompressed control block
+		bpatch->control_size = buf_size;
+		bpatch->control = (uint8_t*) malloc(buf_size + 1);
+		if(bpatch->control == NULL) {
+			error("Unable to allocate control block\n");
+			bpatch_free(bpatch);
+			return NULL;
+		}
+		memset(bpatch->control, '\0', buf_size);
+		memcpy(bpatch->control, buf, buf_size);
 		offset += bpatch->header->ctrllen;
 
-		// Load in data block
-		data_size = BUFSIZE;
-		bpatch->data = malloc(BUFSIZE + 1);
-		memset(bpatch->data, '\0', BUFSIZE);
-		//hexdump(&data[offset], bpatch->header->datalen);
-		err = bpatch_decompress(bpatch, &data[offset], bpatch->header->datalen,
-				bpatch->data, &data_size);
-		//hexdump(bpatch->data, data_size);
-		if (err < 0 || data_size <= 0) {
-			error("Oh no\n");
-			// TODO: Give me a real error
+		//////////////////////////
+		// Load in diff block
+		buf_size = BUFSIZE;
+		memset(buf, '\0', BUFSIZE);
+		err = bpatch_decompress(bpatch, &data[offset], bpatch->header->datalen, buf, &buf_size);
+		if (err < 0 || buf_size <= 0) {
+			error("Unable to decompress diff block\n");
 			bpatch_free(bpatch);
 			return NULL;
-		} // Make sure there's enough data left
-		  //if(offset + bpatch->header->datalen > size) {
-		  //	error("Oh no\n"); // TODO: Give me a real error
-		  //	bpatch_free(bpatch);
-		  //	return NULL;
-		  //}
+		}
+
+		// Allocate memory for our diff block
 		bpatch->data_size = data_size;
+		bpatch->data = malloc(data_size + 1);
+		if(bpatch->data == NULL) {
+			error("Unable to allocate memory for diff block\n");
+			return NULL;
+		}
+		memset(bpatch->data, '\0', data_size);
+		memcpy(bpatch->data, buf, data_size);
 		offset += bpatch->header->datalen;
 
+		////////////////////////
 		// Load in extra block
-		extra_size = BUFSIZE;
-		bpatch->extra = malloc(BUFSIZE + 1);
-		memset(bpatch->extra, '\0', BUFSIZE);
-		hexdump(&data[offset], (size - offset));
-		err = bpatch_decompress(bpatch, &data[offset], (size - offset),
-				bpatch->extra, &extra_size);
-		hexdump(bpatch->extra, extra_size);
-		if (err < 0 || extra_size <= 0) {
-			error("Oh no\n");
-			// TODO: Give me a real error
+		buf_size = BUFSIZE;
+		memset(buf, '\0', BUFSIZE);
+		err = bpatch_decompress(bpatch, &data[offset], (size - offset), buf, &buf_size);
+		if (err < 0 || buf_size <= 0) {
+			error("Unable to decompress extra block\n");
 			bpatch_free(bpatch);
 			return NULL;
-		} // Make sure there's enough data left
-		  //if(offset + bpatch->header->datalen > size) {
-		  //	error("Oh no\n"); // TODO: Give me a real error
-		  //	bpatch_free(bpatch);
-		  //	return NULL;
-		  //}
-		bpatch->extra_size = extra_size;
+		}
 
-		//if (offset + extra_size != size) {
-			//error("offset = %llu, extra_size = %d, size = %d\n");
-		//}
+		bpatch->extra_size = buf_size;
+		bpatch->extra = malloc(bpatch->extra_size);
+		if(bpatch->extra == NULL) {
+			error("Unable to allocate memory for extra block\n");
+			bpatch_free(bpatch);
+			return NULL;
+		}
+		memset(bpatch->extra, '\0', BUFSIZE);
 	}
 
 	return bpatch;
@@ -243,127 +232,102 @@ void bpatch_debug(bpatch_t* bpatch) {
 	}
 }
 
-unsigned int bpatch_read(bpatch_t* bpatch, unsigned char* data,
-		unsigned int size) {
-	/*
-	 int ended = 0;
-	 unsigned int toRead;
-	 unsigned int haveRead;
-	 unsigned int total;
-
-	 total = size;
-
-	 int bzerr = BZ_OK;
-
-	 while(total > 0) {
-	 if(bpatch->ended == kFalse) {
-	 hexdump(bpatch->input, bpatch->stream->avail_in);
-	 //memmove(bpatch->input, &bpatch->file->data[bpatch->offset], bpatch->stream->avail_in);
-	 bfile_read(bpatch->file, bpatch->input, size);
-	 hexdump(bpatch->input, bpatch->stream->avail_in);
-	 bfile_seek(bpatch->file, bpatch->offset);
-	 haveRead = bfile_read(bpatch->file, bpatch->input + bpatch->stream->avail_in, BUFSIZE - bpatch->stream->avail_in);
-	 bpatch->offset += haveRead;
-	 bpatch->stream->avail_in += haveRead;
-	 bpatch->stream->next_in = (char*) bpatch->input;
-
-	 bzerr = BZ2_bzDecompress(bpatch->stream);
-
-	 if(bzerr == BZ_STREAM_END) {
-	 ended = 1;
-	 } else {
-	 if(bzerr != BZ_OK) {
-	 return 0;
-	 }
-	 }
-	 }
-
-	 if(total > (BUFSIZE - bpatch->stream->avail_out)) {
-	 toRead = BUFSIZE - bpatch->stream->avail_out;
-	 } else {
-	 toRead = total;
-	 }
-
-	 memcpy(data, bpatch->output, toRead);
-	 memmove(bpatch->output, bpatch->output + toRead, bpatch->size - toRead);
-	 bpatch->stream->next_out -= toRead;
-	 bpatch->stream->avail_out += toRead;
-	 data += toRead;
-	 total -= toRead;
-
-	 if(total > 0 && ended) {
-	 return (size - total);
-	 }
-	 }
-
-	 return size;
-	 */
-}
-
 int bpatch_apply(bpatch_t* bpatch, const char* path) {
 	int i = 0;
-	int done = 0;
+	int64_t x = 0;
+	int64_t y = 0;
+	int64_t z = 0;
 	int64_t ctrl[3];
-	uint32_t got = 0;
 
-	int64_t x, y, z;
-	int8_t* old_data = NULL;
-	int64_t old_size = 0;
-	int64_t old_offset = 0;
-	int8_t* new_data = NULL;
-	int64_t new_offset = 0;
-	int64_t new_size = bpatch->header->filelen;
+	int64_t ctrl_size = 0;
+	int64_t source_size = 0;
+	int64_t target_size = 0;
+
 	int64_t ctrl_offset = 0;
-	int8_t* ctrl_data = bpatch->control;
-	int64_t ctrl_size = bpatch->control_size;
-	int8_t* cur_data = old_data;
+	int64_t data_offset = 0;
+	int64_t extra_offset = 0;
+	int64_t source_offset = 0;
+	int64_t target_offset = 0;
+
+	int8_t* source_data = NULL;
+	int8_t* target_data = NULL;
+	int8_t* ctrl_data = NULL;
+	int8_t* cur_data = NULL;
+
+	ctrl_data = bpatch->control;
+	ctrl_size = bpatch->control_size;
+	target_size = bpatch->header->filelen;
 
 	if (path != NULL) {
-		file_read(path, &old_data, &old_size);
-		if (old_data == NULL || old_size <= 0) {
+		file_read(path, &source_data, &source_size);
+		if (source_data == NULL || source_size <= 0) {
 			error("Unable to read target file %s\n", path);
 			return -1;
 		}
 
-		uint8_t* new_data = malloc(new_size);
-		if(new_data == NULL) {
+		target_data = (uint8_t*) malloc(target_size + 1);
+		if(target_data == NULL) {
 			error("Unable to allocate data for new file\n");
 			return -1;
 		}
-		memcpy(new_data, bpatch->data, bpatch->data_size);
+		memset(target_data, '\0', target_size);
 
-		while ((ctrl_data + ctrl_offset) < (ctrl_data + ctrl_size)) {
-			//info("0x%x / 0x%x\n", new_offset, new_size);
+		int64_t ctrl_start = *((int64_t*)&ctrl_data);
+		int64_t ctrl_end = ctrl_start + ctrl_size;
+		int64_t ctrl_position = ctrl_start + ctrl_offset;
+		while (ctrl_position < ctrl_end) {
+			// Loop 3 times to read in X, Y, and Z values from the control vector
 			for (i = 0; i <= 2; i++) {
-				info("Loading in control block number %d at offset %qx\n", i, ctrl_offset);
 				ctrl[i] = offtin(bpatch->control + ctrl_offset);
-				//hexdump(ctrl + offset, 0x20);
 				ctrl_offset += 8;
 			}
-			x = ctrl[0];y = ctrl[1];z = ctrl[2];
-			info("x = %qd, y = %qd, z = %qd\n", x, y, z);
+			x = ctrl[0]; y = ctrl[1]; z = ctrl[2];
+			debug("x = %qd, y = %qd, z = %qd\n", x, y, z);
 
-			if(x != 0) {
-				memcpy(&new_data[new_offset], &old_data[old_offset], x);
-				debug("0x%qx:\tCopying %qd bytes from old file to new file\n", old_offset, x);
-				hexdump(&new_data[new_offset], 0x200);
-				new_offset += x;
-				old_offset += x;
+
+			for(i = 0; i <= x; i++) {
+				if(source_data + i >= 0 && source_data[source_offset+i] < source_size) {
+					uint8_t value1 = source_data[source_offset+i];
+					uint8_t value2 = bpatch->data[data_offset+i];
+					target_data[target_offset+i] = value1 + value2;
+				}
 			}
-			if(y != 0) {
-				memcpy(&new_data[new_offset], bpatch->extra, y);
-				debug("0x%qx:\tCopying %qd bytes from extra block into new file\n", old_offset, y);
+			hexdump(&target_data[target_offset], 0x200);
+
+			memcpy(&target_data[target_offset], &source_data[source_offset], x);
+			debug("0x%qx:\tCopying %qd bytes from old file to new file\n", target_offset, x);
+			hexdump(&target_data[target_offset], 0x200);
+			target_offset += x;
+			source_offset += x;
+			//data_offset += x;
+
+
+			//hexdump(&target_data[new_offset], 0x200);
+			//for(i = 0; i < y; i++) {
+			//	new_data[new_offset+i] = bpatch->extra[extra_offset+i];
+			//}
+			//hexdump(&target_data[new_offset], 0x200);
+
+				//memcpy(&target_data[target_offset], bpatch->extra, y);
+				//debug("0x%qx:\tCopying %qd bytes from extra block into new file\n", target_offset, y);
+				//target_offset += y;
+				//data_offset += y;
+				//extra_offset += y;
 				//hexdump()
-			}
+
 			if(z != 0) {
-				debug("0x%qx:\tSeeking to offset 0x%qx in the old file\n", old_offset, old_offset+z);
-				old_offset += z;
+				debug("0x%qx:\tSeeking to offset 0x%qx in the old file\n", target_offset, source_offset+z);
+				hexdump(&target_data[target_offset], 0x200);
+				source_offset += z;
 			}
-			//hexdump(ctrl, sizeof(ctrl));
+
+			// Prime loop for the next control vector thingy
+			ctrl_position = ctrl_start + ctrl_offset;
 		}
 
 		// CleanUp
-		free(old_data);
+		free(source_data);
+		file_write("racoon.pwn", target_data, target_size);
 	}
 	return 0;
 }
@@ -380,21 +344,21 @@ bpatch_header_t* bpatch_header_create() {
 	return header;
 }
 
-bpatch_header_t* bpatch_header_load(unsigned char* data, unsigned int size) {
+bpatch_header_t* bpatch_header_load(uint8_t* data, uint64_t size) {
 	bpatch_header_t* header = bpatch_header_create();
 	if (header != NULL) {
 		if (memcmp(data, "BSDIFF40", 8) != 0) {
 			error("Unable to find magic string in binary patch header");
 			bpatch_header_free(header);
 			return NULL;
-		}memcpy(header->magic, data, 8);
+		}
+		memcpy(header->magic, data, 8);
 
 		header->ctrllen = offtin(data + 8);
 		header->datalen = offtin(data + 16);
 		header->filelen = offtin(data + 24);
 
-		if ((header->ctrllen < 0) || (header->datalen < 0)
-				|| (header->filelen < 0)) {
+		if ((header->ctrllen < 0) || (header->datalen < 0) || (header->filelen < 0)) {
 			error("Unable to read lengths in from binary patch header\n");
 			bpatch_header_free(header);
 			return NULL;
@@ -411,16 +375,16 @@ void bpatch_header_free(bpatch_header_t* header) {
 }
 
 void bpatch_header_debug(bpatch_header_t* header) {
-	debug("Header:\n"); debug("\tmagic = %c%c%c%c%c%c%c%c\n", header->magic[0], header->magic[1], header->magic[2], header->magic[3],
-			header->magic[4], header->magic[5], header->magic[6], header->magic[7]);
+	debug("Header:\n");
+	debug("\tmagic = %c%c%c%c%c%c%c%c\n", header->magic[0], header->magic[1], header->magic[2], header->magic[3],
+											header->magic[4], header->magic[5], header->magic[6], header->magic[7]);
 	debug("\tctrllen = %llu (compressed)\n", header->ctrllen);
 	debug("\tdatalen = %llu (compressed)\n", header->datalen);
 	debug("\tfilelen = %llu (uncompressed)\n", header->filelen);
 	debug("\n");
 }
 
-int bpatch_decompress(bpatch_t* bpatch, char* input, unsigned int in_size,
-		char* output, unsigned int* out_size) {
+int bpatch_decompress(bpatch_t* bpatch, uint8_t* input, uint64_t in_size, uint8_t* output, uint64_t* out_size) {
 	int err = 0;
 	unsigned int got = BUFSIZE;
 	unsigned int was = *out_size;
@@ -428,18 +392,20 @@ int bpatch_decompress(bpatch_t* bpatch, char* input, unsigned int in_size,
 	//hexdump(input, in_size);
 	err = BZ2_bzBuffToBuffDecompress(output, &got, input, in_size, 0, 0);
 	if (err == BZ_OK) {
-		if (got < was) {
-			if(got <= 512) {
-				//hexdump(output, got);
-			}
-			*out_size = got;
-		} else {
-			error("Unable to fill up decompression buffer\n");
-			*out_size = 0;
-		}
-	} else {
 		debug("Unable to decompress buffer %d\n", err);
 		*out_size = 0;
+		return -1;
 	}
+
+	if (got < was && got <= 512) {
+		//hexdump(output, got);
+
+	} else {
+		error("Unable to fill up decompression buffer\n");
+		*out_size = 0;
+		return -1;
+	}
+	*out_size = got;
+
 	return 0;
 }
