@@ -25,9 +25,14 @@ OPENSSL_STATIC=""
 SYSTYPE=
 case "$host_os" in
 	darwin*)
+		if test -d "/Applications/Xcode.app/Contents/Developer"; then
+			SDK_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs
+		else
+			SDK_DIR=/Developer/SDKs
+		fi
 		if test "x$BUILD_10_5" = "x1"; then
 		SYSTYPE=osx.10.5
-		ACCFLAGS+="-fPIC -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 "
+		ACCFLAGS+="-fPIC -arch i386 -arch ppc -isysroot $SDK_DIR/MacOSX10.5.sdk -mmacosx-version-min=10.5 "
 		ACSHAREDLIBS+="-lpthread -lz -lm -liconv -lssl -lcrypto -lxml2 "
 		ACLDFLAGS="-arch i386 -arch ppc "
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
@@ -43,7 +48,7 @@ case "$host_os" in
 		ACLDFLAGS+="-arch i386 "
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
-			-isysroot /Developer/SDKs/MacOSX10.6.sdk \
+			-isysroot $SDK_DIR/MacOSX10.6.sdk \
 			-DCURL_PULL_SYS_SOCKET_H \
 			-D_FILE_OFFSET_BITS=64 -D_LARGE_FILES"
 		ACGUI_LDFLAGS+="-pthread -static-libstdc++"
