@@ -38,7 +38,8 @@ absinthe_SOURCES = \
 	../src/crashreportcopy.c \
 	../src/crashreport.c \
 	../src/idevicebackup2.c \
-	../src/fsgen.c 
+	../src/fsgen.c \
+	../src/bpatch.c
 
 absinthe_CFLAGS = $(AM_CFLAGS) -I../src
 absinthe_CXXFLAGS = $(AM_CXXFLAGS) -I../src
