@@ -1638,7 +1638,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	/********************************************************/
 	/* restore backup WITHOUT rebooting */
 	/********************************************************/
-	status_cb("Sending stage1 data. Your device will appear to be restoring a backup, this may also take a while...", 30);
+	status_cb("Sending initial jailbreak data. This may also take a while...", 30);
 	char* nargv[] = {
 		"idevicebackup2",
 		"restore",
@@ -1833,7 +1833,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	/********************************************************/
 	/* restore backup */
 	/********************************************************/
-	status_cb("Sending stage2 data. Again, your device will appear to be restoring a backup, this may also take a while...", 35);
+	status_cb("Sending final jailbreak data. Your device will appear to be restoring a backup, this may also take a while...", 35);
 	char* rargv[] = {
 		"idevicebackup2",
 		"restore",
