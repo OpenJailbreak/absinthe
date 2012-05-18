@@ -1676,12 +1676,14 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 
 	int failed = 0;
 	bytes = 0;
-	clen = 65536;
+	clen = 0;
 	cxml = NULL;
 	idevice_connection_receive_timeout(conn, (char*)&clen, 4, &bytes, 1500);
 	nlen = be32toh(clen);
 	if (nlen > 0) {
+		cxml = malloc(nlen);
 		idevice_connection_receive_timeout(conn, cxml, nlen, &bytes, 5000);
+		free(cxml);
 		if (bytes > 0) {
 			failed = 1;
 		}
@@ -1694,7 +1696,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	}
 
 	/********************************************************/
-	/* crash lockdownd */
+	/* get racoon from lockdownd */
 	/********************************************************/
 	lockdownd_client_t lckd = NULL;
 	lockdownd_client_new(device->client, &lckd, NULL);
@@ -1715,13 +1717,26 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	// patch the racoon file we got with entitlement exploit
 	unsigned int got = 0;
 	debug("Writing racoon to filesystem\n");
-	got = file_write("data/common/rocky-racoon/racoon", racoon_data, racoon_size);
+	got = file_write("data/common/rocky-racoon/racoon", racoon_data, (unsigned int)racoon_size);
 	if(got == -1) {
 		error("Unable to write data to filesystem\n");
 	}
-	//if (racoon_data) {
-	//	free(racoon_data);
-	//}
+	if (racoon_data) {
+		free(racoon_data);
+	}
+
+	debug("patching racoon\n");
+	bpatch_t* patch = bpatch_open("data/common/rocky-racoon/racoon.bdiff");
+	debug("patch open\n");
+	if (patch != NULL) {
+		if(bpatch_apply(patch, "data/common/rocky-racoon/racoon") != 0) {
+			fprintf(stderr, "ERROR: Failed to patch target\n");
+		}
+		bpatch_free(patch);
+	} else {
+		fprintf(stderr, "ERROR: failed to open racoon.bdiff\n");
+		return -1;
+	}	
 
 	device_free(device);
 	device = NULL;
