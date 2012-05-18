@@ -138,15 +138,25 @@ mkdir -p $CLIDEST/data/common/corona
 mkdir -p $GUIDEST/data/common/corona
 
 # common files
-cp data/common/overrides.plist $CLIDEST/data/common/
+cp data/common/Cydia.tgz $CLIDEST/data/common/
+cp data/common/gzip $CLIDEST/data/common/
+cp data/common/tar $CLIDEST/data/common/
+cp -r data/common/rocky-racoon $CLIDEST/data/common/
 cp data/common/webclip_icon*.png $CLIDEST/data/common/
 cp data/common/webclip_Info.plist $CLIDEST/data/common/
-cp data/common/overrides.plist $GUIDEST/data/common/
+
+cp data/common/Cydia.tgz $GUIDEST/data/common/
+cp data/common/gzip $GUIDEST/data/common/
+cp data/common/tar $GUIDEST/data/common/
+cp -r data/common/rocky-racoon $GUIDEST/data/common/
 cp data/common/webclip_icon*.png $GUIDEST/data/common/
 cp data/common/webclip_Info.plist $GUIDEST/data/common/
 
 cp -r data/common/corona $CLIDEST/data/common/
 cp -r data/common/corona $GUIDEST/data/common/
+
+cp -r data/common/corona2 $CLIDEST/data/common/
+cp -r data/common/corona2 $GUIDEST/data/common/
 
 cp iOS/cleanup/cleanup $CLIDEST/data/common/corona/
 cp iOS/filemover/filemover $CLIDEST/data/common/corona/
@@ -158,7 +168,7 @@ cp iOS/filemover/filemover.plist $GUIDEST/data/common/corona/
 
 # device specific files
 
-function devfiles()
+function devfiles50()
 {
   for I in data/$1/*; do
     mkdir -p $CLIDEST/$I
@@ -170,7 +180,21 @@ function devfiles()
   done
 }
 
-devfiles 9A334
-devfiles 9A405
-devfiles 9A406
+function devfiles51()
+{
+  for I in data/$1/*; do
+    mkdir -p $CLIDEST/$I
+    mkdir -p $GUIDEST/$I
+    cp -r $I/rocky-racoon $CLIDEST/$I/
+    cp -r $I/rocky-racoon $GUIDEST/$I/
+  done
+}
+
+# 5.0.x stuff
+devfiles50 9A334
+devfiles50 9A405
+devfiles50 9A406
+
+# 5.1.1 stuff
+devfiles51 9B206
 

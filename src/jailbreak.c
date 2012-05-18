@@ -631,6 +631,44 @@ static void move_back_files_afc(afc_client_t afc)
 	free_dictionary(list);
 }
 
+static int inodenum = 54323;
+
+static int backup_add_file(backup_t* backup, const char* path, int mode, const char* domain, const char* destpath)
+{
+	int res = 0;
+	char* buff = NULL;
+	int buffsize = 0;
+	if (file_read(path, (unsigned char**)&buff, &buffsize) < 0) {
+		return -1;
+	}
+	backup_file_t* bf = backup_file_create_with_data(buff, buffsize, 0);
+	if (bf) {
+		backup_file_set_domain(bf, domain);
+		backup_file_set_path(bf, destpath);
+		backup_file_set_mode(bf, mode | 0100000);
+		backup_file_set_inode(bf, inodenum++);
+		backup_file_set_uid(bf, 0);
+		backup_file_set_gid(bf, 0);
+		unsigned int tm = (unsigned int)(time(NULL));
+		backup_file_set_time1(bf, tm);
+		backup_file_set_time2(bf, tm);
+		backup_file_set_time3(bf, tm);
+		backup_file_set_length(bf, buffsize);
+		backup_file_set_flag(bf, 4);
+		backup_file_update_hash(bf);
+
+		if (backup_update_file(backup, bf) < 0) {
+			fprintf(stderr, "ERROR: could not add file to backup\n");
+			res = -1;
+		}
+		backup_file_free(bf);
+		if (buff) {
+			free(buff);
+		}
+	}
+	return res;
+}
+
 static int jailbreak_50(const char* uuid, status_cb_t status_cb, device_t* device, lockdown_t* lockdown, const char* product, const char* build)
 {
         char backup_directory[1024];
@@ -1490,9 +1528,20 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 		goto fix;
 	}
 
+#define IOS_5_1_AUDIT_INJECT_DIR ".tmpdir0"
 #define IOS_5_1_LOCKDOWN_INJECT_DIR ".tmpdir1"
 #define IOS_5_1_OVERRIDES_INJECT_DIR ".tmpdir2"
 
+	afc_remove_path(afc, "/Books/" IOS_5_1_AUDIT_INJECT_DIR);
+	afc_remove_path(afc, "/Books/" IOS_5_1_LOCKDOWN_INJECT_DIR);
+	afc_remove_path(afc, "/Books/" IOS_5_1_OVERRIDES_INJECT_DIR);
+
+	if (afc_make_link(afc, AFC_SYMLINK, "../../../audit", "/Books/" IOS_5_1_AUDIT_INJECT_DIR) != AFC_E_SUCCESS) {
+		status_cb("ERROR: could not create link!", 0);
+		afc_client_free(afc);
+		device_free(device);
+		return -1;
+	}
 	if (afc_make_link(afc, AFC_SYMLINK, "../../../root/Library/Lockdown", "/Books/" IOS_5_1_LOCKDOWN_INJECT_DIR) != AFC_E_SUCCESS) {
 		status_cb("ERROR: could not create link!", 0);
 		afc_client_free(afc);
@@ -1516,6 +1565,19 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	afc_rename_path(afc, "/Photos", "/"AFCTMP"/Photos");
 	afc_rename_path(afc, "/Recordings", "/"AFCTMP"/Recordings");
 	// TODO other paths?
+
+	// make sure directory exists
+	afc_make_directory(afc, "/jb-install");
+
+	// remove all files in it
+	rmdir_recursive_afc(afc, "/jb-install", 0);
+
+	afc_upload_file(afc, "data/common/Cydia.tgz", "/jb-install");
+	afc_upload_file(afc, "data/common/tar", "/jb-install");
+	afc_upload_file(afc, "data/common/gzip", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/jb-install", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/jb.plist", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/launchd.conf", "/jb-install");
 
 	afc_client_free(afc);
 	afc = NULL;
@@ -1699,57 +1761,52 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 		}
 	}
 
+	backup_add_file(backup, "data/common/rocky-racoon/overrides.plist", 0644, "BooksDomain", IOS_5_1_OVERRIDES_INJECT_DIR "/overrides.plist");
+
+	// create rocky-racoon directory
+	bf = backup_file_create(NULL);
+	backup_file_set_domain(bf, "BooksDomain");
+	backup_file_set_path(bf, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon");
+	backup_file_set_mode(bf, 040755);
+	backup_file_set_inode(bf, 54321);
+	backup_file_set_uid(bf, 501);
+	backup_file_set_gid(bf, 501);
+	unsigned int tm = (unsigned int)(time(NULL));
+	backup_file_set_time1(bf, tm);
+	backup_file_set_time2(bf, tm);
+	backup_file_set_time3(bf, tm);
+	backup_file_set_length(bf, 0);
+	backup_file_set_flag(bf, 0);
+	if (backup_update_file(backup, bf) < 0) {
+		fprintf(stderr, "ERROR: could not add file to backup\n");
+	}
+	backup_file_free(bf);
+
+	int i;
+	char rocky_file[1024];
+	char rocky_target[256];
+
+	// add 00-ff files
+	for (i = 0; i < 256; i++) {
+		sprintf(rocky_file, "data/%s/%s/rocky-racoon/%02x", build, product, i);
+		sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon/%02x", i); 
+		backup_add_file(backup, rocky_file, 0644, "BooksDomain", rocky_target);
+	}
+
+	// add boot.conf
+	sprintf(rocky_file, "data/%s/%s/rocky-racoon/%s", build, product, "boot.conf");
+	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon/%s", "boot.conf");
+	backup_add_file(backup, rocky_file, 0644, "BooksDomain", rocky_target);
+
+	// add install.conf
+	sprintf(rocky_file, "data/%s/%s/rocky-racoon/%s", build, product, "install.conf");
+	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon/%s", "install.conf");
+	backup_add_file(backup, rocky_file, 0644, "BooksDomain", rocky_target);
+
 	// add racoon
-	bf = backup_file_create_with_data(racoon_data, racoon_size, 0);
-	if (bf) {
-		backup_file_set_domain(bf, "BooksDomain");
-		backup_file_set_path(bf, "racoon");
-		backup_file_set_mode(bf, 0100755);
-		backup_file_set_inode(bf, 54329);
-		backup_file_set_uid(bf, 0);
-		backup_file_set_gid(bf, 0);
-		unsigned int tm = (unsigned int)(time(NULL));
-		backup_file_set_time1(bf, tm);
-		backup_file_set_time2(bf, tm);
-		backup_file_set_time3(bf, tm);
-		backup_file_set_length(bf, racoon_size);
-		backup_file_set_flag(bf, 4);
-		backup_file_update_hash(bf);
-
-		if (backup_update_file(backup, bf) < 0) {
-			fprintf(stderr, "ERROR: could not add file to backup\n");
-		}
-		backup_file_free(bf);
-	}
-
-	// add overrides.plist
-	char* buff = NULL;
-	int buffsize = 0;
-	file_read("data/common/overrides.plist", (unsigned char**)&buff, &buffsize);
-	bf = backup_file_create_with_data(buff, buffsize, 0);
-	if (bf) {
-		backup_file_set_domain(bf, "BooksDomain");
-		backup_file_set_path(bf, IOS_5_1_OVERRIDES_INJECT_DIR "/overrides.plist");
-		backup_file_set_mode(bf, 0100644);
-		backup_file_set_inode(bf, 54323);
-		backup_file_set_uid(bf, 0);
-		backup_file_set_gid(bf, 0);
-		unsigned int tm = (unsigned int)(time(NULL));
-		backup_file_set_time1(bf, tm);
-		backup_file_set_time2(bf, tm);
-		backup_file_set_time3(bf, tm);
-		backup_file_set_length(bf, buffsize);
-		backup_file_set_flag(bf, 4);
-		backup_file_update_hash(bf);
-
-		if (backup_update_file(backup, bf) < 0) {
-			fprintf(stderr, "ERROR: could not add file to backup\n");
-		}
-		backup_file_free(bf);
-		if (buff) {
-			free(buff);
-		}
-	}
+	sprintf(rocky_file, "data/common/rocky-racoon/%s", "racoon");
+	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon/%s", "racoon");
+	backup_add_file(backup, rocky_file, 0755, "BooksDomain", rocky_target);
 
 	backup_write_mbdb(backup);
 	backup_free(backup);
@@ -1829,6 +1886,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	status_cb("Moving back files...", 50);
 
 	// remove the links, we don't need them anymore
+	afc_remove_path(afc, "/Books/" IOS_5_1_AUDIT_INJECT_DIR);
 	afc_remove_path(afc, "/Books/" IOS_5_1_LOCKDOWN_INJECT_DIR);
 	afc_remove_path(afc, "/Books/" IOS_5_1_OVERRIDES_INJECT_DIR);
 
@@ -1999,6 +2057,10 @@ fix:
 	if (afc_read_directory(afc, "/"AFCTMP, &list) == AFC_E_SUCCESS) {
 		fprintf(stderr, "WARNING: the folder /"AFCTMP" is still present in the user's Media folder. You have to check yourself for any leftovers and move them back if required.\n");
 	}
+
+	afc_remove_path(afc, "/Books/" IOS_5_1_AUDIT_INJECT_DIR);
+	afc_remove_path(afc, "/Books/" IOS_5_1_LOCKDOWN_INJECT_DIR);
+	afc_remove_path(afc, "/Books/" IOS_5_1_OVERRIDES_INJECT_DIR);
 
 	rmdir_recursive(backup_directory);
 

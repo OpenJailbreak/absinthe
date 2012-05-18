@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>jb</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/var/audit/rocky-racoon/racoon</string>
+		<string>-F</string>
+		<string>-f</string>
+		<string>boot.conf</string>
+		<string>-l</string>
+		<string>/dev/null</string>
+	</array>
+	<key>WorkingDirectory</key>
+	<string>/var/audit/rocky-racoon/</string>
+	<key>RunAtLoad</key>
+	<true/>
+</dict>
+</plist>
