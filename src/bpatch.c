@@ -65,7 +65,7 @@ bpatch_t* bpatch_create() {
 }
 
 bpatch_t* bpatch_open(const char* path) {
-	uint64_t size = 0;
+	unsigned int size = 0;
 	uint8_t* data = NULL;
 	file_read(path, &data, &size);
 	if (data == NULL || size == 0) {
@@ -150,7 +150,8 @@ bpatch_t* bpatch_load(uint8_t* data, int64_t size) {
 			error("Unable to allocate control block\n");
 			bpatch_free(bpatch);
 			return NULL;
-		}memset(bpatch->control, '\0', control_size);
+		}
+		memset(bpatch->control, '\0', control_size);
 		memcpy(bpatch->control, buf, control_size);
 		offset += bpatch->header->ctrllen;
 
@@ -172,7 +173,8 @@ bpatch_t* bpatch_load(uint8_t* data, int64_t size) {
 		if (bpatch->data == NULL) {
 			error("Unable to allocate memory for diff block\n");
 			return NULL;
-		}memset(bpatch->data, '\0', data_size);
+		}
+		memset(bpatch->data, '\0', data_size);
 		memcpy(bpatch->data, buf, data_size);
 		offset += bpatch->header->datalen;
 
@@ -194,7 +196,8 @@ bpatch_t* bpatch_load(uint8_t* data, int64_t size) {
 			error("Unable to allocate memory for extra block\n");
 			bpatch_free(bpatch);
 			return NULL;
-		}memset(bpatch->extra, '\0', BUFSIZE);
+		}
+		memset(bpatch->extra, '\0', extra_size + 1);
 		memcpy(bpatch->extra, buf, extra_size);
 		offset += extra_size;
 	}
@@ -272,7 +275,7 @@ int bpatch_apply(bpatch_t* bpatch, const char* path) {
 			error("Unable to allocate data for new file\n");
 			return -1;
 		}
-		memset(target_data, '\0', target_size);
+		memset(target_data, '\0', target_size + 1);
 
 		while (ctrl_data + ctrl_offset < ctrl_data + ctrl_size) {
 			// Loop 3 times to read in X, Y, and Z values from the control vector
