@@ -92,7 +92,7 @@ void AbsintheWorker::checkDevice()
 	if (this->device_count == 0) {
 		mainwnd->setButtonEnabled(0);
 		mainwnd->setProgress(0);
-		mainwnd->setStatusText("Plug in your iPhone 4S or iPad 2 to begin.");
+		mainwnd->setStatusText("Plug in your iDevice to begin.");
 	} else if (this->device_count == 1) {
 		idevice_t dev = NULL;
 		idevice_error_t ierr = idevice_new(&dev, NULL);
