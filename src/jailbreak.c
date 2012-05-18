@@ -31,6 +31,7 @@
 
 #include "jailbreak.h"
 #include "mb1.h"
+#include "bpatch.h"
 #include "fsgen.h"
 #include "debug.h"
 #include "backup.h"
@@ -1649,6 +1650,17 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	uint64_t racoon_size = 0;
 	plist_get_data_val(racoon_plist, &racoon_data, &racoon_size);
 
+	// patch the racoon file we got with entitlement exploit
+	unsigned int got = 0;
+	debug("Writing racoon to filesystem\n");
+	got = file_write("data/common/rocky-racoon/racoon", racoon_data, racoon_size);
+	if(got == -1) {
+		error("Unable to write data to filesystem\n");
+	}
+	//if (racoon_data) {
+	//	free(racoon_data);
+	//}
+
 	device_free(device);
 	device = NULL;
 
@@ -1687,8 +1699,6 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 		}
 	}
 
-	// TODO patch racoon !!!
-
 	// add racoon
 	bf = backup_file_create_with_data(racoon_data, racoon_size, 0);
 	if (bf) {
@@ -1710,9 +1720,6 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 			fprintf(stderr, "ERROR: could not add file to backup\n");
 		}
 		backup_file_free(bf);
-	}
-	if (racoon_data) {
-		free(racoon_data);
 	}
 
 	// add overrides.plist

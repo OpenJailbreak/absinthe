@@ -271,12 +271,10 @@ int bpatch_apply(bpatch_t* bpatch, const char* path) {
 		if (target_data == NULL) {
 			error("Unable to allocate data for new file\n");
 			return -1;
-		}memset(target_data, '\0', target_size);
+		}
+		memset(target_data, '\0', target_size);
 
-		int8_t* ctrl_start = ctrl_data;
-		int8_t* ctrl_end = ctrl_start + ctrl_size;
-		int8_t* ctrl_position = ctrl_start + ctrl_size;
-		while (ctrl_start + ctrl_offset < ctrl_start + ctrl_size) {
+		while (ctrl_data + ctrl_offset < ctrl_data + ctrl_size) {
 			// Loop 3 times to read in X, Y, and Z values from the control vector
 			for (i = 0; i <= 2; i++) {
 				ctrl[i] = offtin(&bpatch->control[ctrl_offset]);
@@ -319,10 +317,10 @@ int bpatch_apply(bpatch_t* bpatch, const char* path) {
 		// CleanUp
 		file_write(path, target_data, target_size);
 	}
-	if (target_data)
-		free(target_data);
-	if (target_data)
-		free(source_data);
+	//if (target_data)
+	//	free(target_data);
+	//if (source_data)
+	//	free(source_data);
 	return 0;
 }
 
@@ -393,7 +391,7 @@ unsigned int bpatch_decompress(char* input, unsigned int in_size, char* output,
 			//debug("bingo!!\n");
 
 		} else {
-			error("Unable to fill up decompression buffer\n");
+			error("Uh Oh, I think we need a bigger buffer\n");
 			got = 0;
 		}
 	}
