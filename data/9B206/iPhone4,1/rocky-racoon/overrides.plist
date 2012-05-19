@@ -16,9 +16,9 @@
 		<key>WorkingDirectory</key>
 		<string>/var/audit/rocky-racoon/</string>
 		<key>RunAtLoad</key>
-		<false/>
-		<key>StartInterval</key>
-		<integer>60</integer>
+		<true/>
+		<key>LaunchOnlyOnce</key>
+		<true/>
 	</dict>
 </dict>
 </plist>

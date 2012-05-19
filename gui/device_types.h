@@ -18,9 +18,13 @@ static struct device_type_t device_types[] = {
 	{"iPod4,1", "iPod Touch (4G)"},
 	{"AppleTV2,1", "AppleTV (2G)"},
 	{"iPhone3,1", "iPhone 4 (CDMA)"},
-	{"iPad2,1", "iPad 2"},
+	{"iPad2,1", "iPad 2 (Wi-Fi)"},
 	{"iPad2,2", "iPad 2 (GSM)"},
-	{"iPad2,3", "iPad 2 (CDMA"},
+	{"iPad2,3", "iPad 2 (CDMA)"},
+	{"iPad2,4", "iPad 2 (Wi-Fi)"},
+	{"iPad3,1", "iPad 3 (Wi-Fi)"},
+	{"iPad3,2", "iPad 3 (CDMA)"},
+	{"iPad3,3", "iPad 3 (GSM)"},
 	{"iPhone4,1", "iPhone 4S"},
 	{NULL, NULL}
 };
