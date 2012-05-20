@@ -1850,9 +1850,8 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	backup_add_file(backup, rocky_file, 0644, "BooksDomain", rocky_target);
 
 	// add racoon
-	sprintf(rocky_file, "data/common/rocky-racoon/%s", "racoon");
 	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon/%s", "racoon");
-	backup_add_file(backup, rocky_file, 0755, "BooksDomain", rocky_target);
+	backup_add_file(backup, racoon_path, 0755, "BooksDomain", rocky_target);
 
 	backup_write_mbdb(backup);
 	backup_free(backup);
