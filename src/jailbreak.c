@@ -1878,7 +1878,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 
 	rmdir_recursive(backup_directory);
 
-	status_cb("Waiting for reboot — not done yet, don't unplug your device yet!", 80);
+	status_cb("Waiting for reboot — not done yet, don't unplug your device yet!", 70);
 
 	/********************************************************/
 	/* wait for device reboot */
@@ -1889,13 +1889,66 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 		sleep(2);
 	}
 	debug("Device %s disconnected\n", uuid);
+	status_cb(NULL, 75);
 
 	// wait for device to connect
 	while (!connected) {
 		sleep(2);
 	}
+	debug("Device %s detected. Connecting...\n", uuid);
+	status_cb("Waiting for process to complete...", 80);
+	sleep(2);
 
-	status_cb("Done, enjoy!", 100);
+	/********************************************************/
+	/* connect and wait for completion */
+	/********************************************************/
+	device = device_create(uuid);
+	if (!device) {
+		status_cb("ERROR: Could not connect to device. Aborting.\n", 0);
+		return -1;
+	}
+
+	int retries = 30;
+	int done = 0;
+	while (!done && (retries-- > 0)) {
+		lockdown = lockdown_open(device);
+		if (!lockdown) {
+			device_free(device);
+			status_cb("ERROR: Could not connect to lockdownd. Aborting.\n", 0);
+			return -1;
+		}
+		port = 0;
+		if (lockdown_start_service(lockdown, "com.apple.afc2", &port) == 0) {
+			done = 1;
+			break;
+		}
+		lockdown_free(lockdown);
+		lockdown = NULL;
+		sleep(5);
+	}
+	if (lockdown) {
+		port = 0;
+		if (lockdown_start_service(lockdown, "com.apple.afc", &port) == 0) {
+			afc_client_new(device->client, port, &afc);
+			if (afc) {
+				afc_remove_path(afc, "/Books/" IOS_5_1_AUDIT_INJECT_DIR);
+				afc_remove_path(afc, "/Books/" IOS_5_1_LOCKDOWN_INJECT_DIR);
+				afc_remove_path(afc, "/Books/" IOS_5_1_OVERRIDES_INJECT_DIR);
+				afc_client_free(afc);
+			}
+		}
+
+		lockdown_free(lockdown);
+		lockdown = NULL;
+	}
+
+	if (done) {
+		status_cb("Done, enjoy!", 100);
+	} else {
+		status_cb("Hmm... something seems to have gone wrong... trying to recover", 80);
+		sleep(3);
+		goto fix;
+	}
 
 	goto leave;
 
@@ -1922,9 +1975,6 @@ fix:
 	}
 
 	status_cb(NULL, 90);
-
-	// remove the links
-	afc_remove_path(afc, "/Books/fakedir");
 
 	move_back_files_afc(afc);
 
