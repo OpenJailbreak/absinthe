@@ -35,7 +35,7 @@ case `uname` in
 		rm $PKGNAME.zip
 		PD=`pwd`
 		cd build/absinthe
-		7z a -mx9 -r $PD/$PKGNAME.zip $PKGNAME
+		7z a -tzip -mm=lzma -mx=9 -r $PD/$PKGNAME.zip $PKGNAME
 		cd $PD
 	;;
 esac
