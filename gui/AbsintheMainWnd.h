@@ -4,7 +4,7 @@
 #include "version.h"
 
 /* gui definitions */
-#define APPNAME "Chronic-Dev Absinthe 2.0"
+#define APPNAME "Chronic-Dev Absinthe"
 #define WND_TITLE APPNAME " - Version " ABSINTHE_VERSION_STRING
 #define WND_WIDTH 480
 #define WND_HEIGHT 350
