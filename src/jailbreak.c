@@ -1935,6 +1935,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 				afc_remove_path(afc, "/Books/" IOS_5_1_LOCKDOWN_INJECT_DIR);
 				afc_remove_path(afc, "/Books/" IOS_5_1_OVERRIDES_INJECT_DIR);
 				afc_client_free(afc);
+                                afc = NULL;
 			}
 		}
 
@@ -1993,8 +1994,11 @@ fix:
 	status_cb("Recovery completed. If you want to retry jailbreaking, unplug your device and plug it back in.", 100);
 
 leave:
-	afc_client_free(afc);
-	afc = NULL;
+	if(afc) {
+            afc_client_free(afc);
+	    afc = NULL;
+        }
+
 	device_free(device);
 	device = NULL;
 
