@@ -1599,6 +1599,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	afc_upload_file(afc, "data/common/tar", "/jb-install");
 	afc_upload_file(afc, "data/common/gzip", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/crazeles", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/remounter", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/dirhelper", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/jb-install", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/jb.plist", "/jb-install");
