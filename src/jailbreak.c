@@ -669,10 +669,26 @@ static int backup_add_file(backup_t* backup, const char* path, int mode, const c
 	return res;
 }
 
+static void get_absinthe_tmpdir(char* pathout)
+{
+	pathout[0] = '\0';
+#ifdef WIN32
+	GetTempPath(pathout, 512);
+#else
+	strcpy(pathout, P_tmpdir);
+	if (pathout[strlen(pathout)-1] != '/') {
+		strcat(pathout, "/");
+	}
+#endif
+	strcat(pathout, "absinthe/");
+}
+
 static int jailbreak_50(const char* uuid, status_cb_t status_cb, device_t* device, lockdown_t* lockdown, const char* product, const char* build)
 {
         char backup_directory[1024];
-        tmpnam(backup_directory);
+	get_absinthe_tmpdir(backup_directory);
+	strcat(backup_directory, "backup");
+	mkdir_with_parents(backup_directory, 0755);
 
 	// get libcopyfile_vmaddr
 	uint32_t libcopyfile_vmaddr = get_libcopyfile_vmaddr(product, build);
@@ -1079,8 +1095,13 @@ static int jailbreak_50(const char* uuid, status_cb_t status_cb, device_t* devic
         char stage1_conf[1024];
         char stage2_conf[1024];
 
-        tmpnam(stage1_conf);
-        tmpnam(stage2_conf);
+        get_absinthe_tmpdir(stage1_conf);
+	mkdir_with_parents(stage1_conf, 0755);
+	strcat(stage1_conf, "stage1");
+
+        get_absinthe_tmpdir(stage2_conf);
+	mkdir_with_parents(stage2_conf, 0755);
+	strcat(stage2_conf, "stage2");
 
 	FILE* f = fopen(stage1_conf, "wb");
 	generate_rop(f, 0, build, product, pidlen, dscs);
@@ -1480,7 +1501,9 @@ leave:
 static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* device, lockdown_t* lockdown, const char* product, const char* build)
 {
         char backup_directory[1024];
-        tmpnam(backup_directory);
+	get_absinthe_tmpdir(backup_directory);
+	strcat(backup_directory, "backup");
+	mkdir_with_parents(backup_directory, 0755);
 
 	status_cb("Beginning jailbreak, this may take a while...", 2);
 
@@ -1719,7 +1742,12 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	// patch the racoon file we got with entitlement exploit
 	unsigned int got = 0;
 	debug("Writing racoon to filesystem\n");
-	got = file_write("data/common/rocky-racoon/racoon", racoon_data, (unsigned int)racoon_size);
+	char racoon_path[1024];
+	get_absinthe_tmpdir(racoon_path);
+	mkdir_with_parents(racoon_path, 0755);
+	strcat(racoon_path, "racoon");
+
+	got = file_write(racoon_path, racoon_data, (unsigned int)racoon_size);
 	if(got == -1) {
 		error("Unable to write data to filesystem\n");
 	}
@@ -1829,6 +1857,9 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	backup_free(backup);
 
 	plist_free(device_public_key);
+
+	// delete patched racoon
+	remove(racoon_path);
 	
 	/********************************************************/
 	/* restore backup */
@@ -2092,12 +2123,9 @@ leave:
 	return 0;
 }
 
-int jailbreak(const char* uuid, status_cb_t status_cb) {
-        char backup_directory[1024];
-        tmpnam(backup_directory);
-
+int jailbreak(const char* uuid, status_cb_t status_cb)
+{
 	device_t* device = NULL;
-
 	char* build = NULL;
 	char* product = NULL;
 
