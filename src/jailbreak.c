@@ -2059,7 +2059,6 @@ int jailbreak(const char* uuid, status_cb_t status_cb)
 	}
 
 	// FIXME TODO enable this later
-#if 0
 	uint16_t port = 0;
 	if (lockdown_start_service(lockdown, "com.apple.afc2", &port) == 0) {
                 char **fileinfo = NULL;
@@ -2105,7 +2104,6 @@ int jailbreak(const char* uuid, status_cb_t status_cb)
 	                afc_client_free(afc2);
                 }
 	}
-#endif
 
 	int res = -1;
 	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0)) {
