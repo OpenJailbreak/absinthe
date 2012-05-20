@@ -42,11 +42,8 @@ case `uname` in
 		tar cjvf $PKGNAME.tar.bz2  -C build/absinthe $PKGNAME
 	;;
 	MINGW*)
-		rm $PKGNAME.zip
+		rm -f $PKGNAME.exe
 		PD=`pwd`
-		cd build/absinthe
-		7z a -tzip -mm=lzma -mx=9 -r $PD/$PKGNAME.zip $PKGNAME
-		cd $PD
+		7z a -sfxresources\\win32\\7zCon.sfx -t7z -m0=lzma -mx=9 -r $PD/$PKGNAME.exe -w build/absinthe $PKGNAME
 	;;
 esac
-
