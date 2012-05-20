@@ -28,8 +28,8 @@ case `uname` in
 		cd $PD
 	;;
 	Linux*)
-		rm $PKGNAME.tar.gz
-		tar czvf $PKGNAME.tar.gz  -C build/absinthe $PKGNAME
+		rm $PKGNAME.tar.bz2
+		tar cjvf $PKGNAME.tar.bz2  -C build/absinthe $PKGNAME
 	;;
 	MINGW*)
 		rm $PKGNAME.zip
