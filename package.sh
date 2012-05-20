@@ -21,11 +21,21 @@ fi
 
 case `uname` in
 	Darwin*)
-		rm $PKGNAME.zip
-		PD=`pwd`
-		cd build/absinthe
-		zip -9 -r $PD/$PKGNAME.zip $PKGNAME
-		cd $PD
+		SRCDIR="build/absinthe/${PKGNAME}"
+		MNT="/tmp/dmgmnt"
+		rm -rf ${MNT}
+		rm -f $PKGNAME.dmg
+		rm -f temp.dmg
+		hdiutil create -srcfolder "${SRCDIR}" -volname "Absinthe ${VER}" -fs HFS+ -fsargs "-c c=64,a=16,e=16" -format UDRW -size 110M temp.dmg
+		cp resources/osx/Icon.icns ${SRCDIR}/.VolumeIcon.icns
+		SetFile -c icnC "${SRCDIR}.VolumeIcon.icns"
+		mkdir -p ${MNT}
+		hdiutil attach temp.dmg -mountpoint ${MNT}
+		SetFile -a C ${MNT}
+		hdiutil detach ${MNT}
+		rm -rf ${MNT}
+		hdiutil convert temp.dmg -format UDBZ -o $PKGNAME.dmg
+		rm -f temp.dmg
 	;;
 	Linux*)
 		rm $PKGNAME.tar.bz2
