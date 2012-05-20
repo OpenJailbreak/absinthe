@@ -673,7 +673,7 @@ static void get_absinthe_tmpdir(char* pathout)
 {
 	pathout[0] = '\0';
 #ifdef WIN32
-	GetTempPath(pathout, 512);
+	GetTempPath(512, pathout);
 #else
 	strcpy(pathout, P_tmpdir);
 	if (pathout[strlen(pathout)-1] != '/') {
