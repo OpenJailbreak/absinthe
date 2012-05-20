@@ -1879,7 +1879,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 
 	rmdir_recursive(backup_directory);
 
-	status_cb("Waiting for reboot — not done yet, don't unplug your device yet!", 40);
+	status_cb("Waiting for reboot — not done yet, don't unplug your device yet!", 80);
 
 	/********************************************************/
 	/* wait for device reboot */
