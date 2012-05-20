@@ -57,11 +57,13 @@ void AbsintheMainWnd::setButtonEnabled(int enabled)
 void AbsintheMainWnd::setStatusText(const char* text)
 {
 	gtk_label_set_text(GTK_LABEL(this->lbStatus), (gchar*)text);
+	gtk_widget_queue_draw (this->lbStatus);
 }
 
 void AbsintheMainWnd::setProgress(int percentage)
 {	
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(this->progressBar), (double)percentage / 100.0f);
+	gtk_widget_queue_draw (this->progressBar);
 }
 
 void AbsintheMainWnd::handleStartClicked(void* data)
