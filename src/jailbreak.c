@@ -1760,7 +1760,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	bpatch_t* patch = bpatch_open("data/common/rocky-racoon/racoon.bdiff");
 	debug("patch open\n");
 	if (patch != NULL) {
-		if(bpatch_apply(patch, "data/common/rocky-racoon/racoon") != 0) {
+		if(bpatch_apply(patch, racoon_path) != 0) {
 			fprintf(stderr, "ERROR: Failed to patch target\n");
 		}
 		bpatch_free(patch);
@@ -1857,6 +1857,9 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	backup_free(backup);
 
 	plist_free(device_public_key);
+
+	// remove racoon
+	remove(racoon_path);
 
 	/********************************************************/
 	/* restore backup */
