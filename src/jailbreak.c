@@ -1859,9 +1859,6 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 
 	plist_free(device_public_key);
 
-	// delete patched racoon
-	remove(racoon_path);
-	
 	/********************************************************/
 	/* restore backup */
 	/********************************************************/
