@@ -1918,7 +1918,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 			return -1;
 		}
 		port = 0;
-		if (lockdown_start_service(lockdown, "com.apple.afc2", &port) == 0) {
+		if (lockdown_start_service2(lockdown, "com.apple.afc2", &port, 0) == 0) {
 			done = 1;
 			break;
 		}
@@ -2064,7 +2064,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb)
 
 	// FIXME TODO enable this later
 	uint16_t port = 0;
-	if (lockdown_start_service(lockdown, "com.apple.afc2", &port) == 0) {
+	if (lockdown_start_service2(lockdown, "com.apple.afc2", &port, 0) == 0) {
                 char **fileinfo = NULL;
                 uint32_t ffmt = 0;
 

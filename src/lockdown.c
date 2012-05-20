@@ -90,11 +90,16 @@ int lockdown_get_string(lockdown_t* lockdown, const char *key, char** value) {
 
 int lockdown_start_service(lockdown_t* lockdown, const char* service,
 		uint16_t* port) {
+    return lockdown_start_service2(lockdown, service, port, 1);
+}
+
+int lockdown_start_service2(lockdown_t* lockdown, const char* service,
+		uint16_t* port, int warn_on_fail) {
 	uint16_t p = 0;
 	lockdownd_start_service(lockdown->client, service, &p);
 
 	if (p == 0) {
-		error("%s failed to start!\n", service);
+		if(warn_on_fail) error("%s failed to start!\n", service);
 		return -1;
 	}
 
