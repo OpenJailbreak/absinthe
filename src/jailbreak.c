@@ -1175,12 +1175,12 @@ static int jailbreak_50(const char* uuid, status_cb_t status_cb, device_t* devic
 	// upload files
 	afc_upload_file2(afc, stage2_conf, "/corona/racoon-exploit-bootstrap.conf");
 
-	afc_upload_file(afc, "data/common/Cydia.tgz", "/corona");
+	afc_upload_file(afc, "data/common/Cydia.tar.lzma", "/corona");
 	afc_upload_file(afc, "data/common/corona/jailbreak", "/corona");
 	afc_upload_file(afc, "data/common/corona/jb.plist", "/corona");
 
 	afc_upload_file(afc, "data/common/tar", "/corona");
-	afc_upload_file(afc, "data/common/gzip", "/corona");
+	afc_upload_file(afc, "data/common/lzma", "/corona");
 
 	afc_upload_file(afc, "data/common/corona/cleanup", "/corona");
 	afc_upload_file(afc, "data/common/corona/filemover", "/corona");
@@ -1188,7 +1188,7 @@ static int jailbreak_50(const char* uuid, status_cb_t status_cb, device_t* devic
 
 	char tmpfn[512];
 
-	sprintf(tmpfn, "data/%s/%s/corona/corona.tgz", build, product);
+	sprintf(tmpfn, "data/%s/%s/corona/corona.tar.lzma", build, product);
 	afc_upload_file(afc, tmpfn, "/corona");
 	sprintf(tmpfn, "data/common/corona/vnimage.clean", build, product);
 	afc_upload_file(afc, tmpfn, "/corona");
@@ -1619,9 +1619,9 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	// remove all files in it
 	rmdir_recursive_afc(afc, "/jb-install", 0);
 
-	afc_upload_file(afc, "data/common/Cydia.tgz", "/jb-install");
+	afc_upload_file(afc, "data/common/Cydia.tar.lzma", "/jb-install");
 	afc_upload_file(afc, "data/common/tar", "/jb-install");
-	afc_upload_file(afc, "data/common/gzip", "/jb-install");
+	afc_upload_file(afc, "data/common/lzma", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/crazeles", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/com.chronic-dev.greenpois0n.rocky-racoon.list", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/com.chronic-dev.greenpois0n.rocky-racoon.extrainst_", "/jb-install");

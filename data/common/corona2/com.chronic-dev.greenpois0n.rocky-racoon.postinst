@@ -15,7 +15,7 @@ case "$1" in
     fi
     OS=`sysctl -n kern.osversion`
     PROD=`sysctl -n hw.machine`
-    tar -C $TMPDIR -jxf $TMPDIR/payloads.tar.bz2 ./$OS/$PROD
+    tar -C $TMPDIR --lzma -xf $TMPDIR/payloads.tar.lzma ./$OS/$PROD
     if test -d $TMPDIR/$OS/$PROD; then
       echo "Installing required files..."
       DESTFILE=$CORONA_DIR/racoon

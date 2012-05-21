@@ -138,15 +138,15 @@ mkdir -p $CLIDEST/data/common/corona
 mkdir -p $GUIDEST/data/common/corona
 
 # common files
-cp data/common/Cydia.tgz $CLIDEST/data/common/
-cp data/common/gzip $CLIDEST/data/common/
+cp data/common/Cydia.tar.lzma $CLIDEST/data/common/
+cp data/common/lzma $CLIDEST/data/common/
 cp data/common/tar $CLIDEST/data/common/
 cp -r data/common/rocky-racoon $CLIDEST/data/common/
 cp data/common/webclip_icon*.png $CLIDEST/data/common/
 cp data/common/webclip_Info.plist $CLIDEST/data/common/
 
-cp data/common/Cydia.tgz $GUIDEST/data/common/
-cp data/common/gzip $GUIDEST/data/common/
+cp data/common/Cydia.tar.lzma $GUIDEST/data/common/
+cp data/common/lzma $GUIDEST/data/common/
 cp data/common/tar $GUIDEST/data/common/
 cp -r data/common/rocky-racoon $GUIDEST/data/common/
 cp data/common/webclip_icon*.png $GUIDEST/data/common/
