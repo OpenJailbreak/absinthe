@@ -24,7 +24,7 @@ static const char* getDeviceName(const char* productType)
 		}
 		i++;
 	}
-	return "(Unknown Device)";
+	return productType;
 }
 
 static void device_event_cb(const idevice_event_t* event, void* userdata)
