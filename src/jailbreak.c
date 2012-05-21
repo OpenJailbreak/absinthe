@@ -1599,6 +1599,12 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	afc_upload_file(afc, "data/common/tar", "/jb-install");
 	afc_upload_file(afc, "data/common/gzip", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/crazeles", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/com.chronic-dev.greenpois0n.rocky-racoon.list", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/com.chronic-dev.greenpois0n.rocky-racoon.extrainst_", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/com.chronic-dev.greenpois0n.rocky-racoon.postinst", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/com.chronic-dev.greenpois0n.rocky-racoon.postrm", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/com.chronic-dev.greenpois0n.rocky-racoon.preinst", "/jb-install");
+	afc_upload_file(afc, "data/common/corona2/com.chronic-dev.greenpois0n.rocky-racoon.prerm", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/remounter", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/dirhelper", "/jb-install");
 	afc_upload_file(afc, "data/common/corona2/jb-install", "/jb-install");

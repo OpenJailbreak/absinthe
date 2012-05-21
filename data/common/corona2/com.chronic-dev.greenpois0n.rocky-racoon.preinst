@@ -1,0 +1,33 @@
+#!/bin/sh
+
+SUPPORTED="9B206/iPad1,1
+9B206/iPad2,1
+9B206/iPad2,2
+9B206/iPad2,3
+9B206/iPad2,4
+9B206/iPad3,1
+9B206/iPad3,2
+9B206/iPad3,3
+9B206/iPhone2,1
+9B206/iPhone3,1
+9B206/iPhone3,3
+9B206/iPhone4,1
+9B206/iPod3,1
+9B206/iPod4,1"
+
+OS=`sysctl -n kern.osversion`
+PROD=`sysctl -n hw.machine`
+
+case "$1" in
+  install|upgrade)
+    for I in $SUPPORTED; do
+      if [ "$I" == "$OS/$PROD" ]; then
+        exit 0
+      fi
+    done
+    echo Sorry, your device/iOS version is not supported...
+    exit 1
+  ;;
+esac
+exit 0
+
