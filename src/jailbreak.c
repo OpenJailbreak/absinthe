@@ -71,8 +71,10 @@ static uint32_t get_libcopyfile_vmaddr(const char* product, const char* build)
 int jb_device_is_supported(const char* product, const char* build)
 {
 	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0)) {
-		// FIXME TODO add check!
-		return 1;
+		char testfn[512];
+		struct stat fst;
+		snprintf(testfn, sizeof(testfn), "data/%s/%s/rocky-racoon/boot.conf", build, product);
+		return (stat(testfn, &fst) == 0);
 	} else {
 		uint32_t vmaddr = get_libcopyfile_vmaddr(product, build);
 		return (vmaddr != 0);
@@ -82,7 +84,29 @@ int jb_device_is_supported(const char* product, const char* build)
 int jb_check_consistency(const char* product, const char* build)
 {
 	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0)) {
-		// FIXME TODO fix me!
+		char testfn[512];
+		struct stat fst;
+
+		snprintf(testfn, sizeof(testfn), "data/%s/%s/rocky-racoon/boot.conf", build, product);
+		if (stat(testfn, &fst) != 0) {
+			fprintf(stderr, "ERROR: missing file '%s'\n", testfn);
+			return -2;
+		}
+
+		snprintf(testfn, sizeof(testfn), "data/%s/%s/rocky-racoon/install.conf", build, product);
+		if (stat(testfn, &fst) != 0) {
+			fprintf(stderr, "ERROR: missing file '%s'\n", testfn);
+			return -2;
+		}
+
+		int i = 0;
+		for (i = 0; i < 256; i++) {
+			snprintf(testfn, sizeof(testfn), "data/%s/%s/rocky-racoon/%02x", build, product, i);
+			if (stat(testfn, &fst) != 0) {
+				fprintf(stderr, "ERROR: missing file '%s'\n", testfn);
+				return -2;
+			}
+		}
 		return 0;
 	} else {
 		return fsgen_check_consistency(build, product);
@@ -2068,7 +2092,6 @@ int jailbreak(const char* uuid, status_cb_t status_cb)
 		return -1;
 	}
 
-	// FIXME TODO enable this later
 	uint16_t port = 0;
 	if (lockdown_start_service2(lockdown, "com.apple.afc2", &port, 0) == 0) {
                 char **fileinfo = NULL;
