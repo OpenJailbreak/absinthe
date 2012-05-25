@@ -44,6 +44,8 @@ case `uname` in
 	MINGW*)
 		rm -f $PKGNAME.exe
 		PD=`pwd`
-		7z a -sfxresources\\win32\\7zCon.sfx -t7z -m0=lzma -mx=9 -r $PD/$PKGNAME.exe -w build/absinthe $PKGNAME
+		cd build/absinthe
+		7z a -sfx..\\..\\resources\\win32\\7zCon.sfx -t7z -m0=lzma -mx=9 -r $PD/$PKGNAME.exe $PKGNAME
+		cd ${PD}
 	;;
 esac
