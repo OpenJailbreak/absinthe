@@ -130,7 +130,6 @@ AbsintheMainWnd::AbsintheMainWnd(int* pargc, char*** pargv)
 	gtk_init(pargc, pargv);
 
 	mainwnd = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_keep_above(GTK_WINDOW(mainwnd), 1);
 	gtk_window_set_resizable(GTK_WINDOW(mainwnd), 0);
 	gtk_widget_set_size_request(mainwnd, WND_WIDTH, WND_HEIGHT);
 	gtk_window_set_position(GTK_WINDOW(mainwnd), GTK_WIN_POS_CENTER);
