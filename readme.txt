@@ -62,6 +62,6 @@ CREDITS:
 
 5.1.1 Exploits by: @pod2g, @planetbeing, @pimskeks
 Artwork by @iOPK.
-GUI by: Hanéne Samara & @pimskeks.
+GUI by: Hanene Samara & @pimskeks.
 Servers proudly supplied by Chronic-Dev, LLC (@chronicdevteam)
 
