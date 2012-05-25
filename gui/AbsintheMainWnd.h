@@ -13,7 +13,7 @@
 #define BTN_START_TEXT "Jailbreak"
 #define CREDITS_LABEL_TEXT "Chronic-Dev Absinthe © 2011-2012 Chronic-Dev Team.\n5.1.x exploits by: @pod2g, @planetbeing, and @pimskeks\n5.0.x exploits by: @pod2g, @planetbeing, @saurik, @pimskeks,\n@p0sixninja, @MuscleNerd, and @xvolks.\nArtwork by @iOPK. GUI by Hanéne Samara & @pimskeks."
 #define PAYPAL_LINK_TEXT "Support us (PayPal)"
-#define PAYPAL_LINK_URL "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DPFUPCEAYUD4L"
+#define PAYPAL_LINK_URL "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4U6DQGJ2NRVUN"
 #define GP_LINK_TEXT "http://greenpois0n.com/"
 #define GP_LINK_URL "http://greenpois0n.com/"
 
