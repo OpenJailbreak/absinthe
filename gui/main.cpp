@@ -87,6 +87,9 @@ int main(int argc, char** argv)
 #if defined(__APPLE__)
         char argv0[1024];
         uint32_t argv0_size = sizeof(argv0);
+
+	signal(SIGPIPE, SIG_IGN);
+
         _NSGetExecutablePath(argv0, &argv0_size);
 #else
 	const char* argv0 = argv[0];
