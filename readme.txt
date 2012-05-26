@@ -1,13 +1,13 @@
-~~~~~~~~~~~~~~~~~~~~
-Greenpois0n Absinthe
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+Greenpois0n Absinthe 2.0
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 http://greenpois0n.com/
 
 
 DESCRIPTION: 
 
-- Absinthe is an untethered jailbreak for A5 devices based on the 'corona' exploit by @pod2g
+- Absinthe 2.0 is an untethered jailbreak for iOS 5.1.1 devices
 
 
 SYSTEM REQUIREMENTS:
@@ -17,39 +17,40 @@ SYSTEM REQUIREMENTS:
 - Linux x86/x86_64 (Kernel >= 2.6.15, libgtk+-2.0 >= 2.22.1)
 
 
-SUPPORTED DEVICES/FIRMWARE:
+SUPPORTED FIRMWARE: 5.1.1
 
-- iPhone4S 
-(GSM/CDMA) iOS 5.0   -9A334
-           iOS 5.0.1 -9A405 
-	             -9A406  
+SUPPORTED DEVICES:
 
-- iPad2     
-(WiFi/3G)  iOS 5.0.1 -9A405 
-	                    
+- iPad3 (WiFi/CDMA/Global)
+- iPad2 (WiFi/CDMA/GSM)
+- iPad1
+- iPhone 4S
+- iPhone 4 (GSM), iPhone 4 (CDMA)
+- iPhone 3GS
+- iPod 4G
+- iPod 3G
+
+
+NOT SUPPORTED DEVICES:
+
+- iPad2 WiFi R2 (new model)
+- AppleTV 2
+- AppleTV 3
+
 
 USAGE: (MacOSX, Windows & Linux)
 
-1. Always backup your device before you start. Remove the passcode lock and make sure you do not have a backup password set.
-2. Unzip/extract the absinthe .zip package to a directory easy to find. 
-3. Double click the absinthe icon to launch the application.
-4. Connect your device via USB to your computer.
-5. Press the Jailbreak button.
-6. Be patient. (the more stuff you have on your device the longer it takes)
-7. Be more patient.
-8. After a device reboot Absinthe will still need some time to finish its work. Just wait until it says it's done.
-9. There will be an Absinthe icon on your springboard, tap it to install cydia and finish the process.
-10. Done, Enjoy!
+1. Make a backup of your device iTunes by right clicking on your device name under the 'Devices' menu and click 'Back Up'.
+2. Once your backup is complete return to your device and go to Settings - General - Reset - Erase All Content and Settings. This will make the jailbreak process much faster.
+3. Open Absinthe and be sure your are still connected via USB cable to your computer.
+4. Click 'Jailbreak' and wait... just be patient and do not disconnect your device!
+5. Once jailbroken return to iTunes and restore your backup from earlier. To do so, right click on your device name under the 'Devices' menu in the left panel of iTunes and click 'Restore From Backup...' then select the latest backup you created before. (restoring this backup will return all the content previously on your device, i.e. apps, photos, etc.) 
+6. Thanks for using Absinthe, enjoy your jailbroken iDevice!
+
 
 NOTES: 
 
-a) if during the process you get stuck on the "wait for absinthe to complete.." page you can take these steps:
-	1. Tap Home,
-	2. Goto Settings, General, Network, VPN
-	3. Toggle the VPN to 'ON',
-	4. Acknowledge the error and allow your device to reboot.
-
-b) If your device is already jailbroken, there is no reason to re-apply the jailbreak if a newer version of Absinthe is released. For information on updates please refer to 'changelog.txt'.
+a) If your device is already jailbroken, there is no reason to re-apply the jailbreak if a newer version of Absinthe is released. For information on updates please refer to 'changelog.txt'.
 
 
 CONTACT/HELP:
@@ -59,8 +60,8 @@ CONTACT/HELP:
 
 CREDITS:
 
-Exploits by: @pod2g, @planetbeing, @saurik, @pimskeks, @p0sixninja, @MuscleNerd and @xvolks.
+5.1.1 Exploits by: @pod2g, @planetbeing, @pimskeks
 Artwork by @iOPK.
-GUI by: Hanéne Samara & @pimskeks.
+GUI by: Hanene Samara & @pimskeks.
 Servers proudly supplied by Chronic-Dev, LLC (@chronicdevteam)
 
