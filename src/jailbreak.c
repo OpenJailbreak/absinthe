@@ -70,7 +70,7 @@ static uint32_t get_libcopyfile_vmaddr(const char* product, const char* build)
 
 int jb_device_is_supported(const char* product, const char* build)
 {
-	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0)) {
+	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0) || (strcmp(build, "9B208") == 0)) {
 		char testfn[512];
 		struct stat fst;
 		snprintf(testfn, sizeof(testfn), "data/%s/%s/rocky-racoon/boot.conf", build, product);
@@ -83,7 +83,7 @@ int jb_device_is_supported(const char* product, const char* build)
 
 int jb_check_consistency(const char* product, const char* build)
 {
-	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0)) {
+	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0) || (strcmp(build, "9B208") == 0)) {
 		char testfn[512];
 		struct stat fst;
 
@@ -2139,7 +2139,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb)
 	}
 
 	int res = -1;
-	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0)) {
+	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0) || (strcmp(build, "9B208") == 0)) {
 		res = jailbreak_51(uuid, status_cb, device, lockdown, product, build);
 	} else {
 		res = jailbreak_50(uuid, status_cb, device, lockdown, product, build);

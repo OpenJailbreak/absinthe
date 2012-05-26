@@ -13,7 +13,8 @@ SUPPORTED="9B206/iPad1,1
 9B206/iPhone3,3
 9B206/iPhone4,1
 9B206/iPod3,1
-9B206/iPod4,1"
+9B206/iPod4,1
+9B208/iPhone3,1"
 
 OS=`sysctl -n kern.osversion`
 PROD=`sysctl -n hw.machine`
