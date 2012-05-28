@@ -24,6 +24,11 @@
 
 #include "device.h"
 
+#ifdef WIN32
+#include <windows.h>
+#define sleep(x) Sleep(x*1000)
+#endif
+
 device_t* device_create(const char* udid) {
 	idevice_error_t err = 0;
 	device_t* device = NULL;
