@@ -43,7 +43,14 @@ device_t* device_create(const char* udid) {
 		idevice_get_udid(device->client, (char**)&device->udid);
 
 	} else {
-		err = idevice_new(&(device->client), udid);
+		int retries = 5;
+		do {
+			err = idevice_new(&(device->client), udid);
+			if (device->client) {
+				break;
+			}
+			sleep(1);
+		} while (retries-- >= 0);
 		if (err != IDEVICE_E_SUCCESS) {
 			fprintf(stderr,
 					"No device found with udid %s, is it plugged in?\n", udid);
