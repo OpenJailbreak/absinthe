@@ -13,12 +13,12 @@ class AbsintheWorker
 private:
 	AbsintheMainWnd* mainWnd;
 	int device_count;
-	char* current_uuid;
+	char* current_udid;
 public:
 	AbsintheWorker(AbsintheMainWnd* main);
 	~AbsintheWorker(void);
-	void setUUID(const char* uuid);
-	char* getUUID(void);
+	void setUDID(const char* udid);
+	char* getUDID(void);
 	void DeviceEventCB(const idevice_event_t *event, void *user_data);
 	void checkDevice();
 	void processStart(void);

@@ -54,7 +54,7 @@
 static struct option longopts[] = {
 	{ "help",        no_argument,         NULL,   'h' },
 	{ "verbose",     required_argument,   NULL,   'v' },
-	{ "uuid",        required_argument,   NULL,   'u' },
+	{ "udid",        required_argument,   NULL,   'u' },
 	{ "target",      required_argument,   NULL,   't' },
 	{ "pointer",     required_argument,   NULL,   'p' },
 	{ "aslr-slide",  required_argument,   NULL,   'a' },
@@ -77,9 +77,9 @@ unsigned long find_aslr_slide(crashreport_t* crash, char* cache) {
 
 static void idevice_event_cb(const idevice_event_t *event, void *user_data)
 {
-	/*char* uuid = (char*)user_data;
-	printf("device event %d: %s\n", event->event, event->uuid);
-	if (uuid && strcmp(uuid, event->uuid)) return;
+	/*char* udid = (char*)user_data;
+	printf("device event %d: %s\n", event->event, event->udid);
+	if (udid && strcmp(udid, event->udid)) return;
 	if (event->event == IDEVICE_DEVICE_ADD) {
 		connected = 1;
 	} else if (event->event == IDEVICE_DEVICE_REMOVE) {
@@ -102,7 +102,7 @@ void usage(int argc, char* argv[]) {
 	printf("  General\n");
 	printf("    -h, --help\t\t\tprints usage information\n");
 	printf("    -v, --verbose\t\tprints debuging info while running\n");
-	printf("    -u, --uuid UUID\t\ttarget specific device by its 40-digit device UUID\n");
+	printf("    -u, --udid UDID\t\ttarget specific device by its 40-digit device UDID\n");
 	printf("\n  Payload Generation\n");
 	printf("    -t, --target ADDRESS\toffset to ROP gadget we want to execute\n");
 	printf("    -p, --pointer ADDRESS\theap address we're hoping contains our target\n");
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
 	unsigned long aslr_slide = 0;
 	unsigned long pointer = 0;
 	unsigned long target = 0;
-	char* uuid = NULL;
+	char* udid = NULL;
 	int i = 0;
 	char* product = NULL;
 	char* build = NULL;
@@ -171,7 +171,7 @@ int main(int argc, char* argv[]) {
 			break;
 
 		case 'u':
-			uuid = strdup(optarg);
+			udid = strdup(optarg);
 			break;
 
 		default:
@@ -200,17 +200,17 @@ int main(int argc, char* argv[]) {
 	/********************************************************/
 	/* device detection */
 	/********************************************************/
-	if (!uuid) {
+	if (!udid) {
 		device = device_create(NULL);
 		if (!device) {
 			error("No device found, is it plugged in?\n");
 			return -1;
 		}
-		uuid = strdup(device->uuid);
+		udid = strdup(device->udid);
 	} else {
 		// Open a connection to our device
 		debug("Detecting device...\n");
-		device = device_create(uuid);
+		device = device_create(udid);
 		if (device == NULL) {
 			error("Unable to connect to device\n");
 			return -1;
@@ -304,11 +304,11 @@ int main(int argc, char* argv[]) {
 	/********************************************************/
 	/* begin the process */
 	/********************************************************/
-	idevice_event_subscribe(idevice_event_cb, uuid);
-	jailbreak(uuid, status_cb);
+	idevice_event_subscribe(idevice_event_cb, udid);
+	jailbreak(udid, status_cb);
 	idevice_event_unsubscribe();
 
-	free(uuid);
+	free(udid);
 
 	return 0;
 }

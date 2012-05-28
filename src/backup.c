@@ -24,16 +24,16 @@
 #include "backup.h"
 #include "debug.h"
 
-backup_t* backup_open(const char* backupdir, const char* uuid)
+backup_t* backup_open(const char* backupdir, const char* udid)
 {
-	if (!backupdir || !uuid) {
+	if (!backupdir || !udid) {
 		return NULL;
 	}
 
-	char *backup_path = (char*)malloc(strlen(backupdir)+1+strlen(uuid)+1+4);
+	char *backup_path = (char*)malloc(strlen(backupdir)+1+strlen(udid)+1+4);
 	strcpy(backup_path, backupdir);
 	strcat(backup_path, "/");
-	strcat(backup_path, uuid);
+	strcat(backup_path, udid);
 
 	char *mbdb_path = (char*)malloc(strlen(backup_path)+1+strlen("Manifest.mbdb")+1+4);
 	strcpy(mbdb_path, backup_path);

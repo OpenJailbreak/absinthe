@@ -9,7 +9,7 @@
 
 extern "C" {
 typedef int16_t userpref_error_t;
-extern userpref_error_t userpref_remove_device_public_key(const char *uuid);
+extern userpref_error_t userpref_remove_device_public_key(const char *udid);
 }
 
 static int detection_blocked = 0;
@@ -32,7 +32,7 @@ static void device_event_cb(const idevice_event_t* event, void* userdata)
 	if (!detection_blocked) {
 		self->DeviceEventCB(event, userdata);
 	}
-	jb_device_event_cb(event, (void*)event->uuid);
+	jb_device_event_cb(event, (void*)event->udid);
 }
 
 AbsintheWorker::AbsintheWorker(AbsintheMainWnd* main)
@@ -40,7 +40,7 @@ AbsintheWorker::AbsintheWorker(AbsintheMainWnd* main)
 {
 	self = this;
 
-	this->current_uuid = NULL;
+	this->current_udid = NULL;
 
 	this->checkDevice();
 
@@ -50,25 +50,25 @@ AbsintheWorker::AbsintheWorker(AbsintheMainWnd* main)
 AbsintheWorker::~AbsintheWorker(void)
 {
 	idevice_event_unsubscribe();
-	if (this->current_uuid) {
-		free(this->current_uuid);
+	if (this->current_udid) {
+		free(this->current_udid);
 	}
 }
 
-void AbsintheWorker::setUUID(const char* uuid)
+void AbsintheWorker::setUDID(const char* udid)
 {
-	if (this->current_uuid) {
-		free(this->current_uuid);
-		this->current_uuid = NULL;
+	if (this->current_udid) {
+		free(this->current_udid);
+		this->current_udid = NULL;
 	}
-	if (uuid) {
-		this->current_uuid = strdup(uuid);
+	if (udid) {
+		this->current_udid = strdup(udid);
 	}
 }
 
-char* AbsintheWorker::getUUID(void)
+char* AbsintheWorker::getUDID(void)
 {
-	return current_uuid;
+	return current_udid;
 }
 
 void AbsintheWorker::DeviceEventCB(const idevice_event_t *event, void *user_data)
@@ -87,7 +87,7 @@ void AbsintheWorker::checkDevice()
 	AbsintheMainWnd* mainwnd = (AbsintheMainWnd*)this->mainWnd;
 	char str[256];
 
-	this->setUUID(NULL);
+	this->setUDID(NULL);
 
 	if (this->device_count == 0) {
 		mainwnd->setButtonEnabled(0);
@@ -113,11 +113,11 @@ void AbsintheWorker::checkDevice()
 		} else if (lerr == LOCKDOWN_E_INVALID_HOST_ID) {
 			lerr = lockdownd_unpair(client, NULL);
 			if (lerr == LOCKDOWN_E_SUCCESS) {
-				char *devuuid = NULL;
-				idevice_get_uuid(dev, &devuuid);
-				if (devuuid) {
-					userpref_remove_device_public_key(devuuid);
-					free(devuuid);
+				char *devudid = NULL;
+				idevice_get_udid(dev, &devudid);
+				if (devudid) {
+					userpref_remove_device_public_key(devudid);
+					free(devudid);
 				}
 			}
 			lockdownd_client_free(client);
@@ -267,11 +267,11 @@ void AbsintheWorker::checkDevice()
 		}
 
 		if (ready_to_go) {
-			char* uuid = NULL;
-			idevice_get_uuid(dev, &uuid);
-			if (uuid) {
-				this->setUUID(uuid);
-				free(uuid);
+			char* udid = NULL;
+			idevice_get_udid(dev, &udid);
+			if (udid) {
+				this->setUDID(udid);
+				free(udid);
 			}
 			mainwnd->setButtonEnabled(1);
 		}

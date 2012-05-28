@@ -30,9 +30,9 @@ void AbsintheJailbreaker::statusCallback(const char* message, int progress)
 
 void* AbsintheJailbreaker::Entry(void* data)
 {
-	char* uuid = strdup(worker->getUUID());
-	jailbreak(uuid, status_cb);
-	free(uuid);
+	char* udid = strdup(worker->getUDID());
+	jailbreak(udid, status_cb);
+	free(udid);
 
 	const char* error = "Done!";
 

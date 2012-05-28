@@ -277,9 +277,9 @@ static int connected = 0;
 
 void jb_device_event_cb(const idevice_event_t *event, void *user_data)
 {
-	char* uuid = (char*)user_data;
-	debug("device event %d: %s\n", event->event, event->uuid);
-	if (uuid && strcmp(uuid, event->uuid)) return;
+	char* udid = (char*)user_data;
+	debug("device event %d: %s\n", event->event, event->udid);
+	if (udid && strcmp(udid, event->udid)) return;
 	if (event->event == IDEVICE_DEVICE_ADD) {
 		connected = 1;
 	} else if (event->event == IDEVICE_DEVICE_REMOVE) {
@@ -707,7 +707,7 @@ static void get_absinthe_tmpdir(char* pathout)
 	strcat(pathout, "absinthe/");
 }
 
-static int jailbreak_50(const char* uuid, status_cb_t status_cb, device_t* device, lockdown_t* lockdown, const char* product, const char* build)
+static int jailbreak_50(const char* udid, status_cb_t status_cb, device_t* device, lockdown_t* lockdown, const char* product, const char* build)
 {
         char backup_directory[1024];
 	get_absinthe_tmpdir(backup_directory);
@@ -794,7 +794,7 @@ static int jailbreak_50(const char* uuid, status_cb_t status_cb, device_t* devic
 	};
 	idevicebackup2(3, bargv);
 
-	backup_t* backup = backup_open(backup_directory, uuid);
+	backup_t* backup = backup_open(backup_directory, udid);
 	if (!backup) {
 		fprintf(stderr, "ERROR: failed to open backup\n");
 		return -1;
@@ -995,20 +995,20 @@ static int jailbreak_50(const char* uuid, status_cb_t status_cb, device_t* devic
 	while (connected) {
 		sleep(2);
 	}
-	debug("Device %s disconnected\n", uuid);
+	debug("Device %s disconnected\n", udid);
 
 	// wait for device to connect
 	while (!connected) {
 		sleep(2);
 	}
-	debug("Device %s detected. Connecting...\n", uuid);
+	debug("Device %s detected. Connecting...\n", udid);
 	status_cb("Connecting to device...\n", 50);
 	sleep(1);
 
 	/********************************************************/
 	/* wait for device to finish booting to springboard */
 	/********************************************************/
-	device = device_create(uuid);
+	device = device_create(udid);
 	if (!device) {
 		status_cb("ERROR: Could not connect to device. Aborting.\n", 0);
 		// we can't recover since the device connection failed...
@@ -1206,7 +1206,7 @@ static int jailbreak_50(const char* uuid, status_cb_t status_cb, device_t* devic
 	/* add com.apple.ipsec.plist to backup */
 	/********************************************************/
 	status_cb(NULL, 85);
-	backup = backup_open(backup_directory, uuid);
+	backup = backup_open(backup_directory, udid);
 	if (!backup) {
 		error("ERROR: failed to open backup\n");
 		goto fix;
@@ -1288,7 +1288,7 @@ fix_all:
 	/* Cleanup backup: remove VPN connection and webclip */
 	/********************************************************/
 	status_cb("Trying to recover...\n", 0);
-	backup = backup_open(backup_directory, uuid);
+	backup = backup_open(backup_directory, udid);
 	if (!backup) {
 		error("ERROR: failed to open backup\n");
 		goto fix;
@@ -1388,20 +1388,20 @@ fix_all:
 	while (connected) {
 		sleep(2);
 	}
-	debug("Device %s disconnected\n", uuid);
+	debug("Device %s disconnected\n", udid);
 
 	// wait for device to connect
 	while (!connected) {
 		sleep(2);
 	}
-	debug("Device %s detected. Connecting...\n", uuid);
+	debug("Device %s detected. Connecting...\n", udid);
 	status_cb("Device detected, connecting...\n", 60);
 	sleep(2);
 
 	/********************************************************/
 	/* connect and move back dirs */
 	/********************************************************/
-	device = device_create(uuid);
+	device = device_create(udid);
 	if (!device) {
 		status_cb("ERROR: Could not connect to device. Aborting.\n", 0);
 		return -1;
@@ -1522,7 +1522,7 @@ leave:
 
 }
 
-static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* device, lockdown_t* lockdown, const char* product, const char* build)
+static int jailbreak_51(const char* udid, status_cb_t status_cb, device_t* device, lockdown_t* lockdown, const char* product, const char* build)
 {
         char backup_directory[1024];
 	get_absinthe_tmpdir(backup_directory);
@@ -1656,7 +1656,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	};
 	idevicebackup2(3, bargv);
 
-	backup_t* backup = backup_open(backup_directory, uuid);
+	backup_t* backup = backup_open(backup_directory, udid);
 	if (!backup) {
 		fprintf(stderr, "ERROR: failed to open backup\n");
 		return -1;
@@ -1802,7 +1802,7 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	device_free(device);
 	device = NULL;
 
-	backup = backup_open(backup_directory, uuid);
+	backup = backup_open(backup_directory, udid);
 	if (!backup) {
 		fprintf(stderr, "ERROR: failed to open backup\n");
 		return -1;
@@ -1937,21 +1937,21 @@ static int jailbreak_51(const char* uuid, status_cb_t status_cb, device_t* devic
 	while (connected) {
 		sleep(2);
 	}
-	debug("Device %s disconnected\n", uuid);
+	debug("Device %s disconnected\n", udid);
 	status_cb(NULL, 75);
 
 	// wait for device to connect
 	while (!connected) {
 		sleep(2);
 	}
-	debug("Device %s detected. Connecting...\n", uuid);
+	debug("Device %s detected. Connecting...\n", udid);
 	status_cb("Waiting for process to complete...", 80);
 	sleep(2);
 
 	/********************************************************/
 	/* connect and wait for completion */
 	/********************************************************/
-	device = device_create(uuid);
+	device = device_create(udid);
 	if (!device) {
 		status_cb("ERROR: Could not connect to device. Aborting.\n", 0);
 		return -1;
@@ -2054,14 +2054,14 @@ leave:
 	return 0;
 }
 
-int jailbreak(const char* uuid, status_cb_t status_cb)
+int jailbreak(const char* udid, status_cb_t status_cb)
 {
 	device_t* device = NULL;
 	char* build = NULL;
 	char* product = NULL;
 
-	if (!uuid) {
-		error("ERROR: missing UUID\n");
+	if (!udid) {
+		error("ERROR: missing UDID\n");
 		return -1;
 	}
 	if (!status_cb) {
@@ -2084,7 +2084,7 @@ int jailbreak(const char* uuid, status_cb_t status_cb)
 
 	// Open a connection to our device
 	debug("Opening connection to device\n");
-	device = device_create(uuid);
+	device = device_create(udid);
 	if(device == NULL) {
 		status_cb("ERROR: Unable to connect to device", 0);
 		return -1;
@@ -2159,9 +2159,9 @@ int jailbreak(const char* uuid, status_cb_t status_cb)
 
 	int res = -1;
 	if ((strcmp(build, "9B176") == 0) || (strcmp(build, "9B206") == 0) || (strcmp(build, "9B208") == 0)) {
-		res = jailbreak_51(uuid, status_cb, device, lockdown, product, build);
+		res = jailbreak_51(udid, status_cb, device, lockdown, product, build);
 	} else {
-		res = jailbreak_50(uuid, status_cb, device, lockdown, product, build);
+		res = jailbreak_50(udid, status_cb, device, lockdown, product, build);
 	}
 
 	free(product);
