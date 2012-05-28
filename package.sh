@@ -26,9 +26,9 @@ case `uname` in
 		rm -rf ${MNT}
 		rm -f $PKGNAME.dmg
 		rm -f temp.dmg
-		hdiutil create -srcfolder "${SRCDIR}" -volname "Absinthe ${VER}" -fs HFS+ -fsargs "-c c=64,a=16,e=16" -format UDRW -size 120M temp.dmg
 		cp resources/osx/Icon.icns ${SRCDIR}/.VolumeIcon.icns
 		SetFile -c icnC "${SRCDIR}/.VolumeIcon.icns"
+		hdiutil create -srcfolder "${SRCDIR}" -volname "Absinthe ${VER}" -fs HFS+ -fsargs "-c c=64,a=16,e=16" -format UDRW -size 120M temp.dmg
 		mkdir -p ${MNT}
 		hdiutil attach temp.dmg -mountpoint ${MNT}
 		SetFile -a C ${MNT}
