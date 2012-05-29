@@ -21,7 +21,7 @@ static struct device_type_t device_types[] = {
 	{"iPad2,1", "iPad 2 (Wi-Fi)"},
 	{"iPad2,2", "iPad 2 (GSM)"},
 	{"iPad2,3", "iPad 2 (CDMA)"},
-	{"iPad2,4", "iPad 2 (Wi-Fi)"},
+	{"iPad2,4", "iPad 2 (Wi-Fi) R2"},
 	{"iPad3,1", "iPad 3 (Wi-Fi)"},
 	{"iPad3,2", "iPad 3 (CDMA)"},
 	{"iPad3,3", "iPad 3 (GSM)"},
