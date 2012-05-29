@@ -33,11 +33,11 @@ typedef struct backup_t {
 	plist_t manifest;
 	backup_file_t** files;
 	unsigned int count;
-	unsigned char* uuid;
+	unsigned char* udid;
 	unsigned char* directory;*/
 } backup_t;
 
-backup_t* backup_open(const char* directory, const char* uuid);
+backup_t* backup_open(const char* directory, const char* udid);
 int backup_get_file_index(backup_t* backup, const char* domain, const char* path);
 char* backup_get_file_path(backup_t* backup, backup_file_t* bfile);
 backup_file_t* backup_get_file(backup_t* backup, const char* domain, const char* path);

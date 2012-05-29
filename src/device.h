@@ -24,11 +24,11 @@
 
 typedef struct device_t {
 	idevice_t client;
-	unsigned char* uuid;
+	unsigned char* udid;
 	unsigned char* ecid;
 } device_t;
 
-device_t* device_create(const char* uuid);
+device_t* device_create(const char* udid);
 void device_free(device_t* device);
 void device_enable_debug();
 

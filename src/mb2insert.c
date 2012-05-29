@@ -152,9 +152,9 @@ int connected = 0;
 
 static void idevice_event_cb(const idevice_event_t *event, void *user_data)
 {
-	char* uuid = (char*)user_data;
-	printf("device event %d: %s\n", event->event, event->uuid);
-	if (uuid && strcmp(uuid, event->uuid)) return;
+	char* udid = (char*)user_data;
+	printf("device event %d: %s\n", event->event, event->udid);
+	if (udid && strcmp(udid, event->udid)) return;
 	if (event->event == IDEVICE_DEVICE_ADD) {
 		connected = 1;
 	} else if (event->event == IDEVICE_DEVICE_REMOVE) {
@@ -435,7 +435,7 @@ int main(int argc, char** argv)
 	lockdownd_client_t lckd = NULL;
 	afc_client_t afc = NULL;
 	uint16_t port = 0;
-	char* uuid = NULL;
+	char* udid = NULL;
 	int dscs = 0;
 
 	/* we need to exit cleanly on running backups and restores or we cause havok */
@@ -453,14 +453,14 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	if (IDEVICE_E_SUCCESS == idevice_get_uuid(device, &uuid)) {
-		printf("DeviceUniqueID : %s\n", uuid);
+	if (IDEVICE_E_SUCCESS == idevice_get_udid(device, &udid)) {
+		printf("DeviceUniqueID : %s\n", udid);
 	}
 
 	idevice_free(device);
 	device = NULL;
 
-	idevice_event_subscribe(idevice_event_cb, uuid);
+	idevice_event_subscribe(idevice_event_cb, udid);
 
 	int retries = 20;
 	int i = 0;
@@ -473,7 +473,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	if (IDEVICE_E_SUCCESS != idevice_new(&device, uuid)) {
+	if (IDEVICE_E_SUCCESS != idevice_new(&device, udid)) {
 		printf("No device found, is it plugged in?\n");
 		return -1;
 	}
@@ -540,7 +540,7 @@ int main(int argc, char** argv)
 
 	idevicebackup2(bargc, bargv);
 
-	backup_t* backup = backup_open(BKPTMP, uuid);
+	backup_t* backup = backup_open(BKPTMP, udid);
 	if (!backup) {
 		fprintf(stderr, "ERROR: failed to open backup\n");
 		return -1;
@@ -680,19 +680,19 @@ int main(int argc, char** argv)
 		sleep(2);
 	}
 
-	printf("Device %s disconnected\n", uuid);
+	printf("Device %s disconnected\n", udid);
 
 	// wait for device to connect
 	while (!connected) {
 		sleep(2);
 	}
 	idevice_event_unsubscribe();
-	printf("Device %s detected. Connecting...\n", uuid);
+	printf("Device %s detected. Connecting...\n", udid);
 	sleep(2);
 
 	device = NULL;
-	if (IDEVICE_E_SUCCESS != idevice_new(&device, uuid)) {
-		printf("Reconnect to %s failed... whoops\n", uuid);
+	if (IDEVICE_E_SUCCESS != idevice_new(&device, udid)) {
+		printf("Reconnect to %s failed... whoops\n", udid);
 		return -1;
 	}
 
@@ -836,7 +836,7 @@ leave:
 	afc = NULL;
 	idevice_free(device);
 	device = NULL;
-	free(uuid);
+	free(udid);
 
 	return 0;
 }

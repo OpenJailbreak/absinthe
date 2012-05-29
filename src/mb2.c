@@ -1045,7 +1045,7 @@ int mb2_crash(mb2_t* mb2) {
 	mkdir_with_parents(DUMMYBACKUPDIR, 0755);
 
 	/* make sure backup device sub-directory exists */
-	char *devbackupdir = build_path(DUMMYBACKUPDIR, mb2->device->uuid, NULL);
+	char *devbackupdir = build_path(DUMMYBACKUPDIR, mb2->device->udid, NULL);
 	mkdir_with_parents(devbackupdir, 0755);
 
 	char *statusplist = build_path(devbackupdir, "Status.plist", NULL);
@@ -1063,7 +1063,7 @@ int mb2_crash(mb2_t* mb2) {
 	plist_free(stpl);
 	free(statusplist);
 
-	err = mobilebackup2_send_request(mb2->client, "Restore", mb2->device->uuid, mb2->device->uuid, NULL);
+	err = mobilebackup2_send_request(mb2->client, "Restore", mb2->device->udid, mb2->device->udid, NULL);
 	if (err == MOBILEBACKUP2_E_SUCCESS) {
 		// enable crashing in mb2_handle_send_files()
 
@@ -1104,7 +1104,7 @@ int mb2_inject(mb2_t* mb2, char* data, int size) {
 	mkdir_with_parents(DUMMYBACKUPDIR, 0755);
 
 	/* make sure backup device sub-directory exists */
-	char *devbackupdir = build_path(DUMMYBACKUPDIR, mb2->device->uuid, NULL);
+	char *devbackupdir = build_path(DUMMYBACKUPDIR, mb2->device->udid, NULL);
 	mkdir_with_parents(devbackupdir, 0755);
 
 	char *statusplist = build_path(devbackupdir, "Status.plist", NULL);
@@ -1125,7 +1125,7 @@ int mb2_inject(mb2_t* mb2, char* data, int size) {
 	char* poison_buf = data;
 	int poison_length = size;
 
-	err = mobilebackup2_send_request(mb2->client, "Backup", mb2->device->uuid, NULL, NULL);
+	err = mobilebackup2_send_request(mb2->client, "Backup", mb2->device->udid, NULL, NULL);
 	if (err == MOBILEBACKUP2_E_SUCCESS) {
 		// enable crashing in mb2_handle_send_files()
 
