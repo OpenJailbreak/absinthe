@@ -125,6 +125,8 @@ static void destroy_event(GtkWidget* widget, gpointer data)
 
 AbsintheMainWnd::AbsintheMainWnd(int* pargc, char*** pargv)
 {
+	g_thread_init(NULL);
+
 	gdk_threads_init();
 
 	gtk_init(pargc, pargv);

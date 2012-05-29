@@ -57,28 +57,29 @@ case "$host_os" in
 	;;
 	linux*)
 		PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.16)
+		PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.16)
 		case "$BUILD_HOST_CPU" in
 		x86_64)
 		SYSTYPE=linux.x86_64
-		ACCFLAGS="-fPIC -I\$(top_srcdir)/include -g -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES "
+		ACCFLAGS="-fPIC -I\$(top_srcdir)/include -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES "
 		ACSHAREDLIBS+="-lpthread -lz -lm -lssl -lcrypto -lxml2"
 		ACLDFLAGS+="-s"
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
-			\$(GTK2_CFLAGS) -pthread"
+			\$(GTK2_CFLAGS) \$(GTHREAD_CFLAGS) -pthread"
                 ACGUI_LDFLAGS+="-pthread -Wl,-Bsymbolic-functions -static-libstdc++"
-                ACGUI_LDADD+="-lpthread -lz -lm \$(GTK2_LIBS)"
+                ACGUI_LDADD+="-lpthread -lz -lm \$(GTK2_LIBS) \$(GTHREAD_LIBS)"
 		;;
 		*)
 		SYSTYPE=linux
-		ACCFLAGS+="-fPIC -I\$(top_srcdir)/include -g -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES "
+		ACCFLAGS+="-fPIC -I\$(top_srcdir)/include -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES "
 		ACSHAREDLIBS+="-lpthread -lz -lm -lssl -lcrypto -lxml2"
 		ACLDFLAGS+="-s"
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
-			\$(GTK2_CFLAGS) -pthread"
+			\$(GTK2_CFLAGS) \$(GTHREAD_CFLAGS) -pthread"
 		ACGUI_LDFLAGS+="-pthread -Wl,-Bsymbolic-functions -L/lib32 -L/usr/lib32 -static-libstdc++"
-		ACGUI_LDADD+="-lpthread -lz -lm \$(GTK2_LIBS)"
+		ACGUI_LDADD+="-lpthread -lz -lm \$(GTK2_LIBS) \$(GTHREAD_LIBS)"
 		;;
 		esac
 	;;
