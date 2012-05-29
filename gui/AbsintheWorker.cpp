@@ -122,7 +122,41 @@ void AbsintheWorker::checkDevice()
 			}
 			lockdownd_client_free(client);
 			idevice_free(dev);
-			sprintf(str, "ERROR: Device detection failed due an internal error. Please unplug device and plug it back in.");
+			sprintf(str, "Device detection failed. Please unplug device and plug it back in. Then it should work.");
+			mainwnd->setStatusText(str);
+			return;
+		} else if (lerr == LOCKDOWN_E_SSL_ERROR) {
+			lockdownd_client_t newl = NULL;
+			lockdownd_client_new(dev, &newl, "absinthe");
+			if (newl) {
+				plist_t device_public_key = NULL;
+				lockdownd_get_value(newl, NULL, "DevicePublicKey", &device_public_key);
+				if (device_public_key && (plist_get_node_type(device_public_key) == PLIST_DATA)) {
+					char* testdata = NULL;
+					uint64_t testsize = 0;
+					plist_get_data_val(device_public_key, &testdata, &testsize);
+					const char chk[] = "-----BEGIN RSA PUBLIC KEY-----";
+					if (memcmp(testdata, chk, strlen(chk)) == 0) {
+						lerr = lockdownd_unpair(newl, NULL);
+						if (lerr == LOCKDOWN_E_SUCCESS) {
+							char *devudid = NULL;
+							idevice_get_udid(dev, &devudid);
+							if (devudid) {
+								userpref_remove_device_public_key(devudid);
+								free(devudid);
+							}
+						}
+						lockdownd_client_free(newl);
+						idevice_free(dev);
+						sprintf(str, "Device detection failed. Please unplug device and plug it back in.");
+						mainwnd->setStatusText(str);
+						return;
+					}
+				}
+				lockdownd_client_free(newl);
+			}
+			idevice_free(dev);
+			sprintf(str, "Error detecting device (lockdown error %d)", lerr);
 			mainwnd->setStatusText(str);
 			return;
 		} else if (lerr != LOCKDOWN_E_SUCCESS) {
