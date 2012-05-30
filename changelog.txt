@@ -1,6 +1,7 @@
 Version 2.0.4
 ~~~~~~~~~~~~~
 - Added iPad2,4 support.
+- Added lockdown error -5 workaround
 
 Version 2.0.3
 ~~~~~~~~~~~~~
