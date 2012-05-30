@@ -42,6 +42,37 @@ AbsintheWorker::AbsintheWorker(AbsintheMainWnd* main)
 
 	this->current_udid = NULL;
 
+	struct stat st;
+	int quick_check = 0;
+	memset(&st, '\0', sizeof(struct stat));
+	if ((stat("data/9B208", &st) == 0) && S_ISDIR(st.st_mode)) {
+		quick_check++;
+	}
+	memset(&st, '\0', sizeof(struct stat));
+	if ((stat("data/9B206", &st) == 0) && S_ISDIR(st.st_mode)) {
+		quick_check++;
+	}
+	memset(&st, '\0', sizeof(struct stat));
+	if ((stat("data/9A406", &st) == 0) && S_ISDIR(st.st_mode)) {
+		quick_check++;
+	}
+	memset(&st, '\0', sizeof(struct stat));
+	if ((stat("data/9A405", &st) == 0) && S_ISDIR(st.st_mode)) {
+		quick_check++;
+	}
+	memset(&st, '\0', sizeof(struct stat));
+	if ((stat("data/9A334", &st) == 0) && S_ISDIR(st.st_mode)) {
+		quick_check++;
+	}
+	memset(&st, '\0', sizeof(struct stat));
+	if ((stat("data/common", &st) == 0) && S_ISDIR(st.st_mode)) {
+		quick_check++;
+	}
+	if (quick_check != 6) {
+		mainwnd->setStatusText("ERROR: Could not find required files. Make sure you extracted the entire package!");
+		return;
+	}
+
 	this->checkDevice();
 
 	idevice_event_subscribe(&device_event_cb, NULL);
@@ -221,6 +252,8 @@ void AbsintheWorker::checkDevice()
 			free(productType);
 			free(productVersion);
 			free(buildVersion);
+			lockdownd_client_free(client);
+			idevice_free(dev);
 			return;
 		}
 
