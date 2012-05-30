@@ -69,7 +69,7 @@ AbsintheWorker::AbsintheWorker(AbsintheMainWnd* main)
 		quick_check++;
 	}
 	if (quick_check != 6) {
-		mainwnd->setStatusText("ERROR: Could not find required files. Make sure you extracted the entire package!");
+		this->mainWnd->setStatusText("ERROR: Could not find required files. Make sure you extracted the entire package!");
 		return;
 	}
 
