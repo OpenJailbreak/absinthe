@@ -272,8 +272,7 @@ int macho_handle_command(macho_t* macho, macho_command_t* command) {
 			if (seg) {
 				macho->segments[macho->segment_count++] = seg;
 			} else {
-				error(
-						"Could not load segment at offset 0x%x\n", command->offset);
+				error("Could not load segment at offset 0x%x\n", command->offset);
 			}
 		}
 			break;
@@ -284,8 +283,7 @@ int macho_handle_command(macho_t* macho, macho_command_t* command) {
 			if (symtab) {
 				macho->symtabs[macho->symtab_count++] = symtab;
 			} else {
-				error(
-						"Could not load symtab at offset 0x%x\n", command->offset);
+				error("Could not load symtab at offset 0x%x\n", command->offset);
 			}
 		}
 			break;

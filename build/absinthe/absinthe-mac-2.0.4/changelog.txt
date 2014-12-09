@@ -1,0 +1,21 @@
+Version 2.0.4
+~~~~~~~~~~~~~
+- Added iPad2,4 support.
+- Added lockdown error -5 workaround
+
+Version 2.0.3
+~~~~~~~~~~~~~
+- updated device detection and communication code
+
+Version 2.0.2
+~~~~~~~~~~~~~
+- added support for iPhone 4 (GSM) 5.1.1b build 9B208
+
+Version 2.0.1
+~~~~~~~~~~~~~
+- fixed a possible hang that could occur in certain situations
+
+Version 2.0
+~~~~~~~~~~~
+- first public release
+

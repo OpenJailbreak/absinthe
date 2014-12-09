@@ -17,11 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <dirent.h>
+
 #include "debug.h"
 #include "common.h"
 #include "boolean.h"
 
-static int __mkdir(const char* path, int mode)
+int __mkdir(const char* path, int mode)
 {
 #ifdef WIN32
 	return mkdir(path);
@@ -170,3 +172,40 @@ void hexdump(unsigned char* buf, unsigned int len) {
 
 	debug("\r\n\n");
 }
+
+/* recursively remove path, including path */
+void rmdir_recursive(const char *path) /*{{{*/
+{
+	if (!path) {
+		return;
+	}
+	DIR* cur_dir = opendir(path);
+	if (cur_dir) {
+		struct dirent* ep;
+		while ((ep = readdir(cur_dir))) {
+			if ((strcmp(ep->d_name, ".") == 0) || (strcmp(ep->d_name, "..") == 0)) {
+				continue;
+			}
+			char *fpath = (char*)malloc(strlen(path)+1+strlen(ep->d_name)+1);
+			if (fpath) {
+				struct stat st;
+				strcpy(fpath, path);
+				strcat(fpath, "/");
+				strcat(fpath, ep->d_name);
+
+				if ((stat(fpath, &st) == 0) && S_ISDIR(st.st_mode)) {
+					rmdir_recursive(fpath);
+				} else {
+					if (remove(fpath) != 0) {
+						debug("could not remove file %s: %s\n", fpath, strerror(errno));
+					}
+				}
+				free(fpath);
+			}
+		}
+		closedir(cur_dir);
+	}
+	if (rmdir(path) != 0) {
+		fprintf(stderr, "could not remove directory %s: %s\n", path, strerror(errno));
+	}
+} /*}}}*/

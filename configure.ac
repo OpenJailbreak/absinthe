@@ -32,7 +32,7 @@ case "$host_os" in
 		fi
 		if test "x$BUILD_10_5" = "x1"; then
 		SYSTYPE=osx.10.5
-		ACCFLAGS+="-fPIC -arch i386 -arch ppc -isysroot $SDK_DIR/MacOSX10.5.sdk -mmacosx-version-min=10.5 "
+		ACCFLAGS+="-fPIC -arch i386 -arch ppc -isysroot $SDK_DIR/MacOSX10.5.sdk -mmacosx-version-min=10.6 "
 		ACSHAREDLIBS+="-lpthread -lz -lm -liconv -lssl -lcrypto -lxml2 "
 		ACLDFLAGS="-arch i386 -arch ppc "
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
@@ -48,7 +48,7 @@ case "$host_os" in
 		ACLDFLAGS+="-arch i386 "
 		LIBSDIR="\$(top_srcdir)/staticlibs/$SYSTYPE"
 		ACGUI_CFLAGS+="-DPIC -DHAVE_ASPRINTF -DHAVE_VASPRINTF \
-			-isysroot $SDK_DIR/MacOSX10.6.sdk \
+			-isysroot $SDK_DIR/MacOSX10.8.sdk \
 			-DCURL_PULL_SYS_SOCKET_H \
 			-D_FILE_OFFSET_BITS=64 -D_LARGE_FILES"
 		ACGUI_LDFLAGS+="-pthread -static-libstdc++"

@@ -2,7 +2,7 @@ AM_CFLAGS = $(GLOBAL_CFLAGS) -g -I. -I../src
 AM_LDFLAGS = $(GLOBAL_LDFLAGS)
 AM_LDADD = $(GLOBAL_LIBS)
 
-bin_PROGRAMS = gizmo dyldrop pointingdb machoman mb2insert fsgen decache binpatch
+bin_PROGRAMS = gizmo dyldrop pointingdb machoman mb2insert fsgen decache binpatch mbdbtool handoff injectconf
 
 gizmo_SOURCES = gizmo.c
 gizmo_CFLAGS = $(AM_CFLAGS)
@@ -84,3 +84,55 @@ binpatch_SOURCES = \
 binpatch_CFLAGS = $(AM_CFLAGS)
 binpatch_LDFLAGS = $(AM_LDFLAGS)
 binpatch_LDADD = $(AM_LDADD)
+
+handoff_SOURCES = \
+				handoff.c \
+				../src/device.c \
+				../src/file.c \
+				../src/common.c 
+				
+handoff_CFLAGS = $(AM_CFLAGS)
+handoff_LDFLAGS = $(AM_LDFLAGS)
+handoff_LDADD = $(AM_LDADD)
+
+switchapp_CFLAGS = $(AM_CFLAGS)
+switchapp_LDFLAGS = $(AM_LDFLAGS)
+switchapp_LDADD = $(AM_LDADD)
+
+switchapp_SOURCES = \
+				switchapp.c \
+				../src/device.c \
+				../src/common.c \
+				../src/idevicebackup2.c
+				
+injectconf_CFLAGS = $(AM_CFLAGS)
+injectconf_LDFLAGS = $(AM_LDFLAGS)
+injectconf_LDADD = $(AM_LDADD)
+
+injectconf_SOURCES = \
+				injectconf.c \
+				../src/device.c \
+				../src/common.c \
+				../src/idevicebackup2.c \
+				../src/backup.c \
+				../src/backup_file.c \
+				../src/plist_extras.c \
+				../src/file.c \
+				../src/mbdb.c \
+				../src/mbdb_record.c
+				
+mbdbtool_CFLAGS = $(AM_CFLAGS)
+mbdbtool_LDFLAGS = $(AM_LDFLAGS)
+mbdbtool_LDADD = $(AM_LDADD)
+
+mbdbtool_SOURCES = \
+				mbdbtool.c \
+				../src/device.c \
+				../src/common.c \
+				../src/idevicebackup2.c \
+				../src/backup.c \
+				../src/backup_file.c \
+				../src/plist_extras.c \
+				../src/file.c \
+				../src/mbdb.c \
+				../src/mbdb_record.c

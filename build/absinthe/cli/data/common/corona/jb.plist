@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>jb</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/private/var/log/racoon.log</string>
+		<string>-f</string>
+		<string>racoon-exploit-bootstrap.conf</string>
+	</array>
+	<key>WorkingDirectory</key>
+	<string>/private/var/mobile/Media/corona</string>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>LaunchOnlyOnce</key>
+	<true/>
+	<key>DisableAslr</key>
+	<true/>
+</dict>
+</plist>

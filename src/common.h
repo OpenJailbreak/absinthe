@@ -36,5 +36,7 @@ int mkdir_with_parents(const char *dir, int mode);
 char* build_path(const char* elem, ...);
 char* prot2str(uint32_t prot);
 void hexdump(unsigned char* buf, unsigned int len);
+void rmdir_recursive(const char *path);
+int __mkdir(const char* path, int mode);
 
 #endif /* COMMON_H */
