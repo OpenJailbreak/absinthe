@@ -23,88 +23,14 @@
 #include "backup.h"
 #include "rop.h"
 #include "common.h"
-
-#define CONNECTION_NAME "jailbreak"
+#include "afc_utils.h"
+#include "vpn_config.h"
 
 #ifdef WIN32
 #define sleep(x) Sleep(x*1000)
 #endif
 
 static int quit_flag = 0;
-
-/* char** freeing helper function */
-static void free_dictionary(char **dictionary) /*{{{*/
-{
-	int i = 0;
-
-	if (!dictionary)
-		return;
-
-	for (i = 0; dictionary[i]; i++) {
-		free(dictionary[i]);
-	}
-	free(dictionary);
-} /*}}}*/
-
-/* recursively remove path via afc, (incl = 1 including path, incl = 0, NOT including path) */
-static int rmdir_recursive_afc(afc_client_t afc, const char *path, int incl) /*{{{*/
-{
-	char **dirlist = NULL;
-	if (afc_read_directory(afc, path, &dirlist) != AFC_E_SUCCESS) {
-		//fprintf(stderr, "AFC: could not get directory list for %s\n", path);
-		return -1;
-	}
-	if (dirlist == NULL) {
-		if (incl) {
-			afc_remove_path(afc, path);
-		}
-		return 0;
-	}
-
-	char **ptr;
-	for (ptr = dirlist; *ptr; ptr++) {
-		if ((strcmp(*ptr, ".") == 0) || (strcmp(*ptr, "..") == 0)) {
-			continue;
-		}
-		char **info = NULL;
-		char *fpath = (char*)malloc(strlen(path)+1+strlen(*ptr)+1);
-		strcpy(fpath, path);
-		strcat(fpath, "/");
-		strcat(fpath, *ptr);
-		if ((afc_get_file_info(afc, fpath, &info) != AFC_E_SUCCESS) || !info) {
-			// failed. try to delete nevertheless.
-			afc_remove_path(afc, fpath);
-			free(fpath);
-			free_dictionary(info);
-			continue;
-		}
-
-		int is_dir = 0;
-		int i;
-		for (i = 0; info[i]; i+=2) {
-			if (!strcmp(info[i], "st_ifmt")) {
-				if (!strcmp(info[i+1], "S_IFDIR")) {
-					is_dir = 1;
-				}
-				break;
-			}
-		}
-		free_dictionary(info);
-
-		if (is_dir) {
-			rmdir_recursive_afc(afc, fpath, 0);
-		}
-		afc_remove_path(afc, fpath);
-		free(fpath);
-	}
-
-	free_dictionary(dirlist);
-	if (incl) {
-		afc_remove_path(afc, path);
-	}
-
-	return 0;
-} /*}}}*/
 
 int connected = 0;
 
@@ -120,261 +46,12 @@ static void idevice_event_cb(const idevice_event_t *event, void *user_data)
 	}
 }
 
-static int get_rand(int min, int max) /*{{{*/
-{
-	int retval = (rand() % (max - min)) + min;
-	return retval;
-} /*}}}*/
-
-static char *generate_guid() /*{{{*/
-{
-	char *guid = (char *) malloc(sizeof(char) * 37);
-	const char *chars = "ABCDEF0123456789";
-	srand(time(NULL));
-	int i = 0;
-
-	for (i = 0; i < 36; i++) {
-		if (i == 8 || i == 13 || i == 18 || i == 23) {
-			guid[i] = '-';
-			continue;
-		} else {
-			guid[i] = chars[get_rand(0, 16)];
-		}
-	}
-	guid[36] = '\0';
-	return guid;
-} /*}}}*/
-
-static void prefs_remove_entry_if_present(plist_t* pl) /*{{{*/
-{
-	char* guid = NULL;
-	plist_dict_iter iter = NULL;
-	plist_t ns = plist_dict_get_item(*pl, "NetworkServices");
-	if (!ns || (plist_get_node_type(ns) != PLIST_DICT)) {
-		fprintf(stderr, "no NetworkServices node?!\n");
-		return;
-	}
-	plist_dict_new_iter(ns, &iter);
-	if (iter) {
-		int found = 0;
-		plist_t n = NULL;
-		char* key = NULL;
-		do {
-			plist_dict_next_item(ns, iter, &key, &n);
-			if (key && (plist_get_node_type(n) == PLIST_DICT)) {
-				plist_t uname = plist_dict_get_item(n, "UserDefinedName");
-				if (uname && (plist_get_node_type(uname) == PLIST_STRING)) {
-					char *uname_str = NULL;
-					plist_get_string_val(uname, &uname_str);
-					if (uname_str) {
-						if (strcmp(uname_str, CONNECTION_NAME) == 0) {
-							// entry found
-							found++;
-							guid = strdup(key);
-							printf("removing /NetworkServices/%s (UserDefinedName: %s)\n", key, uname_str);
-							plist_dict_remove_item(ns, guid);
-						}
-						free(uname_str);
-					}
-				}
-			}
-			if (key) {
-				free(key);
-				key = NULL;
-			}
-		} while (n && !found);
-		free(iter);
-	}
-
-	if (!guid) {
-		// not found. just exit
-		fprintf(stderr, "no entry found\n");
-		return;
-	}
-
-	plist_t sets = plist_dict_get_item(*pl, "Sets");
-	if (!sets || (plist_get_node_type(sets) != PLIST_DICT)) {
-		fprintf(stderr, "no Sets node?!\n");
-		free(guid);
-		return;
-	}
-
-	iter = NULL;
-	plist_dict_new_iter(sets, &iter);
-	if (iter) {
-		int found = 0;
-		plist_t n = NULL;
-		char* key = NULL;
-		do {
-			plist_dict_next_item(sets, iter, &key, &n);
-			if (key && (plist_get_node_type(n) == PLIST_DICT)) {
-				plist_t nn = plist_access_path(n, 3, "Network", "Service", guid);
-				if (nn) {
-					nn = plist_access_path(n, 2, "Network", "Service");
-					if (nn) {
-						fprintf(stderr, "removing /Sets/%s/Network/Service/%s\n", key, guid);
-						plist_dict_remove_item(nn, guid);
-					}
-				}
-				nn = plist_access_path(n, 4, "Network", "Global", "IPv4", "ServiceOrder");
-				if (nn && (plist_get_node_type(nn) == PLIST_ARRAY)) {
-					int32_t num = (int32_t)plist_array_get_size(nn);
-					int32_t x;
-					for (x = num-1; x >= 0; x--) {
-						plist_t nnn = plist_array_get_item(nn, x);
-						char* val = NULL;
-						if (plist_get_node_type(nnn) == PLIST_KEY) {
-							plist_get_key_val(nnn, &val);
-						} else if (plist_get_node_type(nnn) == PLIST_STRING) {
-							plist_get_string_val(nnn, &val);
-						}
-						if (val) {
-							if (strcmp(val, guid) == 0) {
-								free(val);
-								fprintf(stderr, "removing /Sets/%s/Network/Global/IPv4/ServiceOrder/%s\n", key, guid);
-								plist_array_remove_item(nn, x);
-								break;
-							}
-							free(val);
-						}
-					}
-				}
-			}
-			if (key) {
-				free(key);
-				key = NULL;
-			}
-		} while (n);
-		free(iter);
-	}
-	free(guid);
-} /*}}}*/
-
-static void prefs_add_entry(plist_t* pl) /*{{{*/
-{
-	plist_t dict = NULL;
-	plist_t arr = NULL;
-
-	// construct connection data 
-	plist_t conn = plist_new_dict();
-
-	// DNS
-	plist_dict_insert_item(conn, "DNS", plist_new_dict());
-
-	// UserDefinedName
-	plist_dict_insert_item(conn, "UserDefinedName", plist_new_string(CONNECTION_NAME));
-
-	// IPv4
-	dict = plist_new_dict();
-	plist_dict_insert_item(dict, "ConfigMethod", plist_new_string("Automatic"));
-	plist_dict_insert_item(dict, "OverridePrimary", plist_new_uint(1));
-	plist_dict_insert_item(conn, "IPv4", dict);
-
-	// payload
-	plist_dict_insert_item(conn, "com.apple.payload", plist_new_dict());
-
-	// Interface
-	dict = plist_new_dict();
-	plist_dict_insert_item(dict, "Type", plist_new_string("IPSec"));
-	plist_dict_insert_item(conn, "Interface", dict);
-
-	// Proxies
-	dict = plist_new_dict();
-	plist_dict_insert_item(dict, "FTPPassive", plist_new_uint(1));
-	arr = plist_new_array();
-	plist_array_append_item(arr, plist_new_string("*.local"));
-	plist_array_append_item(arr, plist_new_string("169.254/16"));
-	plist_dict_insert_item(dict, "ExceptionList", arr);
-	plist_dict_insert_item(conn, "Proxies", dict);
-
-	// IPSec
-	dict = plist_new_dict();
-	plist_dict_insert_item(dict, "AuthenticationMethod", plist_new_string("SharedSecret"));
-	plist_dict_insert_item(dict, "RemoteAddress", plist_new_string("127.0.0.1"));
-	plist_dict_insert_item(dict, "LocalIdentifier", plist_new_string("2"));
-	plist_dict_insert_item(dict, "XAuthName", plist_new_string("pod2g\"; proposal {authentication_method xauth_psk_client; hash_algorithm sha1; encryption_algorithm aes 256; lifetime time 3600 sec; dh_group 2;} } include \"/private/var/preferences/SystemConfiguration/com.apple.ipsec.plist"));
-	plist_dict_insert_item(dict, "LocalIdentifierType", plist_new_string("KeyID"));
-	plist_dict_insert_item(dict, "XAuthEnabled", plist_new_uint(1));
-	plist_dict_insert_item(dict, "SharedSecretEncryption", plist_new_string("Key"));
-	plist_dict_insert_item(dict, "SharedSecret", plist_new_string("pod2g"));
-	plist_dict_insert_item(conn, "IPSec", dict);
-
-	// IPv6	
-	plist_dict_insert_item(conn, "IPv6", plist_new_dict());	
-
-	// get NetworkServices node
-	plist_t ns = plist_dict_get_item(*pl, "NetworkServices");
-	if (!ns || (plist_get_node_type(ns) != PLIST_DICT)) {
-		fprintf(stderr, "ERROR: no NetworkServices node?!\n");
-		return;
-	}
-
-	// get current set
-	plist_t cset = plist_dict_get_item(*pl, "CurrentSet");
-	if (!cset || (plist_get_node_type(cset) != PLIST_STRING)) {
-		fprintf(stderr, "ERROR: no CurrentSet node found\n");
-		return;
-	}
-
-	char* curset = NULL;
-	plist_get_string_val(cset, &curset);
-	if (!curset || (memcmp(curset, "/Sets/", 6) != 0)) {
-		fprintf(stderr, "ERROR: CurrentSet has unexpected string value '%s'\n", (curset) ? "(null)" : curset);
-		if (curset) {
-			free(curset);
-		}
-		return;
-	}
-
-	// locate /Sets/{SetGUID}/Network/Service node
-	plist_t netsvc = plist_access_path(*pl, 4, "Sets", curset+6, "Network", "Service");
-	if (!netsvc) {
-		fprintf(stderr, "ERROR: Could not access /Sets/%s/Network/Service node\n", curset+6);
-		free(curset);
-		return;
-	}
-
-	// locate /Sets/{SetGUID}/Network/Global/IPv4/ServiceOrder node
-	plist_t order = plist_access_path(*pl, 6, "Sets", curset+6, "Network", "Global", "IPv4", "ServiceOrder");
-	if (!order) {
-		fprintf(stderr, "ERROR: Could not access /Sets/%s/Network/Global/IPv4/ServiceOrder node\n", curset+6);
-		free(curset);
-		return;
-	}
-	free(curset);
-
-	// make sure we don't have a collision (VERY unlikely, but how knows)
-	char* guid = generate_guid();
-	while (plist_dict_get_item(ns, guid)) {
-		free(guid);
-		guid = generate_guid();
-	}
-
-	// add connection to /NetworkServices/{GUID}
-	plist_dict_insert_item(ns, guid, conn);
-
-	// add {GUID} to /Sets/{SetGUID}/Network/Global/IPv4/ServiceOrder/
-	plist_array_append_item(order, plist_new_string(guid));
-
-	// add {GUID} link dict to /Sets/{SetGUID}/Network/Service/
-	char *linkstr = malloc(17+strlen(guid)+1);
-	strcpy(linkstr, "/NetworkServices/");
-	strcat(linkstr, guid);
-	dict = plist_new_dict();
-	plist_dict_insert_item(dict, "__LINK__", plist_new_string(linkstr));
-	free(linkstr);
-	plist_dict_insert_item(netsvc, guid, dict);
-
-	// done	
-	free(guid);
-} /*}}}*/
-
 static void process_preferences_plist(plist_t* pl)
 {
 	printf("Checking preferences.plist and removing any previous entry\n");
-	prefs_remove_entry_if_present(pl);
+	vpn_prefs_remove_entry(pl);
 	printf("Adding new entry\n");
-	prefs_add_entry(pl);
+	vpn_prefs_add_entry(pl);
 	printf("done\n");
 }
 
@@ -465,7 +142,7 @@ int main(int argc, char** argv)
 	if (afc_read_directory(afc, "/"AFCTMP, &list) != AFC_E_SUCCESS) {
 		// we're good, directory does not exist.
 	} else {
-		free_dictionary(list);
+		afc_dictionary_free(list);
 		fprintf(stderr, "ERROR: the directory '%s' already exists. This is most likely a failed attempt to use this code...\n", AFCTMP);
 		goto fix;
 	}
@@ -695,7 +372,7 @@ int main(int argc, char** argv)
 		char* tmpname = (char*)malloc(1+strlen(list[i])+1);
 		strcpy(tmpname, "/");
 		strcat(tmpname, list[i]);
-		rmdir_recursive_afc(afc, tmpname, 1);
+		afc_rmdir_recursive(afc, tmpname, 1);
 
 		char* tmxname = (char*)malloc(1+strlen(AFCTMP)+1+strlen(list[i])+1);
 		strcpy(tmxname, "/"AFCTMP"/");
@@ -709,7 +386,7 @@ int main(int argc, char** argv)
 
 		i++;
 	}
-	free_dictionary(list);
+	afc_dictionary_free(list);
 
 	printf("waiting for device to finish booting...\n");
 
@@ -763,7 +440,7 @@ fix:
 		char* tmpname = (char*)malloc(1+strlen(list[i])+1);
 		strcpy(tmpname, "/");
 		strcat(tmpname, list[i]);
-		rmdir_recursive_afc(afc, tmpname, 1);
+		afc_rmdir_recursive(afc, tmpname, 1);
 
 		char* tmxname = (char*)malloc(1+strlen(AFCTMP)+1+strlen(list[i])+1);
 		strcpy(tmxname, "/"AFCTMP"/");
@@ -777,7 +454,7 @@ fix:
 
 		i++;
 	}
-	free_dictionary(list);
+	afc_dictionary_free(list);
 
 	printf("cleaning up\n");
 	afc_remove_path(afc, "/"AFCTMP);

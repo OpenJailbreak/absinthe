@@ -23,6 +23,7 @@
 #include <libimobiledevice/afc.h>
 
 #include "afc.h"
+#include "afc_utils.h"
 #include "debug.h"
 #include "lockdown.h"
 
@@ -89,19 +90,6 @@ void afc_free(afc_t* afc) {
 	}
 }
 
-static void afc_free_dictionary(char **dictionary) //ghetto i know, not sure where/how to put a global function for this
-{
-	int i = 0;
-
-	if (!dictionary)
-		return;
-
-	for (i = 0; dictionary[i]; i++) {
-		free(dictionary[i]);
-	}
-	free(dictionary);
-}
-
 void apparition_afc_get_file_contents(afc_t* afc, const char *filename,
 		char **data, uint64_t *size) {
 	if (!afc || !data || !size) {
@@ -122,7 +110,7 @@ void apparition_afc_get_file_contents(afc_t* afc, const char *filename,
 			break;
 		}
 	}
-	afc_free_dictionary(fileinfo);
+	afc_dictionary_free(fileinfo);
 
 	if (fsize == 0) {
 		return;
