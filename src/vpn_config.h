@@ -21,7 +21,9 @@
 
 #include <plist/plist.h>
 
+/* Name of the VPN connection created for jailbreak on-demand triggering */
 #define VPN_CONNECTION_NAME   "jailbreak"
+/* Loopback address used to trigger the on-demand VPN connection */
 #define VPN_TRIGGER_ADDRESS   "127.0.0.1"
 
 /* Remove the jailbreak VPN on-demand entry from a preferences.plist, if present. */

@@ -2487,7 +2487,7 @@ int jailbreak(const char* udid, status_cb_t status_cb) {
 						break;
 					}
 				}
-				afc_afc_dictionary_free(fileinfo);
+				afc_dictionary_free(fileinfo);
 				fileinfo = NULL;
 
 				if (ffmt) {
