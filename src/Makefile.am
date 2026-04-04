@@ -7,6 +7,9 @@ bin_PROGRAMS = absinthe
 absinthe_SOURCES = \
 	absinthe.c \
 	jailbreak.c \
+	afc_utils.c \
+	vpn_config.c \
+	device_compat.c \
 	common.c \
 	file.c \
 	backup.c \

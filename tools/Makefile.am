@@ -53,7 +53,9 @@ mb2insert_SOURCES = mb2insert.c \
 				../src/backup.c \
 				../src/backup_file.c \
 				../src/mbdb.c \
-				../src/mbdb_record.c 
+				../src/mbdb_record.c \
+				../src/afc_utils.c \
+				../src/vpn_config.c 
 mb2insert_CFLAGS = $(AM_CFLAGS)
 mb2insert_LDFLAGS = $(AM_LDFLAGS)
 mb2insert_LDADD = $(AM_LDADD)
@@ -119,7 +121,9 @@ injectconf_SOURCES = \
 				../src/plist_extras.c \
 				../src/file.c \
 				../src/mbdb.c \
-				../src/mbdb_record.c
+				../src/mbdb_record.c \
+				../src/vpn_config.c \
+				../src/afc_utils.c 
 				
 mbdbtool_CFLAGS = $(AM_CFLAGS)
 mbdbtool_LDFLAGS = $(AM_LDFLAGS)

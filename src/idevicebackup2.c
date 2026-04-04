@@ -42,6 +42,7 @@
 #endif
 
 #include "common.h"
+#include "afc_utils.h"
 
 #define MOBILEBACKUP2_SERVICE_NAME "com.apple.mobilebackup2"
 #define NP_SERVICE_NAME "com.apple.mobile.notification_proxy"
@@ -98,19 +99,6 @@ static void notify_cb(const char *notification, void *userdata)
 	}
 }
 
-static void free_dictionary(char **dictionary)
-{
-	int i = 0;
-
-	if (!dictionary)
-		return;
-
-	for (i = 0; dictionary[i]; i++) {
-		free(dictionary[i]);
-	}
-	free(dictionary);
-}
-
 static void mobilebackup_afc_get_file_contents(afc_client_t afc, const char *filename, char **data, uint64_t *size)
 {
 	if (!afc || !data || !size) {
@@ -131,7 +119,7 @@ static void mobilebackup_afc_get_file_contents(afc_client_t afc, const char *fil
 			break;
 		}
 	}
-	free_dictionary(fileinfo);
+	afc_dictionary_free(fileinfo);
 
 	if (fsize == 0) {
 		return;
